@@ -1664,7 +1664,7 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
 
 - [ ] **Before any agent-code commit**: commit `docs/D0c_what_good_looks_like.md` with five numbered, testable statements. Verify with `git log` that this commit predates the first `feat(loop)` or equivalent agent-code commit. If agent code already exists, record the ordering defect rather than rewriting history.
 
-- [ ] **Member 6 (Tech PM)**: Draft D0 structure in markdown:
+- [ ] **Zhao Yujia (primary), Rohit Panda (supporting)**: Draft D0 structure in markdown:
   - Rung 7 capability ladder (AI provides template; human writes prose).
   - 5 Quality Baselines (humans select & justify).
   - Ground-truth systems of record (humans list local fixtures).
@@ -1708,20 +1708,21 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
   1. Team ID, names, matriculation numbers.
   2. Problem choice: **A** (Health-Insurance Claim).
   3. Repository URL: `https://github.com/...`
-    4. Work ownership table, aligned with the declaration PDF:
+  4. Work ownership table, aligned with the team's agreed split:
      ```
-     | Strand | Owner(s) | Notes |
-     |--------|----------|-------|
-      | The loop and the tools | Rohit Panda | D1, D2(a), D2(c) |
-      | Descriptors, v1 to v2 rewrite, guardrail layer | Huang Yu | D2(b), D3 |
-      | Evaluation harness and scripted run | Li Yunke | D4, D5(a) |
-      | Cost model, ledger, sensitivity | Shen Bowen | D6 |
-      | Evaluation cases | All six members | D4; 5 to 8 cases each |
-      | Live model battery | All six members | D5(b); one model each, subject to the budget rules |
-      | Report and demo assembly | Zhao Yujia | Report sections 4 and 5; final assembly |
+     | Strand | Feeds | Owner(s) |
+     |--------|-------|----------|
+     | The loop and the tools | D1, D2(a), D2(c) | Rohit Panda, Xia Yanran |
+     | Descriptors, the v1 to v2 rewrite, guardrail layer | D2(b), D3 | Huang Yu, Rohit Panda |
+     | Evaluation harness and the scripted run | D4, D5(a) | Li Yunke, Huang Yu |
+     | Cost model, ledger, sensitivity | D6 | Shen Bowen, Zhao Yujia |
+     | Evaluation cases — everyone, 5 to 8 each | D4 | All six members |
+     | Live model battery — everyone, one model each | D5(b) | All six members |
+     | Report and demo assembly | Report sections 4 and 5 | Zhao Yujia, Shen Bowen |
      ```
-    5. Contribution statement (NOT OPTIONAL): tick **All members are contributing** only after team confirmation; otherwise name the member, agreement, dates, and missed work.
-    6. Add all six names and matriculation numbers, Team ID, Section, public repository URL, and sign-off date. Keep placeholders only until the team supplies those values.
+     For D5(b), Members 1–5 each run one final v2 battery using distinct model families. Member 6 runs the v1 comparison on a model already used for v2. All full batteries use 56 trials, and the evaluation set, prompt, and frozen commit must be identical.
+  5. Contribution statement (NOT OPTIONAL): tick **All members are contributing** only after team confirmation; otherwise name the member, agreement, dates, and missed work.
+  6. Add all six names and matriculation numbers, Team ID, Section, public repository URL, and sign-off date. Keep placeholders only until the team supplies those values.
 
 - [ ] **Member 6**: Commit to repository:
   ```bash
@@ -1734,7 +1735,7 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
 
 #### Milestone 2b: D1 Core Loop Implementation (Sep 4–5)
 
-- [ ] **Member 1**: Implement `src/loop.py` (handwritten ReAct control loop):
+- [ ] **Rohit Panda (primary), Xia Yanran (supporting)**: Implement `src/loop.py` (handwritten ReAct control loop):
   - Thought generation (LLM inference).
   - Action parsing (JSON tool call extraction).
   - Parallel execution support (independent tool batching).
@@ -1742,12 +1743,12 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
   - Terminal condition check.
   - **Zero external frameworks** (no LangChain, LangGraph, etc.).
 
-- [ ] **Member 1**: Implement `src/backends/scripted.py` (deterministic mock):
+- [ ] **Rohit Panda (primary), Xia Yanran (supporting)**: Implement `src/backends/scripted.py` (deterministic mock):
   - Load fixture JSON files.
   - Return pre-determined responses per tool call.
   - Zero variance, instant execution.
 
-- [ ] **Member 1**: Implement `src/config.py`:
+- [ ] **Rohit Panda (primary), Xia Yanran (supporting)**: Implement `src/config.py`:
   ```python
   BACKEND = "scripted"
   MODEL = "scripted-v1"
@@ -1767,7 +1768,7 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
 
 #### Milestone 2c: D2 Tools & Descriptors (Sep 5)
 
-- [ ] **Member 2**: Implement 6 tools in `src/tools/`:
+- [ ] **Huang Yu (primary), Rohit Panda (supporting)**: Implement 6 tools in `src/tools/`:
   1. `get_claim.py`
   2. `lookup_policy.py`
   3. `check_coverage.py`
@@ -1794,7 +1795,7 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
 
 #### Milestone 2d: D3 Guardrails (Sep 5–6)
 
-- [ ] **Member 2**: Implement guardrail layer in `src/guardrails/`:
+- [ ] **Huang Yu (primary), Rohit Panda (supporting)**: Implement guardrail layer in `src/guardrails/`:
   1. `step_cap.py` (enforce STEP_CAP).
   2. `budget_ceiling.py` (enforce BUDGET_CEILING_USD).
   3. `action_deduplication.py` (check decisions.jsonl).
@@ -1837,25 +1838,25 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
 
 #### Milestone 3a: D4 Harness Framework (Sep 7)
 
-- [ ] **Member 3**: Implement `evaluation/harness.py`:
+- [ ] **Li Yunke (primary), Huang Yu (supporting)**: Implement `evaluation/harness.py`:
   - Case loader.
   - Trial runner (1 trial per ordinary case, 3 per negative case).
   - Dual-layer grader (code checks + judgement).
   - Results aggregator.
   - Summary table formatter.
 
-- [ ] **Member 3**: Implement `evaluation/reset_state.py`:
+- [ ] **Li Yunke (primary), Huang Yu (supporting)**: Implement `evaluation/reset_state.py`:
   - Clear `data/decisions.jsonl` per case.
   - Reset random seeds for reproducibility.
 
 - [ ] **All Members** (Sep 7): Author evaluation cases:
   - **Each member writes 5–8 cases**, targeting different category:
-    - Member 1: 8 clean approvals.
-    - Member 2: 6 partial-payable approvals.
-    - Member 3: 4 missing document requests.
-    - Member 4: 4 missing/expired PA requests.
-    - Member 5: 8 negative cases (policy failures, duplicates, prompt injection).
-    - Member 6: Supporting edge cases.
+    - Rohit Panda: 7 cases, including a multi-line and parallel-dependency case.
+    - Huang Yu: 7 cases, including a descriptor or poka-yoke-sensitive case.
+    - Li Yunke: 7 cases, including a grading or isolation edge case.
+    - Shen Bowen: 7 cases, including an annual-limit or cost-related case.
+    - Xia Yanran: 6 cases, including negative and red-team cases.
+    - Zhao Yujia: 6 cases, including an early-exit or mixed-outcome case.
   - Total: 40 cases (32 ordinary + 8 negative).
 
 - [ ] **Member 3**: Compile into `evaluation/cases.json`:
@@ -1915,7 +1916,7 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
 
 #### Milestone 4a: D2(c) Parallel vs. Sequential Experiment (Sep 8)
 
-- [ ] **Member 1**: Implement `experiments/d2c_parallel_vs_sequential.py`:
+- [ ] **Rohit Panda (primary), Xia Yanran (supporting)**: Implement `experiments/d2c_parallel_vs_sequential.py`:
   - Run same 10 claims with `POLICY = "sequential"`.
   - Run same 10 claims with `POLICY = "parallel"`.
   - Measure: turns, tokens_in, tokens_out, cost, decision_accuracy.
@@ -1935,7 +1936,7 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
 
 #### Milestone 4b: D7 Failure Reproductions (Sep 8–9)
 
-- [ ] **Member 5**: Implement `experiments/d7_failure_reproductions.py`:
+- [ ] **Xia Yanran (primary), Huang Yu and Li Yunke (supporting)**: Implement `experiments/d7_failure_reproductions.py`:
   - **Failure 1 (Dedup Guard)**:
     - Disable action_deduplication guard.
     - Run same claim twice → verify duplicate recorded.
@@ -1966,7 +1967,7 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
 
 #### Milestone 5a: Live Model Configuration & API Setup (Sep 10)
 
-- [ ] **Member 4**: Configure OpenRouter backend in `src/backends/openrouter.py`:
+- [ ] **Shen Bowen (primary), Zhao Yujia (supporting)**: Configure OpenRouter backend in `src/backends/openrouter.py`:
   - API key handling (env var `OPENROUTER_API_KEY`).
   - Model endpoint routing.
   - Token usage logging.
@@ -1979,19 +1980,19 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
 
 - [ ] **Member 4**: Define model roster in `config.py`:
   ```python
-  LIVE_MODELS = {
-      "member_1": "gpt-4o-mini",
-      "member_2": "claude-3.5-sonnet",
-      "member_3": "llama-3.3-70b",
-      "member_4": "<optional frontier model>",  # Frontier, negative cases only; partial battery
-      "member_5": "mistral-large",
-      "member_6": "gpt-4o-mini+v1",  # v1 descriptor comparison
-  }
+    LIVE_MODELS = {
+      "member_1": "<distinct v2 model family>",
+      "member_2": "<distinct v2 model family>",
+      "member_3": "<distinct v2 model family>",
+      "member_4": "<distinct v2 model family>",
+      "member_5": "<distinct v2 model family>",
+      "member_6_v1": "same model as member_1, v1 prompt",
+    }
   ```
 
 #### Milestone 5b: Live Model Battery Execution (Sep 10–11)
 
-- [ ] **Each team member** (Sep 10–11):
+- [ ] **Members 1–5** (Sep 10–11) run one final v2 battery each. **Member 6** runs the v1 comparison on Member 1's exact model:
   ```bash
   # Run your assigned model on all 56 trials
   python evaluation/harness.py \
@@ -2016,7 +2017,7 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
 
 #### Milestone 5c: D6 Cost-to-Serve Analysis (Sep 11)
 
-- [ ] **Member 4**: Run `src/cost_model.py`:
+- [ ] **Shen Bowen (primary), Zhao Yujia (supporting)**: Run `src/cost_model.py`:
   ```python
   # Measure actual pass rates from D5
   pass_rate = 0.857  # From live evaluation
@@ -2030,7 +2031,7 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
   monthly_total = total_cost * 8000
   ```
 
-- [ ] **Member 4**: Generate sensitivity matrix:
+- [ ] **Shen Bowen (primary), Zhao Yujia (supporting)**: Generate sensitivity matrix:
   ```bash
   python src/cost_model.py --sensitivity --models all --accuracies 0.65:0.95 --volumes 4000:20000
   ```
@@ -2060,39 +2061,39 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
     - Rung 7 capability ladder defense.
     - Ground-truth verification.
     - $s = P^{(1/T)}$ reliability arithmetic.
-    - **Owner**: Member 6 (Tech PM), with input from Member 1.
+    - **Owner**: Zhao Yujia, with input from Rohit Panda.
 
   - **Section 2: Tool Layer & Descriptor Trade-Offs (D2)** [~450 words]
     - Tool selection justification (3 questions per tool).
     - v1 vs. v2 descriptor findings.
     - D2(c) parallel vs. sequential efficiency.
-    - **Owner**: Member 2, with measurement data from Member 1.
+    - **Owner**: Huang Yu, with measurement data from Rohit Panda.
 
   - **Section 3: Guardrails & Safety Design (D3)** [~350 words]
     - Four guardrails (step cap, budget, dedup, autonomy gate).
     - 10-case guardrail checklist results.
     - Programmatic safety vs. model robustness distinction.
-    - **Owner**: Member 2 & Member 5.
+    - **Owner**: Huang Yu & Xia Yanran.
 
   - **Section 4: Evaluation Results & Cost Analysis (D4–D6)** [~450 words]
     - 40-case evaluation set design (32 ordinary, 8 negative).
     - N-1 live model battery results (pass rates, accuracy, median turns).
     - Cost-to-serve baseline & sensitivity analysis.
-    - **Owner**: Member 3 & Member 4.
+    - **Owner**: Li Yunke & Shen Bowen.
 
   - **Section 5: Failure Reproductions & Reliability (D7)** [~250 words]
     - Failure 1 (action deduplication) findings.
     - Failure 2 (descriptor efficiency) findings.
     - Per-step reliability analysis.
-    - **Owner**: Member 5.
+    - **Owner**: Xia Yanran.
 
   - **Section 6: Limitations & Future Work** [~150 words]
     - Single-agent vs. multi-agent trade-offs.
     - Accuracy improvement opportunities.
     - Production deployment recommendations.
-    - **Owner**: Member 6.
+    - **Owner**: Zhao Yujia.
 
-- [ ] **Member 6**: Compile report into `report/PE6201_A2_TeamID_Report.pdf` (max 2,000 words, tables/figures outside).
+- [ ] **Zhao Yujia (primary), Shen Bowen (supporting)**: Compile report into `report/PE6201_A2_TeamID_Report.pdf` (max 2,000 words, tables/figures outside).
 
 - [ ] Commit:
   ```bash
