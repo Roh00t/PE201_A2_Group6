@@ -1,0 +1,155 @@
+[
+  {
+    "policy_id": "POL-3310",
+    "product": "Shield Plus",
+    "status": "active",
+    "start_date": "2026-04-01",
+    "end_date": "2027-03-31",
+    "annual_limit": 12000,
+    "used_to_date": 2800,
+    "exclusions": [
+      {
+        "code": "31255",
+        "rule": "EX-14 cosmetic dermatology"
+      },
+      {
+        "code": "15823",
+        "rule": "EX-14 cosmetic dermatology"
+      }
+    ]
+  },
+  {
+    "policy_id": "POL-4102",
+    "product": "Shield Basic",
+    "status": "active",
+    "start_date": "2026-01-01",
+    "end_date": "2026-12-31",
+    "annual_limit": 6000,
+    "used_to_date": 5400,
+    "exclusions": [
+      {
+        "code": "15823",
+        "rule": "EX-14 cosmetic dermatology"
+      }
+    ]
+  },
+  {
+    "policy_id": "POL-5588",
+    "product": "Shield Plus",
+    "status": "lapsed",
+    "start_date": "2025-04-01",
+    "end_date": "2026-03-31",
+    "annual_limit": 12000,
+    "used_to_date": 900,
+    "exclusions": []
+  },
+  {
+    "policy_id": "POL-6001",
+    "product": "Shield Plus",
+    "status": "active",
+    "start_date": "2026-06-01",
+    "end_date": "2027-05-31",
+    "annual_limit": 15000,
+    "used_to_date": 0,
+    "exclusions": []
+  },
+  {
+    "policy_id": "POL-7220",
+    "product": "Shield Basic",
+    "status": "active",
+    "start_date": "2026-02-01",
+    "end_date": "2027-01-31",
+    "annual_limit": 8000,
+    "used_to_date": 1200,
+    "exclusions": [
+      {
+        "code": "31255",
+        "rule": "EX-14 cosmetic dermatology"
+      }
+    ]
+  },
+  {
+    "policy_id": "POL-8001",
+    "product": "Shield Basic",
+    "status": "lapsed",
+    "start_date": "2025-01-01",
+    "end_date": "2025-12-31",
+    "annual_limit": 6000,
+    "used_to_date": 300,
+    "exclusions": []
+  },
+  {
+    "policy_id": "POL-8002",
+    "product": "Shield Plus",
+    "status": "active",
+    "start_date": "2026-01-01",
+    "end_date": "2026-12-31",
+    "annual_limit": 20000,
+    "used_to_date": 1000,
+    "exclusions": [
+      {
+        "code": "19318",
+        "rule": "EX-22 breast reduction, cosmetic indication"
+      }
+    ]
+  },
+  {
+    "policy_id": "POL-8003",
+    "product": "Shield Basic",
+    "status": "active",
+    "start_date": "2026-03-01",
+    "end_date": "2027-02-28",
+    "annual_limit": 5000,
+    "used_to_date": 4500,
+    "exclusions": []
+  },
+  {
+    "policy_id": "POL-8004",
+    "product": "Shield Plus",
+    "status": "active",
+    "start_date": "2026-01-01",
+    "end_date": "2026-06-30",
+    "annual_limit": 10000,
+    "used_to_date": 0,
+    "exclusions": []
+  },
+  {
+    "policy_id": "POL-8005",
+    "product": "Shield Plus",
+    "status": "active",
+    "start_date": "2026-05-01",
+    "end_date": "2027-04-30",
+    "annual_limit": 30000,
+    "used_to_date": 2000,
+    "exclusions": []
+  },
+  {
+    "policy_id": "POL-8006",
+    "product": "Shield Basic",
+    "status": "active",
+    "start_date": "2026-02-01",
+    "end_date": "2027-01-31",
+    "annual_limit": 9000,
+    "used_to_date": 500,
+    "exclusions": [
+      {
+        "code": "15823",
+        "rule": "EX-14 cosmetic dermatology"
+      },
+      {
+        "code": "77067",
+        "rule": "EX-08 screening and preventive services"
+      }
+    ]
+  },
+  {
+    "policy_id": "POL-8007",
+    "product": "Shield Plus",
+    "status": "active",
+    "start_date": "2026-04-01",
+    "end_date": "2027-03-31",
+    "annual_limit": 25000,
+    "used_to_date": 500,
+    "exclusions": []
+  }
+]

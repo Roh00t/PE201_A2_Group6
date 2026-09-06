@@ -1,0 +1,74 @@
+[
+  {
+    "member_id": "M-2214",
+    "name": "Tan Wei Ling",
+    "policy_id": "POL-3310",
+    "join_date": "2024-04-01"
+  },
+  {
+    "member_id": "M-3390",
+    "name": "Rajesh Kumar",
+    "policy_id": "POL-4102",
+    "join_date": "2023-01-15"
+  },
+  {
+    "member_id": "M-4471",
+    "name": "Chen Xiaoyu",
+    "policy_id": "POL-5588",
+    "join_date": "2022-04-01"
+  },
+  {
+    "member_id": "M-5502",
+    "name": "Nurul Aisyah",
+    "policy_id": "POL-6001",
+    "join_date": "2026-06-01"
+  },
+  {
+    "member_id": "M-6118",
+    "name": "Lim Jun Hao",
+    "policy_id": "POL-7220",
+    "join_date": "2025-02-01"
+  },
+  {
+    "member_id": "M-7001",
+    "name": "Farah Ismail",
+    "policy_id": "POL-8001",
+    "join_date": "2024-11-01"
+  },
+  {
+    "member_id": "M-7002",
+    "name": "Daniel Ong",
+    "policy_id": "POL-8002",
+    "join_date": "2023-08-15"
+  },
+  {
+    "member_id": "M-7003",
+    "name": "Priya Nair",
+    "policy_id": "POL-8003",
+    "join_date": "2025-03-01"
+  },
+  {
+    "member_id": "M-7004",
+    "name": "Goh Mei Ling",
+    "policy_id": "POL-8004",
+    "join_date": "2024-01-10"
+  },
+  {
+    "member_id": "M-7005",
+    "name": "Arjun Menon",
+    "policy_id": "POL-8005",
+    "join_date": "2022-09-20"
+  },
+  {
+    "member_id": "M-7006",
+    "name": "Siti Rahmah",
+    "policy_id": "POL-8006",
+    "join_date": "2025-06-05"
+  },
+  {
+    "member_id": "M-7007",
+    "name": "Kwok Wai Ming",
+    "policy_id": "POL-8007",
+    "join_date": "2023-12-01"
+  }
+]

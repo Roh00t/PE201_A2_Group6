@@ -1,0 +1,65 @@
+[
+  {
+    "preauth_id": "PA-5521",
+    "member_id": "M-2214",
+    "procedure_code": "62480",
+    "valid_from": "2026-08-01",
+    "valid_to": "2026-10-31"
+  },
+  {
+    "preauth_id": "PA-5640",
+    "member_id": "M-6118",
+    "procedure_code": "29881",
+    "valid_from": "2026-03-01",
+    "valid_to": "2026-05-31"
+  },
+  {
+    "preauth_id": "PA-5702",
+    "member_id": "M-5502",
+    "procedure_code": "27447",
+    "valid_from": "2026-07-01",
+    "valid_to": "2026-12-31"
+  },
+  {
+    "preauth_id": "PA-6001",
+    "member_id": "M-7002",
+    "procedure_code": "64483",
+    "valid_from": "2026-06-01",
+    "valid_to": "2026-12-31"
+  },
+  {
+    "preauth_id": "PA-6002",
+    "member_id": "M-7005",
+    "procedure_code": "33533",
+    "valid_from": "2026-08-15",
+    "valid_to": "2026-09-15"
+  },
+  {
+    "preauth_id": "PA-6003",
+    "member_id": "M-7006",
+    "procedure_code": "29881",
+    "valid_from": "2026-01-01",
+    "valid_to": "2026-06-30"
+  },
+  {
+    "preauth_id": "PA-6004",
+    "member_id": "M-7003",
+    "procedure_code": "27447",
+    "valid_from": "2026-09-01",
+    "valid_to": "2026-09-30"
+  },
+  {
+    "preauth_id": "PA-6005",
+    "member_id": "M-7007",
+    "procedure_code": "62480",
+    "valid_from": "2026-10-01",
+    "valid_to": "2026-12-31"
+  },
+  {
+    "preauth_id": "PA-6006",
+    "member_id": "M-7007",
+    "procedure_code": "29881",
+    "valid_from": "2026-08-01",
+    "valid_to": "2026-11-30"
+  }
+]
