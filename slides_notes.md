@@ -1,3 +1,438 @@
+These slides serve as the opening section (C0) for Class 4 of PE6201: Emerging AI Technologies. They bridge previous lessons on AI models with the current session's focus on building and evaluating AI agents.
+
+**Course Recap (Classes 1–3)**
+
+* **Classes 1 & 2:** Covered the taxonomy of AI, the "jagged frontier" of capabilities, the AI tech stack (from compute to evals), build-vs-buy decisions, and hands-on work building a RAG pipeline end-to-end.
+* **Class 3:** Focused on steering the model via prompt engineering (chain-of-thought, structured JSON), understanding transformers/tokens, and using eval-driven iteration.
+
+**AI in the News**
+
+* **Agents in the Wild:** Highlights a recent security intrusion where a multi-agent system bypassed model guardrails, alongside Google's Agent2Agent moving under the Linux Foundation to standardize agent communication.
+* **Agent Economics:** Notes the massive ~$40bn valuation of Cognition (makers of Devin) contrasted with low actual production rates of agentic AI (only ~9–14% of firms), setting up a discussion on the cost, reliability, and trust gap.
+* **Fine-Tuning:** Uses the Harvey Legal Agent Benchmark to show that fine-tuning models for specific tasks improves performance at roughly the same cost per task.
+
+**Class 4 Objectives & Agenda**
+
+* **Focus:** Understanding agents and tool use, agentic patterns (like ReAct), agent failure modes, and agent economics.
+* **C1:** What is an agent? (Lecture and discussion).
+* **C2:** Tools, failure modes, and evals, including a live demo where you will build and intentionally break a loop.
+* **C3:** Agent economics and a case discussion on Anthropic.
+
+The graph in **Screenshot 2026-08-25 at 18.51.57.jpg** plots the performance of various AI models on the August 2026 Harvey Legal Agent Benchmark, measuring their task success rate against their actual operating costs.
+
+**Specialization Over Scale**
+
+* The vertical arrow from Kimi K3 to Harvey highlights the performance jump achieved by fine-tuning a strong general model specifically for legal work.
+* This post-training specialization roughly doubled the model's all-pass rate—from approximately 11% to 20%—while maintaining broadly the same cost per task.
+
+**Pricing the Task, Not the Token**
+
+* The horizontal axis evaluates the cache-aware cost in dollars per completed task, rather than the raw price per million tokens.
+* This metric is used because models with cheaper tokens might require more retries, conversational turns, and re-sent context, which can ultimately cost more per completed task.
+
+**Frontier Model Landscape**
+
+* Frontier models like Opus 5, Fable 5, and Opus 4.8 cluster on the high-cost side (left), requiring $10 to $25+ per task to achieve pass rates between 5% and 12%.
+* Muse Spark 1.1 stands out in the top right quadrant as a high-efficiency outlier, reaching a 20% pass rate for under $1 per task.
+* Models positioned on the far right, such as Haiku 4.5 and GPT-5.6 Luna, represent the lowest cost per task (under $0.50) but yield near-zero all-pass rates on this strict evaluation standard.
+
+The **PE6201 Class 4 (Capsule C1)** slide deck, titled *"What is an agent?"*, provides a comprehensive framework for defining, structuring, evaluating, and deciding when to deploy AI agents.
+
+### Slide-by-Slide Overview
+
+**Slide 1: Title & Objective**
+
+* **Focus:** Introduces Capsule C1 (~45 mins) covering agent loops, memory, architectural patterns, and anti-patterns.
+
+
+* **Learning Goal:** Differentiate agents from static prompts, deterministic workflows, and RAG pipelines, while understanding the cost and operational implications of each.
+
+
+
+**Slide 2: Definition of an Agent**
+
+* **Core Definition:** Cites Anthropic's definition where a model dynamically directs its own process and tool usage at runtime.
+
+
+* **Two Non-Negotiable Conditions:** (1) Steps are not fixed in advance (chosen dynamically at runtime); (2) Ground truth (tool execution results) feeds back into the model to correct its path.
+
+
+* **Contrast:** Removing condition 1 yields a fixed workflow; removing condition 2 yields an unvalidated monologue.
+
+
+
+**Slide 3: You Have Already Used One**
+
+* **Everyday Examples:** Highlights real-world agent implementations like Deep Research, AI coding assistants running test suites, Google's Gemini Spark, and automated customer support rebooking agents.
+
+
+* **Takeaway:** Agents are already mainstream patterns embedded in daily enterprise tools.
+
+
+
+**Slide 4: From One Call to a Loop**
+
+* **Architecture:** Breaks down an agent system into 6 core components: Model, Tools, Memory, Control Loop (orchestration code), Stop Condition (budget/step cap), and System Orchestration.
+
+
+* **Takeaway:** The developer builds and controls the loop around the model; the model only produces action requests.
+
+
+
+**Slide 5: The Loop, as Text (Mechanism)**
+
+* **ReAct Trajectory:** Illustrates the `Thought` $\rightarrow$ `Action` $\rightarrow$ `Observation` execution trace based on Yao et al. (2022).
+
+
+* **Key Insight:** Observations from external tools are the model's only touchpoint with reality. Because observations append to the transcript and resend on every turn, they drive accuracy as well as token costs.
+
+
+
+**Slide 6: What Counts as a Tool?**
+
+* **5 Tool Categories:** Classifies tools by side-effects into Retrieve (read-only), Compute (deterministic execution), Act on System (write/update), Communicate (messaging), and Sense (OCR/sensing).
+
+
+* **Governance Boundary:** Systems that only read (Retrieve/Compute/Sense) are research tools; systems that write or communicate carry non-reversible real-world impact.
+
+
+
+**Slide 7: Memory — What It Holds, and What It Keeps**
+
+* **Working Memory:** The active running transcript. Highly temporary, resent on each call, and susceptible to "context rot" as tokens grow.
+
+
+* **Persistent Memory:** External storage (databases, notes, vector stores) loaded at initialization and saved upon exit.
+
+
+
+**Slide 8: Who Decides the Control Flow?**
+
+* **Workflow vs. Agent:**
+* *Workflows:* Pre-defined code paths, fixed step counts, fully testable paths, predictable costs.
+
+
+* *Agents:* Runtime-determined paths, variable step counts, outcome-based testing, unpredictable costs.
+
+
+
+
+
+**Slide 9: The Chooser — Seven Rungs, Cheapest First**
+
+* **Taxonomy Ladder:** Maps system complexity across 7 rungs: (1) Single call, (2) Prompt chain, (3) Routing, (4) Parallelisation, (5) Orchestrator–workers, (6) Evaluator–optimiser, and (7) Full Agent.
+
+
+* **Takeaway:** Rungs 1–6 are deterministic workflows. Developers should only escalate to Rung 7 when step sequences genuinely cannot be pre-determined.
+
+
+
+**Slide 10: Three Agent Patterns**
+
+* **Architectural Options:**
+* *ReAct:* Single loop (Think $\rightarrow$ Act $\rightarrow$ Observe). Fails via infinite loops or wandering when observations are noisy.
+
+
+* *Planner–Executor:* Upfront master plan execution. Fails when rigid plans encounter unexpected realities.
+
+
+* *Multi-Agent:* Specialized sub-agents coordinated by a lead. Fails when agents make contradictory un-reconciled assumptions.
+
+
+
+
+
+**Slide 11: Multi-Agent, Honestly (The Correction)**
+
+* **Cognition Case Study:** Compares Cognition's shift from [June 2025 ("Don't build multi-agents")](https://cognition.com/blog/dont-build-multi-agents) to [April 2026 ("Multi-agents: what's actually working")](https://cognition.com/blog/multi-agents-working).
+
+
+* **Rule of Thumb:** "Multiple minds, one hand on the keyboard"—split analysis across specialized agents, but enforce single-threaded state writes.
+
+
+
+**Slide 12: RAG, Agentic RAG, or an Agent?**
+
+* **3-Question Matrix:** Differentiates systems based on who selects retrieval parameters, whether query looping is supported, and whether external side-effects (writes/payments) occur.
+
+
+* **Agentic RAG:** An agent restricted entirely to read-only tool sets.
+
+
+
+**Slides 13–15: One Patient, Three Systems (Clinical Example)**
+
+* **RAG:** Single guideline lookup for metformin dosage rules.
+
+
+* **Agentic RAG:** Dynamically queries guidelines, checks patient lab values ($eGFR = 38$), re-queries adjusted bands, and returns cited recommendations.
+
+
+* **Agent:** Executes clinical actions—drafting record adjustments, scheduling follow-up lab panels, and notifying pharmacy staff.
+
+
+
+**Slide 16: When NOT to Build an Agent**
+
+* **Ground-Truth Test:** Agents require immediate, objective feedback (e.g., code test suite passing vs. delayed subjective user feedback).
+
+
+* **Compound Probability Arithmetic:** A 20-step process with 95% single-step accuracy yields only $0.95^{20} \approx 36\%$ end-to-end reliability. Reliable agents require heavy recovery machinery rather than just raw model capabilities.
+
+
+
+**Slide 17: Same Pattern, Different Industries**
+
+* **Industry Mapping:** Evaluates banking reconciliation, prior-authorization workflows, shipment tracking, and telco outage routing, demonstrating that most real-world enterprise tasks require workflows below Rung 7.
+
+
+
+**Slide 18: Think–Pair–Share Exercise**
+
+* **Class Activity:** Interactive exercise asking students to analyze a workplace task across retrieval capabilities, loop requirements, irreversible action boundaries, and appropriate target rungs.
+
+
+
+**Slide 19: Capsule 1 Takeaway & References**
+
+* **Summary:** Reinforces that an agent is fundamentally a decision loop. Links to foundational engineering resources from [Anthropic's Agent Guide](https://www.anthropic.com/engineering/building-effective-agents) and Cognition.
+
+The **C2: Build it & Harden it** slide deck (~60 mins) focuses on designing robust agent interfaces, breaking and hardening control loops, implementing code-level guardrails, and evaluating multi-step agent trajectories.
+
+**Tool Design & Interface Design**
+
+* **The Agent-Computer Interface (ACI):** Models resolve description ambiguities confidently and wrongly. Tool descriptions serve as the entire manual, requiring strict typing and clear parameters rather than conversational instructions.
+
+
+* **Poka-Yoke Interface Design:** Replace soft prompt requests with hard code constraints. For instance, use `Literal["SIN-DC1", "KUL-DC2"]` instead of free-text strings, split `draft_email` from `send_email`, and set `dry_run = True` as the default.
+
+
+* **Prompts vs. Interfaces:** Interface constraints cost zero marginal tokens and permanently eliminate failure modes, whereas prompt instructions re-bill tokens every turn and risk being ignored during model updates.
+
+
+* **Minimal Tool Sets:** Adding unnecessary tools inflates context cost (+24% across an 8-turn run for 5 extra tools) and degrades tool selection accuracy.
+
+
+
+**Failure Mechanisms & Field Evidence**
+
+* **Bad Observations:** Poor tool output derails model reasoning; fixed at the **tool layer** by filtering returned data.
+
+
+* **Repetitive Loops:** Agent repeats identical actions; fixed at the **loop layer** via step caps, budget limits, and deduplication.
+
+
+* **Prior Overriding Evidence:** Model relies on pre-trained assumptions over tool outputs; fixed in **code** by verifying claims against observations.
+
+
+* **Real-World Failures:** Maps real-world coding agent benchmarks (e.g., Devin) to these mechanisms, showing failures like hallucinated capabilities and context rot.
+
+
+
+**Deterministic Guardrails & Autonomy**
+
+* **Bounds:** Three lines of non-AI code (step caps, budget ceilings, action deduplication) turn silent token burns into immediate stops, recovering ~75% of wasted spend.
+
+
+* **Gates:** Enforce an autonomy dial (`suggest` $\rightarrow$ `confirm` $\rightarrow$ `act`) placed strictly in front of non-reversible write/action tools.
+
+
+
+**Agent Evaluation & Test Harness**
+
+* **Outcome-Based Evals:** Evaluate trajectories and real-world side effects across multiple isolated trials rather than fixed paths.
+
+
+* **Negative Test Cases:** The 8-task eval suite includes negative cases (e.g., non-existent orders or unapproved draft policies). Eager agents pass standard tasks but fail negative cases by inventing dates or enforcing draft policies, whereas careful agents know when to refuse.
+
+The **Agent-Computer Interface (ACI)** is the design paradigm stating that tool engineering for AI models is fundamentally interface design. Because an AI agent cannot ask clarifying questions, hover over tooltips, or test code in staging, it relies entirely on a tool's name, type signature, and description to execute actions.
+
+**The Asymmetric Reader**
+
+* Human engineers read documentation, test endpoints, and ask colleagues when ambiguity arises.
+* AI models read a name, signature, and single docstring, then immediately execute—resolving any ambiguity confidently, incorrectly, and at scale.
+
+**Four Core Interface Rules**
+
+* **Room to Think:** Provide sufficient token space for the model to reason through its plan before emitting non-retractable action parameters.
+* **Familiar Formats:** Use standard formats (e.g., standard JSON, SQL, or tabular data) matching patterns dense in pre-training corpora.
+* **No Bookkeeping:** Avoid requiring the model to manage string escaping, manual character counting, or precise indentation.
+* **Mistake-Proofing (Poka-Yoke):** Build constraints into code signatures instead of prompt text. Prompts re-bill tokens every turn and can be ignored, whereas type constraints cannot be bypassed.
+
+**ACI Implementation Examples**
+
+* **Constrained Types:** Use `Literal["SIN-DC1", "KUL-DC2"]` instead of `str` to eliminate silent lookup errors from typos.
+* **Unambiguous Identifiers:** Pass exact keys like `patient_id: str` rather than ambiguous attributes like `patient_name: str`.
+* **Separation of Concerns:** Split single destructive functions into safe two-step interfaces (e.g., `draft_email` and `send_email`).
+* **Safe Defaults:** Set non-destructive defaults explicitly (e.g., `dry_run: bool = True`) so missing flags fail safely.
+* **Observation Filtering:** Return compact, relevant schema fields (e.g., returning 3 summary records of 8 tokens instead of dumping 246 tokens of unparsed text) to prevent context rot and lower turn costs.
+
+This formula calculates the **total input tokens billed across an $T$-turn agentic loop**, illustrating why agent execution costs scale quadratically ($O(T^2)$) rather than linearly.
+
+**Formula Breakdown**
+
+$$\text{Total Cumulative Tokens} \approx B \cdot T + \frac{D \cdot T^2}{2}$$
+
+* **$B$ (Base Context):** Fixed overhead tokens re-sent on every single turn (system prompt, guidelines, and tool definitions).
+* **$D$ (Delta / Turn Growth):** Average number of new tokens added to the working memory transcript on each turn (tool observations, model thoughts, and action calls).
+* **$T$ (Turns / Steps):** The number of iterations the agent loop executes.
+
+---
+
+**Derivation**
+
+Because an agent's working memory transcript grows with every turn and is re-sent in full on each subsequent call:
+
+* **Turn 1:** $B + D$ tokens billed
+* **Turn 2:** $B + 2D$ tokens billed
+* **Turn $T$:** $B + T \cdot D$ tokens billed
+
+Summing across all $T$ turns yields:
+
+$$\sum_{t=1}^{T} (B + t \cdot D) = B \cdot T + D \frac{T(T + 1)}{2} = B \cdot T + \frac{D \cdot T^2}{2} + \frac{D \cdot T}{2} \approx B \cdot T + \frac{D \cdot T^2}{2}$$
+
+---
+
+**Engineering Takeaways**
+
+* **Quadratic Scaling ($T^2$):** Doubling the number of turns quadruples the token cost driven by transcript history. Capping steps or stopping early provides the largest cost reduction.
+* **The "Fat Observation" Tax ($D$):** Returning a 200-token tool output instead of an 8-token filtered JSON increases $D$ by $25\times$. That penalty compounds across every subsequent turn in the run.
+* **Tool Overhead ($B$):** Every tool added to the prompt inflates $B$, increasing the base baseline cost for every turn, even if that tool is never called.
+
+This slide bridges theoretical AI failure modes with empirical field data by mapping independent evaluation data from the Devin AI coding agent across 20 real-world tasks to the course's three core failure mechanisms.
+
+| Devin's Observed Failure | Evaluator Symptom | Underlying Mechanism & Layer |
+| --- | --- | --- |
+| **Hallucinated capabilities** | Claimed to use tools or services that did not exist. | **Mechanism 3 (Priors Over Evidence):** The model relied on training priors instead of checking the actual tool list provided in context. |
+| **Context blindness** | Missed a constraint stated earlier in the trajectory. | **Mechanism 1 (Bad Observation / Context Rot):** Early constraints were diluted by accumulated transcript tokens. |
+| **Tunnel vision** | Each local step seemed reasonable, but the global path was wrong. | **Mechanism 2 (Repetition Sibling):** The control loop lacks an explicit world model or global tracking of progress. |
+| **Overcomplexity** | Built far more code or features than requested. | **Lack of Stop Criteria:** No ground-truth definition of "done" was enforced in code. |
+| **No confidence signalling** | Reported success on tasks that actually failed. | **Mechanism 1 (Unchecked Output):** Returned observations were bad or unverified by deterministic checks. |
+
+**Key Engineering Takeaways**
+
+* **Symptoms vs. Mechanisms:** Evaluators report symptoms ("tunnel vision" or "hallucinations"), but developers cannot fix a symptom directly. You must fix the underlying layer—filtering tool observations, capping loop iterations, or verifying claims in code.
+* **Greenfield vs. Brownfield Gap:** Devin completed **2 of 8 greenfield tasks** but **0 of 8 brownfield tasks**. Autonomous agents struggle significantly when dropped into existing, complex codebases.
+* **The Institutional Knowledge Bottleneck:** An agent's effectiveness is strictly capped by how much architectural context and institutional knowledge is explicitly written down. Unwritten conventions lead directly to agent failure.
+
+In **Class 4 (Capsule 3)** of the course, **Agent Economics & The Case** addresses the financial and strategic trade-offs of deploying autonomous AI agents, shifting focus from single-call prompt costs to multi-step loop economics.
+
+**The Quadratic Cost Curve**
+Agent execution loops are stateless, meaning the entire history of previous turns and tool observations must be re-sent on every new turn.
+
+* **Input Formula**: For $T$ turns with a base prompt $B$ and added observation tokens $D$ per turn, total input tokens grow quadratically: $\text{Input Tokens} \approx B \cdot T + \frac{D \cdot T^2}{2}$.
+
+
+* **Impact**: Doubling turns from 8 to 16 does not double costs; it nearly triples input tokens (from 16,400 to 52,000) and cost (from US$0.0612 to US$0.1800).
+
+
+
+**Four Cost Optimization Levers**
+
+* **Fewer Turns ($T$)**: Narrowing tasks or providing better tools to remove turns entirely.
+
+
+* **Thinner Observations ($D$)**: Reducing returned tool data, which pays dividends on every subsequent turn.
+
+
+* **Prompt Caching**: Discounts the re-sent unchanged prefix (~2.4× savings on an 8-turn run).
+
+
+* **Context Compaction**: Caps quadratic growth into linear growth via periodic summarization.
+
+
+
+**Product Pricing & Subscription Envelopes**
+
+* **Per-Seat vs. Per-Work Pricing**: Agent costs scale with steps executed, making flat per-seat subscriptions risky without usage caps. Usage caps prevent heavy users at the 95th percentile from creating unbounded liabilities.
+
+
+* **Model Selection**: Multi-step agents prioritize fast, lightweight models because per-step latency and token costs dominate overall task performance.
+
+
+
+**The Decision Test & Pricing Equation**
+Evaluating whether an agent loop is financially viable requires adjusting for failures:
+
+
+$$\text{Cost per Useful Output} = \frac{\text{Cost per Run}}{\text{Success Rate}}$$
+
+
+Because failed runs are billed in full, a 70% success rate increases the effective cost per completed output by over 42%.
+
+**The HBS Strategy Case: Anthropic**
+The case study (*"Anthropic's Next Step: From LLM to Agents?"*) examines Anthropic's position in late 2025:
+
+* **Market Position**: Holding a 32% enterprise model share, US$3B ARR, and a US$183B valuation.
+
+
+* **Strategic Dilemma**: Balancing its Public Benefit Corporation charter and safety-first identity against faster-moving competitors (OpenAI, Google, Microsoft) shipping commercial agent frameworks.
+
+The base prompt ($B$) is directly proportional to the number of tools because an LLM agent requires the complete definition, parameter schema, and description of every available tool to be injected into its baseline context.
+
+* **Tool Schemas Live in $B$**: For an agent to know what actions it can take, the prompt must explicitly list each tool's name, function description, parameter types, and JSON schema.
+* **Per-Tool Token Overhead**: Every tool added consumes a fixed token payload (typically 100 to 300+ tokens per schema). If $N$ is the number of tools, $B$ scales linearly as $B \approx B_{\text{system}} + (N \cdot \text{Tokens}_{\text{tool}})$. Loading 50 tools instead of 5 bloats $B$ by thousands of tokens.
+* **Multiplicative Cost Across Turns**: In the agent token equation ($\text{Input Tokens} \approx B \cdot T + \frac{D \cdot T^2}{2}$), $B$ is re-sent on every single turn $T$. Carrying 45 unused tool schemas inflates $B$ on turn 1 and multiplies that wasted token cost across all $T$ steps in the loop.
+
+$T$ represents the **number of turns** (the count of loop iterations executed by the agent), not the token count.
+
+* **$T$ (Number of Turns)**: The total number of steps or iterations the agent loop takes (e.g., 1, 2, 4, 8, or 16 turns).
+* **$B$ (Base Prompt)**: The baseline size in **tokens** of the initial prompt (system instructions + tool schemas).
+* **$D$ (Delta Tokens)**: The **tokens** added per turn from tool observations and intermediate outputs.
+* **Input Tokens**: The total combined **tokens** sent across the entire run, calculated as $\text{Input Tokens} \approx B \cdot T + \frac{D \cdot T^2}{2}$.
+
+Because $T$ is squared in the formula ($\frac{D \cdot T^2}{2}$), increasing the number of turns ($T$) causes the total input token count—and therefore the cost—to scale quadratically rather than linearly.
+
+$$\text{Input Tokens} \approx B \cdot T + \frac{D \cdot T^2}{2}$$
+
+This equation governs total input token consumption across a stateless agent loop, where $B$ is the base prompt (system rules and tool schemas), $D$ is the delta observation tokens added per turn, and $T$ is the number of executed turns. Backtracking down the pattern ladder shows how architectural decisions directly manipulate these variables:
+
+**1. Autonomous ReAct Loop (Dynamic Reasoning)**
+
+* **Equation Profile**: High $B$, variable $T$, compounding $D$.
+* **Design**: The agent dynamically cycles through Thought $\rightarrow$ Action $\rightarrow$ Observation. Because context is re-sent every turn, every prior observation $D$ is re-billed on all subsequent turns, driving quadratic token growth ($\frac{D \cdot T^2}{2}$).
+* **Economics**: Highest cost and failure risk; requires hard step caps on $T$ to prevent unbounded usage.
+
+**2. Evaluator-Optimizer Loop (Iterative Refinement)**
+
+* **Equation Profile**: Strictly capped $T$ (e.g., $T \le 3$), static $B$, moderate $D$.
+* **Design**: A generator model creates an output and an evaluator checks it, looping until quality criteria are met.
+* **Economics**: Bounds the quadratic term by limiting maximum turns, trading predictable token burn for higher output accuracy.
+
+**3. Orchestrator-Workers (Parallel Sub-Agents)**
+
+* **Equation Profile**: Replaces one large $T$ with $N$ parallel sub-runs ($T_i$), using targeted worker base prompts ($B_i$).
+* **Design**: A central router breaks complex tasks into sub-tasks and delegates them to specialized worker prompts.
+* **Economics**: Eliminates $T^2$ explosion by isolating loop contexts and shrinking $B_i$ (workers only receive the specific tool schemas they need rather than the full tool suite).
+
+**4. Prompt Chaining & Routing Workflows (Deterministic Sequences)**
+
+* **Equation Profile**: Fixed step count $k$; $D = 0$ across turns; linear cost $\sum_{i=1}^{k} B_i$.
+* **Design**: Hardcoded, step-by-step pipelines where the output of step $i$ feeds directly into step $i+1$.
+* **Economics**: Removes quadratic growth entirely, yielding deterministic costs and predictable latency.
+
+**5. Single Augmented Call (RAG / Direct Function Call)**
+
+* **Equation Profile**: $T = 1$, $D = 0$, Total Input Tokens $= B$.
+* **Design**: A single prompt call with context or basic schema injection.
+* **Economics**: Represents the economic floor (1.0× baseline cost) against which any multi-turn agent loop must prove its ROI.
+
+Preserving the seam between the teaching case and the course scaffold is the strongest structural framing choice for your presentation. It prevents your analysis from collapsing into a standard HBS summary by cleanly separating **empirical case observations** (what Anthropic faced in late 2025) from **underlying engineering mechanisms** (why agent loops behave the way they do).
+
+**Structuring the Core Arguments**
+Connecting the presentation spine directly to your course readings transforms open-ended strategy questions into a mechanically sound position:
+
+* **Q1: ARR vs. Burn Rate (Financial Mechanics)**: Pair Anthropic's US$3B ARR and cash burn metrics directly with Reading 2’s quadratic input token formula ($\text{Input} \approx B \cdot T + \frac{D \cdot T^2}{2}$) and Reading 4’s Pareto 95th-percentile cost distribution. This proves that compute costs do not merely scale linearly with user acquisition—they compound quadratically as workloads transition from single calls to multi-turn agent loops.
+* **Q2: Forecast vs. Friction (Architectural Gaps)**: Use your mapping of the case's five agent components against LeCun’s six modules. Identifying the two structural omissions—the **World Model** and an **Explicit Cost Module**—explains why adoption lags behind enterprise hype: without an internal world model to simulate environment state changes, agents hit a governance cliff where safety requires human confirmation loops.
+
+**Bridging the Data Cutoff to Reality**
+Grounding the final section in Anthropic's post-September 2025 moves resolves the case's open closing question. Rather than choosing between a horizontal model platform and vertical specialization, Anthropic executed both. Bringing Stainless in-house captured SDK generation and MCP server infrastructure to control agent connectivity, while standing up an in-house custom silicon team under Amir Salek directly addresses compute cost and supply chain bottlenecks at the hardware layer.
+
+**Audit Rigor in Q&A**
+Your audit of third-party responses exposes the exact conceptual flattening the course aims to correct: conflating context-window pressure with latency, or treating Agentic RAG as a parallel alternative to agents rather than a constrained subset. Positioning these distinctions clearly ensures you can defend your technical choices under pushback.
+
+Which specific slide or scenario would you like to stress-test next: defending the $T^2/2$ token compounding against model price drops, or unpacking how the approval step in Exhibit 4 creates a latency bottleneck?
+
 ## PE6201 Class 5 (C0): Strategic & Technical Notes
 
 ### 1. The Core Pivot: From Technical Feasibility to Business Viability
