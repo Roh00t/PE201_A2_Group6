@@ -16,6 +16,7 @@ folder and run it there. "Works on my laptop" has caught out every
 cohort so far.
 ====================================================================
 """
+import datetime
 import json
 import os
 import sys
@@ -76,13 +77,16 @@ def main(argv):
         print("  Cases with no script will stop the run - that is the")
         print("  scripted backend telling you to write one.")
     else:
-        # Default: only what is scripted, so a clean clone always works.
+        # Default: the whole labelled set. Every case is either hand
+        # scripted or derived by the planner, so a clean clone runs all
+        # of it with no key and no network - which is what D5(a) is.
         key = load_key()
-        cases = [c for c in load_cases() if c in SCRIPTS and c in key]
-        print("\n  Running the %d SCRIPTED case(s): %s"
-              % (len(cases), ", ".join(cases)))
-        print("  Add more to SCRIPTS in backends.py, or use --all once you")
-        print("  have scripted them.")
+        cases = [c for c in load_cases() if c in key]
+        hand = sum(1 for c in cases if c in SCRIPTS)
+        print("\n  Running all %d labelled case(s) - %d hand-scripted, "
+              "%d planned." % (len(cases), hand, len(cases) - hand))
+        print("  Grouping: %s (see src/backends/planner.py for the rule)."
+              % config.GROUPING)
 
     if not cases:
         print("\n  Nothing to run for Problem %s." % config.PROBLEM)
@@ -93,12 +97,36 @@ def main(argv):
     results, queue = run_set(cases)
     summary = report(results)
 
-    with open("results.json", "w", encoding="utf-8") as fh:
-        json.dump({"config": config.summary(), "summary": summary,
+    # WHERE RESULTS GO. Anchored to the repository, never to the working
+    # directory: a relative "results.json" lands wherever you happened to
+    # launch python from, which is how six team members end up with six
+    # partial result files and no way to tell which produced which number.
+    # The name carries backend, prompt version and date, because
+    # GUARDRAILS 7 requires a pass rate to be traceable to the run
+    # that produced it.
+    out_dir = os.path.join(ROOT, "results",
+                           "scripted" if config.BACKEND == "scripted" else "live")
+    os.makedirs(out_dir, exist_ok=True)
+    stamp = datetime.date.today().isoformat()
+    slug = (config.MODEL.replace("/", "-") if config.BACKEND == "live"
+            else "scripted")
+    out_path = os.path.join(
+        out_dir, "problem%s__%s__%s__%s.json"
+                 % (config.PROBLEM, slug, config.PROMPT_VERSION, stamp))
+
+    with open(out_path, "w", encoding="utf-8") as fh:
+        json.dump({"config": config.summary(),
+                   "backend": config.BACKEND,
+                   "model": config.MODEL if config.BACKEND == "live" else None,
+                   "prompt_version": config.PROMPT_VERSION,
+                   "problem": config.PROBLEM,
+                   "date": stamp,
+                   "summary": summary,
                    "results": [{k: v for k, v in r.items()} for r in results],
                    "judgement_queue": queue}, fh, indent=2, default=str)
-    print("  Wrote results.json - commit it. Your result tables come from")
-    print("  here, and a marker reads it alongside your report.")
+    print("  Wrote %s" % os.path.relpath(out_path, ROOT))
+    print("  Commit it. Your result tables come from here, and a marker")
+    print("  reads it alongside your report.")
     print()
     return 0
 

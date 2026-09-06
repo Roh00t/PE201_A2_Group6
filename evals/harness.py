@@ -30,6 +30,7 @@ grading a model is a claim that needs defending.
 """
 import json
 import os
+import re
 import statistics
 
 import config
@@ -98,7 +99,94 @@ def code_check(record, expected):
                 fails.append("booked.%s %r, expected %r"
                              % (field, got.get(field), expected["booked"][field]))
 
+    # A REQUEST MUST NAME THE RIGHT THING. Brief D4 lists "the named
+    # missing item" as a code check, beside the decision and the trigger.
+    # Without this, CLM-9030 - whose whole point is that asking for the
+    # pre-authorisation instead of the discharge summary is WRONG - passes
+    # on the decision word alone.
+    if expected.get("missing"):
+        ok, why = _missing_matches(record.get("missing"), expected["missing"])
+        if not ok:
+            fails.append("missing %r, expected %r (%s)"
+                         % (record.get("missing"), expected["missing"], why))
+
+    # THE GATED ACTION FIRED AT MOST ONCE. Brief D4 again. Cheap to check,
+    # and it is the difference between a gate and a decoration.
+    gated = _gated_action_name()
+    if gated:
+        fired = [e for e in record.get("evidence", []) if e == gated]
+        if len(fired) > 1:
+            fails.append("%s fired %d times - the gated action must fire at "
+                         "most once" % (gated, len(fired)))
+        if fired and record.get("decision") in ("escalate", "request_document",
+                                                "request_information"):
+            fails.append("%s fired on a %r outcome - nothing should have been "
+                         "issued" % (gated, record.get("decision")))
+
     return (not fails), fails
+
+
+def _gated_action_name():
+    """Imported lazily so this module can also be used to re-score a saved
+    results file without dragging in the tool layer."""
+    try:
+        from tools import tools as _t
+        return _t.GATED_ACTION.get(config.PROBLEM)
+    except Exception:
+        return None
+
+
+_CODE_RE = re.compile(r"\b(\d{5})\b")
+_DATE_RE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
+
+
+def _missing_matches(got, want):
+    """Compare two 'named missing item' strings STRUCTURALLY.
+
+    Exact equality is too strict and a substring test is too loose - and
+    the loose one is the trap Class 4 showed: a check that passed because
+    a date it was looking for happened to appear in an answer that was
+    wrong about everything else.
+
+    So compare the things we actually care about, and nothing else:
+
+      * the LINE it belongs to        - the 5-digit procedure code
+      * the DATE it must be valid on  - where the label names one
+      * WHICH KIND of thing is wanted - a pre-authorisation, or a named
+        document, and if a document, which document
+
+    Wording is deliberately NOT compared. Our own key phrases the same
+    request three ways - "pre-authorisation reference for line 62480,
+    valid on ...", "current pre-authorisation for line 29881, valid on
+    ...", "pre-authorisation valid on ... for line 62480" - because six
+    people wrote it. Grading prose would fail correct answers and teach
+    the team to write to the grader instead of to the member.
+    """
+    if not got:
+        return False, "nothing was named"
+    got_s, want_s = str(got).lower(), str(want).lower()
+
+    want_codes = set(_CODE_RE.findall(want_s))
+    if want_codes and not (want_codes & set(_CODE_RE.findall(got_s))):
+        return False, "does not name line %s" % ", ".join(sorted(want_codes))
+
+    want_dates = set(_DATE_RE.findall(want_s))
+    if want_dates and not (want_dates & set(_DATE_RE.findall(got_s))):
+        return False, "does not name the date %s" % ", ".join(sorted(want_dates))
+
+    wants_preauth = "pre-authorisation" in want_s or "preauth" in want_s
+    got_preauth = "pre-authorisation" in got_s or "preauth" in got_s
+    if wants_preauth != got_preauth:
+        return False, ("named a document where a pre-authorisation was wanted"
+                       if wants_preauth else
+                       "named a pre-authorisation where a document was wanted")
+
+    if not wants_preauth:
+        doc = want_s.split(" for line")[0].strip()
+        if doc and doc not in got_s:
+            return False, "does not name the document %r" % doc
+
+    return True, ""
 
 
 # =====================================================================

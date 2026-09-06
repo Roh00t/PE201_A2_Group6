@@ -29,6 +29,15 @@ BACKEND = "scripted"          # "scripted" | "live"
 MODEL = "openai/gpt-4o-mini"  # only used when BACKEND == "live"
 BASE_URL = "https://openrouter.ai/api/v1"
 
+# WHICH DESCRIPTOR SET THE PROMPT IS BUILT FROM (D2b).
+#   "v2"  the descriptors we ship  - the battery runs this, on every model
+#   "v1"  the deliberately worse ones - ONE model only, for the comparison
+# Stamped into every result file, because a pass rate that cannot be
+# traced to a prompt version is not a measurement. Change one thing at a
+# time: to compare prompt versions hold MODEL fixed; to compare models
+# hold PROMPT_VERSION fixed.
+PROMPT_VERSION = "v2"
+
 # Your key never goes in this file. Put it in the environment:
 #     export OPENROUTER_API_KEY="sk-or-..."
 # In Colab:  os.environ["OPENROUTER_API_KEY"] = "sk-or-..."
@@ -45,6 +54,30 @@ PROBLEM = "A"
 # turns and your worst legitimate run is 7, a cap of 8 is defensible
 # and a cap of 30 is decoration.
 # ─────────────────────────────────────────────────────────────────────
+# WHERE THESE TWO NUMBERS CAME FROM. Measured, not chosen. Run
+# `python3 experiments/d2c_parallel_vs_sequential.py` to reproduce the
+# distribution below on the scripted backend, free, in seconds.
+#
+#   turn distribution, 60 trials over 40 cases, parallel grouping:
+#       2 turns  12 runs      median            4
+#       3 turns  12 runs      mean              3.50
+#       4 turns  30 runs      worst LEGITIMATE  5
+#       5 turns   6 runs      hit the cap       0
+#
+#   per-run tokens: median 21,600 · worst 29,520 · worst cost US$0.00317
+#
+# STEP CAP 8 = worst legitimate (5) + 3. The margin is deliberate and it
+# is not padding: the planner is a LOWER BOUND on turns, because it never
+# wanders, never re-reads and never mis-parses. A live model does all
+# three, so a cap fitted tightly to scripted runs would truncate correct
+# live ones. Revisit this after the D5(b) battery with real turn counts.
+# A cap of 5 would cut the longest correct run in the set; a cap of 30
+# would be decoration.
+#
+# BUDGET CEILING 60,000 = worst measured run (29,520) x ~2, same logic.
+# Note it is NOT slack: at one call per turn, 11 of 60 trials breach this
+# ceiling and halt. Our caps are calibrated to the grouping in GROUPING
+# below, and that dependency is stated in the report rather than hidden.
 MAX_TURNS = 8                 # step cap
 MAX_TOKENS_PER_RUN = 60000    # budget ceiling
 AUTONOMY = "confirm"          # "suggest" | "confirm" | "act"
@@ -53,6 +86,12 @@ AUTONOMY = "confirm"          # "suggest" | "confirm" | "act"
 #              which waits for a yes. THE GATE GOES IN FRONT OF THE
 #              IRREVERSIBLE STEP, not in front of the agent.
 #   act      - the agent completes the irreversible step itself
+
+# HOW CALLS ARE GROUPED INTO TURNS (D2c). "parallel" applies our
+# dependency rule; "sequential" runs one call per turn. The same work,
+# grouped two ways - which is the measurement D2(c) asks for. See the
+# rule itself, written out, at the top of src/backends/planner.py.
+GROUPING = "parallel"         # "parallel" | "sequential"
 
 # ─────────────────────────────────────────────────────────────────────
 # WHERE THE DATA IS. The scaffold ships in its own folder, so it looks

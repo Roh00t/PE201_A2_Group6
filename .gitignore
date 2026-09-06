@@ -1,3 +1,11 @@
 .env
-.gitattributes
+.env.*
+*.key
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
 .DS_Store
+results/tmp/
+logs/*.local
+results.json

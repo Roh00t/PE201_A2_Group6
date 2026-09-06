@@ -28,11 +28,17 @@ reproduces exactly. D7 needs no API key.
 ====================================================================
 """
 import copy
+import os
+import sys
 
-import backends
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "src"))
+sys.path.insert(0, ROOT)
+
 import config
-from agent import run_case
-from guardrails import Guardrails
+from backends import backends
+from backends.guardrails import Guardrails
+from loop_agent import run_case
 
 # Works for either problem. The default follows config.PROBLEM.
 CASES = {"B": "REF-5602", "A": "CLM-8842"}

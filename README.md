@@ -1,75 +1,283 @@
-# PE201 A2 · Group 6
+# PE6201 A2 · Applied AI System — Group 6
 
-Health-insurance claim first-response agent for PE6201 Assignment 2, Problem A.
+**Problem A — health-insurance claim first response.** A single-agent ReAct loop that
+reads a claim, checks the policy, works every line item, chases a pre-authorisation
+where a procedure needs one, checks the hospital panel, and reaches exactly one of three
+outcomes: **approve in principle · request a specific missing document · escalate to a
+human assessor.**
 
-## Current Status
+The loop is hand-rolled. No framework owns it.
 
-This repository is at the scaffold and partial implementation stage as of 6 September 2026. The status below is based on files currently checked in or present in the workspace; planned work is not counted as complete.
+---
 
-### Completed or substantially present
+## Run it — clone to reproduced numbers in 4 commands, no API key
 
-- D0(c): five testable statements describing what a good run must do in [docs/D0c_what_good_looks_like.md](docs/D0c_what_good_looks_like.md).
-- Local Problem A reference data and answer labels: 50 claims plus policy, member, hospital, procedure, pre-authorisation, required-document, and decided-claim tables under [data/data_A](data/data_A).
-- Data validation utilities: [data/check_my_data.py](data/check_my_data.py) and [data/check_labels_A.py](data/check_labels_A.py).
-- A hand-written ReAct-style loop in [src/loop_agent.py](src/loop_agent.py), including multi-call turns, observation accumulation, per-run turn/token/cost instrumentation, and loud guardrail stops.
-- Scripted and live backend concepts in [src/backends/backends.py](src/backends/backends.py), with one vendor-specific OpenRouter call site and a scripted backend design.
-- A shared configuration module in [src/config.py](src/config.py), including a scripted backend default, model settings, autonomy mode, turn cap, and token ceiling.
-- Problem A tool implementations and descriptors in [src/tools/tools.py](src/tools/tools.py), including the claim lookup, policy/coverage checks, pre-authorisation lookup, hospital lookup, and gated decision action.
-- Prompt construction and six-field descriptor formatting in [src/prompt.py](src/prompt.py).
-- Evaluation harness structure and deterministic code-check/judgement-check split in [evals/harness.py](evals/harness.py), plus grader scaffolding under [evals/graders](evals/graders).
-- A D7 loop-failure demonstration scaffold in [experiments/demo_loop_failure.py](experiments/demo_loop_failure.py).
-- The implementation plan and course reference material under [docs/plan](docs/plan) and [docs/course](docs/course).
-
-### Partially complete or not yet complete
-
-- The repository default is still `PROBLEM = "B"` in `src/config.py`, although the assignment target is Problem A. Problem B fixture data is not present in this checkout.
-- The offline entry point is not integrated from the repository root. `evals/run_eval.py` imports modules that are not currently available under those names (`agent`, `backends`, and related package imports), and Python package marker files are absent.
-- Problem A has a scripted example for `CLM-8842`, but the scripted backend does not yet cover the full 40-case evaluation run.
-- D3(b) is not complete: [evals/guardrail_cases.json](evals/guardrail_cases.json) is empty.
-- D2(c) is not complete: [experiments/d2c_parallel_vs_sequential.py](experiments/d2c_parallel_vs_sequential.py) is empty.
-- D4 is not complete: there is no repository-owned 40-case evaluation file with 32 ordinary and 8 negative cases, and no recorded 56-trial scripted result.
-- D5(b) live model results are not present. No live battery should be treated as completed from the current files.
-- D6 cost analysis is not present as an executable model or results table.
-- D7 has only the loop-failure demonstration scaffold; the required full-evaluation before/after evidence and a second non-loop failure are still outstanding.
-- The final team declaration, contribution record, report, and demo artefacts are not yet represented as completed deliverables in this README.
-
-## Repository Layout
-
-| Path | Purpose |
-| --- | --- |
-| `src/` | Configuration, ReAct loop, prompt, backends, guardrails, and tools |
-| `data/data_A/` | Problem A local fixture tables |
-| `evals/` | Evaluation harness, graders, and guardrail-case placeholder |
-| `experiments/` | D2(c) and D7 experiment entry points |
-| `results/` | Reserved for scripted, live, and v1/v2 evidence |
-| `logs/` | Decision ledger location |
-| `docs/` | D0(c), implementation plan, course material, and notes |
-
-## Running the Current Code
-
-The intended marker command is:
+Python 3.9+. **Standard library only** — nothing to install.
 
 ```bash
-python3 evals/run_eval.py
+git clone <this repo> && cd PE201_A2_Group6
+python3 data/check_my_data.py                          # the fixtures hang together
+python3 run_eval.py                                    # the whole evaluation set
+python3 experiments/d2c_parallel_vs_sequential.py      # D2(c), both groupings
 ```
 
-At present this command is a target integration check, not a passing clean-clone command. The current configuration and import/package issues described above must be resolved before claiming D5(a) reproducibility.
+`BACKEND = "scripted"` is the committed default. Every command above is offline, free and
+deterministic. Nothing here needs a key.
 
-The intended live backend requires an environment variable and incurs API cost:
+What the third command prints today:
+
+```
+Running all 40 labelled case(s) - 1 hand-scripted, 39 planned.
+Grouping: parallel
+
+  RESULTS   60 of 60 trials passed   (100%)
+  trials              60
+  median turns        4.0
+  worst case turns    5
+  hit the step cap    0
+```
+
+**Read that 100% correctly.** It is not a claim that our agent is good — see
+[*What the scripted number does and does not mean*](#what-the-scripted-number-does-and-does-not-mean)
+below. The honest pass rates come from the live battery (D5b).
+
+Other entry points:
 
 ```bash
-export OPENROUTER_API_KEY="..."
+python3 run_eval.py CLM-8842        # one case, every turn, with the decision record
+python3 run_eval.py --prompt        # exactly what a live model is sent, and its token cost
+python3 experiments/demo_loop_failure.py   # D7 failure 1, before/after
 ```
 
-Do not commit the key. Development and guardrail work should remain on the scripted backend.
+---
 
-## Next Blocking Work
+## Where things are
 
-1. Make the Problem A path the default and repair the package/module entry points.
-2. Add the repository-owned scripted cases and run the data/label checks.
-3. Populate the guardrail checklist and D2(c) experiment, then record their outputs.
-4. Build the 40-case D4 harness run before spending tokens on live models.
-5. Add D6 results and complete both D7 failure reproductions from the working implementation.
+```
+run_eval.py                      the entry point a marker types
+src/
+  config.py                      BACKEND / MODEL / PROMPT_VERSION / caps — one block
+  loop_agent.py                  the ReAct loop: multi-call turns, instrumentation
+  prompt.py                      what the model is actually sent (D2b artefact)
+  narrative_guard.py             hostile-text detection, in code (D3a)
+  tools/tools.py                 7 tools + six-field descriptors
+  backends/backends.py           scripted + live; ONE function knows a vendor exists
+  backends/planner.py            derives the move sequence from the records (D5a)
+  backends/guardrails.py         step cap · budget ceiling · de-duplication · gate
+evals/
+  harness.py                     code check + judgement queue
+  run_eval.py                    argument handling and result-file naming
+  guardrail_cases.json           D3(b) checklist            <- Huang Yu, in progress
+data/
+  make_fixtures_A.py             the generator — EXTRA_* block is where cases are added
+  data_A/*.json                  generated; never hand-edited
+  expected_outcomes_A.json       the answer key — 40 labels, written BY HAND
+  check_my_data.py               ids resolve · shipped rows unchanged · every case labelled
+  check_labels_A.py              our own: the arithmetic inside each label
+experiments/
+  d2c_parallel_vs_sequential.py  D2(c) measurement + the turn distribution
+  demo_loop_failure.py           D7 failure 1, as a deletion from the working agent
+results/scripted/                committed run output
+logs/decisions.jsonl             the gated action's append-only record
+docs/                            D0…D7 write-ups
+```
 
-The full requirements and submission gates are tracked in [docs/plan/Project_Implementation_Plan.md](docs/plan/Project_Implementation_Plan.md). The current implementation should be judged against that plan, not against the scaffold comments that describe future work.
+---
 
+## The evaluation set — 40 cases, 10 negative, 60 trials
+
+| | |
+|---|---|
+| Cases | **40** — 15 shipped, 25 ours |
+| Negative | **10** (7 escalate, 3 request_document) |
+| Trials per model | **60** = 30 ordinary × 1 + 10 negative × 3 |
+| Cost per member | ≈ **US$0.30** cheap tier · **US$2.94** mid tier |
+
+**Declared: our set carries 10 negatives, not the 8 the brief expects, and that is
+forced rather than chosen.** Nine of the fifteen shipped cases are already negative, and
+the extension rule is *add rows with new ids, never edit or delete a shipped row*. So 9
+is the floor for any set built on the shipped data, and 8 is unreachable without breaking
+that rule. Ten sits inside the brief's stated 6–10 band, and at 60 trials the mid tier
+comes in at US$2.94 — under the US$3-per-member warning line.
+
+**Where our 25 cases concentrate, and why.** The shipped nine negatives already cover
+every negative family in Appendix A — lapsed policy, outside dates, over the limit,
+duplicate, missing pre-authorisation, missing document, and two hostile narratives. Adding
+more negatives would have re-tested the same families at three times the trial cost. So our
+extension goes mostly into **boundary and near-miss ordinary cases** — a claim exactly at
+the remaining limit and one dollar under it, a pre-authorisation valid on its last legal
+day, the first and last day of a policy window, and three duplicate near-misses that a
+shortcut match wrongly escalates. Those near-misses are the most discriminating cases in the
+set: an agent that matches duplicates on anything less than all four facts fails them.
+
+We added one negative of our own, `CLM-9035`, because the extension guide requires at least
+three negative cases to involve hostile free text and the shipped set supplies only two.
+
+**The answer key is a submitted artefact.** `data/expected_outcomes_A.json` holds all 40
+labels. Every one was written from Appendix A's routing table *before* the agent ran on it.
+
+### Extending it
+
+```bash
+# 1 · edit the EXTRA_* lists near the bottom of data/make_fixtures_A.py
+python3 data/make_fixtures_A.py     # 2 · regenerate data_A/
+python3 data/check_my_data.py       # 3 · names anything broken or unlabelled
+# 4 · add the label to data/expected_outcomes_A.json   <- BY HAND, from the routing table
+python3 data/check_my_data.py       # 5 · "Your data hangs together."
+python3 data/check_labels_A.py      # 6 · the arithmetic inside each label
+```
+
+Use ids that are obviously yours: claims from `CLM-9001`, members `M-7001`, policies
+`POL-8001`. Never scroll up to edit a shipped row — `check_my_data.py` fingerprints every
+one and will name the one that moved.
+
+---
+
+## What the scripted number does and does not mean
+
+One case (`CLM-8842`) is hand-scripted move by move. The other 39 are produced by
+`src/backends/planner.py`, which derives the move sequence from the claim record.
+
+Everything else in the run is real: the loop, the tools, the guardrails, the gate, the
+ledger, the instrumentation. Only the *model's choices* are simulated.
+
+So the scripted pass rate is **close to 100% by construction** — the planner implements
+the routing rule, and the key was written from the same routing rule. It is not evidence
+that our agent is good. It is evidence that the **machinery reproduces**: that the loop
+executes several tool calls in one turn, that the guardrails fire, that the gate holds,
+that the ledger writes exactly once per approval, that turns and cost are counted.
+
+The planner never reads `expected_outcomes_A.json` and contains no branch keyed to a claim
+id. A planner that peeked would agree with the key by construction and measure nothing.
+
+---
+
+## The dependency rule (D2c)
+
+```
+Turn 1   get_claim                                              ALONE
+Turn 2   lookup_policy || lookup_hospital || check_duplicate_claim
+Turn 3   check_coverage × N        (one per line, independent of each other)
+Turn 4   get_preauthorisation × M  (only the lines that need one)
+Turn 5   issue_decision_letter                                  GATED
+```
+
+Measured both ways over the whole set, caps lifted so grouping is the only variable:
+
+| grouping | turns | calls | input tokens | cost | pass rate |
+|---|---|---|---|---|---|
+| sequential | 356 | 360 | 2,314,800 | $0.2514 | 60/60 |
+| parallel | 210 | 360 | 1,083,600 | $0.1213 | 60/60 |
+
+**41% fewer turns, 53% fewer input tokens, correctness unchanged.** The call count is
+identical — nothing was removed, the calls were regrouped, so the saving is the transcript
+being re-sent fewer times.
+
+Two things we will not claim. We do not quote the brief's 54%: that is CLM-8842's number
+under the brief's grouping, not ours. And our `CLM-8842` takes **five** turns, not the
+brief's four, because our `check_coverage` requires a `policy_id` — the D2(b) poka-yoke —
+which turns a parallel pair into a chain. We pay one turn on every approval and get it back
+on every escalation: a lapsed policy, a breached limit or a duplicate stops at **two turns**
+without ever pricing a line.
+
+---
+
+## The caps, and where they came from
+
+Measured, not chosen. Reproduce with `experiments/d2c_parallel_vs_sequential.py`.
+
+```
+turn distribution, 60 trials, parallel grouping
+    2 turns  12 runs        median             4
+    3 turns  12 runs        mean               3.50
+    4 turns  30 runs        worst LEGITIMATE   5
+    5 turns   6 runs        hit the cap        0
+
+per-run tokens: median 21,600 · worst 29,520
+```
+
+`MAX_TURNS = 8` is the worst legitimate run (5) plus three. The margin is deliberate: the
+planner never wanders, re-reads or mis-parses, so it is a **lower bound** on turns, and a cap
+fitted tightly to scripted runs would truncate correct live ones. To be revisited after the
+battery with real turn counts.
+
+`MAX_TOKENS_PER_RUN = 60000` is the worst measured run doubled. **It is not slack** — run the
+same work one call per turn and 11 of 60 trials breach it and halt. Our caps are calibrated
+to the parallel grouping, and that dependency is stated rather than hidden.
+
+Every stop is loud: the decision record carries `stopped_by` and the full `guardrails_fired`
+list, so a cap never looks like a quiet wrong answer.
+
+---
+
+## The gated action
+
+`issue_decision_letter` **does not write a letter.** It checks the gate, appends one
+structured record to `logs/decisions.jsonl`, and returns a short confirmation. Three things
+it enforces in code rather than asserting in a docstring:
+
+1. **Once only per run** — a second decision on the same claim is blocked whatever its
+   arguments.
+2. **The claim exists** — a decision on an id that resolves to nothing is refused.
+3. **The arithmetic is the record's, not the model's** — for an approve, `lines_resolved`
+   and the two totals are re-derived from the claim and compared. A model that checked one
+   line of four cannot write `lines_resolved: 4` and be believed.
+
+Check 3 applies to approvals only: Appendix A's escalate example stops at two turns with the
+lines deliberately never priced.
+
+A cross-check that costs nothing: one clean run writes **30 ledger rows**, and the key holds
+exactly **30 approve cases**. The gate fired once per approval and never on an escalate or a
+request.
+
+`AUTONOMY = "confirm"`, with the gate in front of the irreversible step rather than in front
+of the agent.
+
+---
+
+## Contribution
+
+| Strand | Feeds | Owner(s) |
+|---|---|---|
+| The loop and the tools | D1, D2(a), D2(c) | Rohit Panda, Xia Yanran |
+| Descriptors, v1→v2 rewrite, guardrail layer | D2(b), D3 | Huang Yu, Rohit Panda |
+| Evaluation harness and the scripted run | D4, D5(a) | Li Yunke, Huang Yu |
+| Cost model, ledger, sensitivity | D6 | Shen Bowen, Zhao Yujia |
+| Negative-case design, D7 failures | D3(b), D7 | Xia Yanran |
+| Report and demo assembly | Report §§4–5 | Zhao Yujia, Shen Bowen |
+| **Evaluation cases — 5–8 each** | D4 | **all six** |
+| **Live model battery — one model each** | D5(b) | **all six** |
+
+See `CONTRIBUTIONS.md`; the commit history corroborates it.
+
+---
+
+## Status
+
+| | |
+|---|---|
+| D0 · Why an agent | `docs/D0c_what_good_looks_like.md` committed before any agent code |
+| D1 · The agent | Done — multi-call turns, instrumented per run |
+| D2(a) · Tool set | 7 tools, none added: `check_coverage` was widened instead |
+| D2(b) · Descriptors | v2 shipped; v1 comparison outstanding |
+| D2(c) · Multi-tool turns | Measured both ways |
+| D3(a) · Guardrail code | Step cap · budget ceiling · de-duplication · gate · narrative guard |
+| D3(b) · Checklist | Outstanding |
+| D4 · Evaluation set | 40 cases, 10 negative, code + judgement checks |
+| D5(a) · Scripted run | Reproduces from a clean clone, no key |
+| D5(b) · Live battery | Outstanding — one model per member |
+| D6 · Cost model | Outstanding |
+| D7 · Two failures | Failure 1 done; failure 2 outstanding |
+
+## Known limits
+
+- The scripted pass rate is 100% by construction and is not a claim about agent quality.
+- `narrative_guard.py` is a keyword-and-shape tripwire over three rules. It catches all
+  three injection cases with no false positives across 40 narratives, but it will not catch
+  a paraphrase it has never seen. The real boundary is that the narrative never reaches a
+  tool argument and cannot change what `policies.json` says.
+- Scripted guardrail runs prove a guardrail fires when the agent *attempts* a bad action.
+  Whether a live model can be talked into attempting it is a D5 observation, not a
+  guardrail case.
+- `docs/lecturer_clarifications.md` records where two course documents disagree and what we
+  assumed instead.

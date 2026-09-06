@@ -261,7 +261,14 @@ def _live_call(messages):
 
 def make_backend(case_id, tool_descriptors=None, system_prompt=""):
     if config.BACKEND == "scripted":
-        return ScriptedBackend(case_id)
+        # A HAND-WRITTEN SCRIPT WINS. SCRIPTS holds the cases we reasoned
+        # through by hand - the brief's worked example, and any case we
+        # want to pin move-by-move. Everything else is derived by the
+        # planner, so the whole 50-case set runs offline and free.
+        if case_id in SCRIPTS:
+            return ScriptedBackend(case_id)
+        from .planner import PlannerBackend
+        return PlannerBackend(case_id)
     if config.BACKEND == "live":
         return LiveBackend(case_id, tool_descriptors or [], system_prompt)
     raise SystemExit("BACKEND must be 'scripted' or 'live', not %r"

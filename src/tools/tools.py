@@ -418,7 +418,7 @@ def lookup_hospital(hospital_id):
                  if h["hospital_id"] == hospital_id), None)
 
 
-def check_coverage(code, policy_id):
+def check_coverage(code, policy_id, documents_attached=None):
     """Is this ONE procedure payable under THIS policy?
 
     WHAT IT DOES   resolves one line item: what the code means, whether
@@ -449,6 +449,38 @@ def check_coverage(code, policy_id):
     POKA-YOKE: `policy_id` is REQUIRED. Coverage is meaningless without a
     policy, and a tool that let you omit it would cheerfully return an
     answer about nothing at all.
+
+    --------------------------------------------------------------------
+    D2(a) - WHY THE DOCUMENT CHECK LIVES HERE AND NOT IN ITS OWN TOOL
+
+    Appendix A's routing table has a row we could not reach: "a required
+    document is absent -> request_document". Nothing read
+    required_documents.json, so three cases in our set (CLM-8901,
+    CLM-9029, CLM-9030) were unreachable by any correct trajectory.
+
+    D2(a) says: before you add a tool, try not adding one. Four moves, in
+    order of preference. We tried them in that order and stopped at move
+    2, and this is what that looks like in code:
+
+      1 widen an existing tool's parameters   -> done: `documents_attached`
+      2 return more from one call             -> done: `required_document`
+                                                 and `document_attached`
+      3 move the step into ordinary code      -> rejected: the agent must
+                                                 be able to NAME the
+                                                 document in its request,
+                                                 so it has to see it
+      4 add the tool                          -> not needed
+
+    A get_required_documents tool would have cost a definition in the
+    prompt prefix - re-sent and re-billed on EVERY turn of EVERY run,
+    called or not - plus one more call per line, plus a confusable
+    neighbour: "when do I use check_coverage rather than
+    get_required_documents?" is a question we could not answer in one
+    line, which by D2(a) question 2 is the signal to merge them.
+
+    The cost of the merge is ~15 tokens per observation and zero extra
+    turns. That trade is the whole of lever 1 vs lever 3 in D6, and it is
+    measurable: run `python3 run_eval.py --prompt` before and after.
     """
     proc = next((p for p in _load("A", "procedures") if p["code"] == code), None)
     pol = next((p for p in _load("A", "policies")
@@ -456,11 +488,24 @@ def check_coverage(code, policy_id):
     if proc is None or pol is None:
         return None
     excl = next((e for e in pol["exclusions"] if e["code"] == code), None)
+
+    # Which document, if any, this procedure cannot be assessed without.
+    required = next((r["document"] for r in _load("A", "required_documents")
+                     if r["procedure_code"] == code), None)
+    # None (not False) when no document is required: "no rule applies" and
+    # "a rule applies and is unmet" are different facts and must not
+    # collapse into one falsy value.
+    attached = None
+    if required is not None and documents_attached is not None:
+        attached = required in documents_attached
+
     return {"code": code,
             "description": proc["description"],
             "requires_preauth": proc["requires_preauth"],
             "excluded": excl is not None,
-            "exclusion_rule": excl["rule"] if excl else None}
+            "exclusion_rule": excl["rule"] if excl else None,
+            "required_document": required,
+            "document_attached": attached}
 
 
 def get_preauthorisation(member_id, procedure_code, date_of_service):
@@ -793,14 +838,24 @@ DESCRIPTORS = {
         "when": "ONCE PER LINE. A three-line claim needs three calls, and "
                 "they are independent, so they belong in the same turn.",
         "args": {"code": "str, one line's procedure code",
-                 "policy_id": "str, REQUIRED, from lookup_policy"},
+                 "policy_id": "str, REQUIRED, from lookup_policy",
+                 "documents_attached": "the claim's documents[] list, "
+                                       "unchanged, so this call can also tell "
+                                       "you whether the document this "
+                                       "procedure requires is present"},
         "returns": "{code, description, requires_preauth (bool), excluded "
-                   "(bool), exclusion_rule (str or None)}",
-        "failure": "Returns None when the code or policy does not exist. TWO "
-                   "FIELDS DRIVE WHAT HAPPENS NEXT: requires_preauth true "
-                   "means look for an approval, false means do not. excluded "
-                   "refuses THAT LINE, not the claim - cite exclusion_rule by "
-                   "name, and keep deciding the other lines.",
+                   "(bool), exclusion_rule (str|None), required_document "
+                   "(str|None), document_attached (bool|None)} - 7 fields, "
+                   "one line, ~45 tokens. Never a list.",
+        "failure": "Returns None when the code or policy does not exist. "
+                   "THREE FIELDS DRIVE WHAT HAPPENS NEXT: requires_preauth "
+                   "true means look for an approval, false means do not. "
+                   "excluded refuses THAT LINE, not the claim - cite "
+                   "exclusion_rule by name and keep deciding the other lines. "
+                   "document_attached false means REQUEST that document, "
+                   "naming it and the line; document_attached null means no "
+                   "document rule applies to this code, which is not the same "
+                   "thing and is not a problem.",
     },
     "check_duplicate_claim": {
         "name": "check_duplicate_claim",
