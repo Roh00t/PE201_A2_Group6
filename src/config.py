@@ -38,10 +38,37 @@ BASE_URL = "https://openrouter.ai/api/v1"
 # hold PROMPT_VERSION fixed.
 PROMPT_VERSION = "v2"
 
-# Your key never goes in this file. Put it in the environment:
-#     export OPENROUTER_API_KEY="sk-or-..."
-# In Colab:  os.environ["OPENROUTER_API_KEY"] = "sk-or-..."
-API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+# Your key never goes in this file. Two ways in, and BOTH work:
+#     export OPENROUTER_API_KEY="sk-or-..."      (shell, or Colab os.environ)
+#     config.set_api_key("sk-or-...")            (runtime, what run_battery uses)
+#
+# WHY api_key() IS A FUNCTION. The module-level read below happens exactly
+# ONCE, at import. So the intuitive move -
+#     import config
+#     os.environ["OPENROUTER_API_KEY"] = key     # too late!
+# - leaves API_KEY empty and produces a confusing "key is not set" exit
+# from a key you just supplied. Reading the environment at CALL time makes
+# the intuitive move work too. The wrong thing looking right is exactly
+# the class of bug this file's stale-bytecode warning already exists for.
+API_KEY = os.environ.get("OPENROUTER_API_KEY", "")   # legacy shim; prefer api_key()
+
+_API_KEY_RUNTIME = None
+
+
+def set_api_key(value):
+    """Supply the key AFTER import, without touching os.environ.
+
+    run_battery.py uses this deliberately: a key placed in the process
+    environment leaks into every subprocess and into crash dumps, and
+    students paste tracebacks into group chats.
+    """
+    global _API_KEY_RUNTIME
+    _API_KEY_RUNTIME = value or None
+
+
+def api_key():
+    """The key, read at CALL time. Runtime override first, env second."""
+    return _API_KEY_RUNTIME or os.environ.get("OPENROUTER_API_KEY", "") or API_KEY
 
 # ─────────────────────────────────────────────────────────────────────
 # WHICH PROBLEM. "A" = claims first response, "B" = referral coordination.
@@ -92,6 +119,30 @@ AUTONOMY = "confirm"          # "suggest" | "confirm" | "act"
 # grouped two ways - which is the measurement D2(c) asks for. See the
 # rule itself, written out, at the top of src/backends/planner.py.
 GROUPING = "parallel"         # "parallel" | "sequential"
+
+# ─────────────────────────────────────────────────────────────────────
+# LIVE TRANSPORT (D5b). Only used when BACKEND == "live".
+# ─────────────────────────────────────────────────────────────────────
+# MAX_TOKENS_PER_CALL is a SPEND control and MAX_TOKENS_PER_RUN is not:
+# the run guardrail fires AFTER the tokens are billed, so it bounds the
+# damage of a runaway completion but cannot prevent it. This caps the
+# request itself. Output bills at 4-5x input, so this is the cheapest
+# guardrail in the file.
+MAX_TOKENS_PER_CALL = 1024
+TEMPERATURE = 0
+HTTP_TIMEOUT = 60
+RETRY_MAX = 5
+RETRY_BASE_SECONDS = 2.0
+
+# Reasoning models bill hidden thinking as OUTPUT. The brief recommends
+# against one for A2 and `reasoning: exclude` hides the tokens while
+# still charging for them. Off by default; run_battery --allow-reasoning
+# turns it on, caps it, and says so loudly at pre-flight.
+ALLOW_REASONING = False
+
+# Set True by run_battery when it mutates this module in memory, so the
+# stale-bytecode detector does not cry wolf on every live run.
+RUNTIME_OVERRIDE = False
 
 # ─────────────────────────────────────────────────────────────────────
 # WHERE THE DATA IS. The scaffold ships in its own folder, so it looks
@@ -155,6 +206,11 @@ def _stale_bytecode_warning():
     The fix is `rm -rf __pycache__`, or in a notebook, restart the kernel.
     """
     import re
+    if RUNTIME_OVERRIDE:
+        # run_battery sets BACKEND/MODEL in memory ON PURPOSE, so the file
+        # and memory SHOULD disagree. Warning here would put a false
+        # "STALE BYTECODE" banner into every live results file.
+        return ""
     try:
         src = open(os.path.join(HERE, "config.py"), encoding="utf-8").read()
     except OSError:

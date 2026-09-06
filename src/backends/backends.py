@@ -26,9 +26,37 @@ moves is how you test the parts you wrote.
 ====================================================================
 """
 import json
+import random
+import time
+import urllib.error
 import urllib.request
 
 import config
+
+
+class LiveTransportError(Exception):
+    """A call failed for a reason that is not the model's fault and that
+    retrying might have fixed - a 429, a 5xx, a dropped socket.
+
+    It is a distinct type because loop_agent must treat it differently
+    from a bad answer: the tokens already spent on turns 1..n-1 of this
+    run are REAL, and letting this propagate would lose the record of
+    them. A trial that ends this way is not a model failure and must not
+    sit in the pass-rate denominator."""
+
+    def __init__(self, detail, attempts):
+        self.detail, self.attempts = detail, attempts
+        super().__init__("%s (after %d attempts)" % (detail, attempts))
+
+
+class LiveFatalError(Exception):
+    """A call failed for a reason no amount of retrying will fix - a bad
+    key, no credits, an unknown model id, a malformed request.
+
+    Separate from LiveTransportError so the battery ABORTS immediately.
+    Sixty exponential backoffs against a typo'd model id is a forty-minute
+    failure where a thirty-second one was available."""
+
 
 
 # =====================================================================
@@ -191,18 +219,23 @@ class LiveBackend:
         self.last_tokens_in = 0
         self.last_tokens_out = 0
         self.usage_seen = False
+        self.last_usage = {}
+        self.last_meta = {}
+        self.turn_usage = []      # the whole block, per turn
 
     def next_move(self, transcript):
         messages = [{"role": "system", "content": self.system_prompt}]
         for entry in transcript:
             messages.append({"role": entry["role"], "content": entry["content"]})
-        raw, usage = _live_call(messages)
+        raw, usage, meta = LIVE_CALL(messages)
         # OpenRouter normalises to the OpenAI shape. If a provider omits
         # the block we record zero AND remember that we did, so a silent
         # zero is never mistaken for a cheap run.
         self.last_tokens_in = int(usage.get("prompt_tokens") or 0)
         self.last_tokens_out = int(usage.get("completion_tokens") or 0)
         self.usage_seen = bool(usage)
+        self.last_usage, self.last_meta = usage, meta
+        self.turn_usage.append({"usage": usage, "meta": meta})
         return _parse_move(raw)
 
     def token_estimate(self, transcript):
@@ -226,6 +259,13 @@ def _parse_move(text):
                 "thought": "unparseable: %s" % text[:200]}
 
 
+_RETRYABLE_STATUS = {408, 409, 429, 500, 502, 503, 504}
+_FATAL_STATUS = {400: "malformed request", 401: "bad or missing API key",
+                 402: "insufficient credits on this key",
+                 403: "forbidden - key lacks access to this model",
+                 404: "unknown model id"}
+
+
 def _live_call(messages):
     """>>> THE ONLY FUNCTION IN THIS REPOSITORY THAT KNOWS A VENDOR <<<
 
@@ -233,30 +273,97 @@ def _live_call(messages):
     vendor means rewriting this one function, and changing MODEL and
     BASE_URL in config.py. Nothing else.
 
-    Returns (content, usage). The usage block is the MEASURED token count
-    for this call. Discarding it and estimating instead is precisely the
-    mistake D6 punishes - and it is the reason every live run in this
-    repository used to report a cost of exactly zero.
+    Returns (content, usage, meta). `usage` is the MEASURED token count -
+    discarding it and estimating instead is the mistake D6 punishes, and
+    it is why every live run here used to report a cost of exactly zero.
+    `meta` carries which model and provider ACTUALLY served the call:
+    OpenRouter routes across providers, so two members requesting the
+    same slug can be served different quantisations, and the only way to
+    notice is to record it.
+
+    RETRY LIVES HERE, NOT AROUND THE TRIAL. Retrying a whole trial after
+    a failure at turn 6 re-sends and re-pays for turns 1 to 5. Retrying
+    the HTTP call preserves the transcript and the spend.
     """
-    if not config.API_KEY:
-        raise SystemExit(
-            "\n  BACKEND is 'live' but OPENROUTER_API_KEY is not set.\n"
+    key = config.api_key()
+    if not key:
+        raise LiveFatalError(
+            "\n  BACKEND is 'live' but no API key is set.\n"
             "    export OPENROUTER_API_KEY='sk-or-...'\n"
+            "  or call config.set_api_key(...) before running.\n"
             "  Or set BACKEND = 'scripted' in config.py, which is free.\n")
-    body = json.dumps({
+
+    body = {
         "model": config.MODEL,
         "messages": messages,
-        "temperature": 0,
-    }).encode()
-    req = urllib.request.Request(
-        config.BASE_URL.rstrip("/") + "/chat/completions",
-        data=body,
-        headers={"Authorization": "Bearer " + config.API_KEY,
-                 "Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        payload = json.load(r)
-    return (payload["choices"][0]["message"]["content"],
-            payload.get("usage") or {})
+        "temperature": config.TEMPERATURE,
+        # A SPEND CONTROL, not a quality setting. MAX_TOKENS_PER_RUN in
+        # guardrails.py fires only AFTER the tokens are billed; this is
+        # the one thing that stops a runaway completion being paid for.
+        "max_tokens": config.MAX_TOKENS_PER_CALL,
+        # Ask the vendor for its own cost figure so ours can be checked
+        # against it rather than merely asserted.
+        "usage": {"include": True},
+    }
+    if not getattr(config, "ALLOW_REASONING", False):
+        # Hidden thinking bills as OUTPUT, at 4-5x input. `exclude` would
+        # only hide it while still charging - so turn it off, not away.
+        body["reasoning"] = {"enabled": False}
+
+    data = json.dumps(body).encode()
+    last = ""
+    for attempt in range(1, config.RETRY_MAX + 1):
+        req = urllib.request.Request(
+            config.BASE_URL.rstrip("/") + "/chat/completions",
+            data=data,
+            headers={"Authorization": "Bearer " + key,
+                     "Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=config.HTTP_TIMEOUT) as r:
+                payload = json.load(r)
+            break
+        except urllib.error.HTTPError as err:
+            if err.code in _FATAL_STATUS:
+                raise LiveFatalError("HTTP %d - %s" % (err.code,
+                                                       _FATAL_STATUS[err.code]))
+            if err.code not in _RETRYABLE_STATUS:
+                raise LiveFatalError("HTTP %d - unexpected" % err.code)
+            last = "HTTP %d" % err.code
+            _sleep_before_retry(attempt, err.headers.get("Retry-After"))
+        except (urllib.error.URLError, TimeoutError, OSError) as err:
+            last = "%s: %s" % (type(err).__name__, err)
+            _sleep_before_retry(attempt, None)
+    else:
+        raise LiveTransportError(last, config.RETRY_MAX)
+
+    choice = (payload.get("choices") or [{}])[0]
+    content = (choice.get("message") or {}).get("content") or ""
+    return (content,
+            payload.get("usage") or {},
+            {"served_model": payload.get("model"),
+             "provider": payload.get("provider"),
+             "response_id": payload.get("id")})
+
+
+def _sleep_before_retry(attempt, retry_after):
+    """Honour Retry-After when the vendor sends one; otherwise back off
+    exponentially with jitter so six members retrying at once do not
+    synchronise into a thundering herd against the same endpoint."""
+    if retry_after:
+        try:
+            time.sleep(min(float(retry_after), 60.0))
+            return
+        except (TypeError, ValueError):
+            pass
+    time.sleep(min(config.RETRY_BASE_SECONDS * (2 ** (attempt - 1)), 30.0)
+               + random.uniform(0, 1.0))
+
+
+# THE TEST SEAM. evals/test_battery_fake.py rebinds this to a fake so the
+# entire battery path - retry, resume, budget, provenance - is exercised
+# without a key and without a dollar. One line, and it is the difference
+# between a design nobody can test and one anybody can.
+LIVE_CALL = _live_call
 
 
 def make_backend(case_id, tool_descriptors=None, system_prompt=""):

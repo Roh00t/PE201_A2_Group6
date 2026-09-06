@@ -28,7 +28,7 @@ import time
 import config
 import prompt
 from tools import tools
-from backends.backends import make_backend
+from backends.backends import LiveTransportError, make_backend
 from backends.guardrails import Guardrails, GuardrailStop
 
 
@@ -74,6 +74,11 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
     iterations = 0       # loop-safety only; never reported
     tokens_in = tokens_out = 0
     stopped_by = None
+    # PER-TURN tokens, not just the run total. Two things need this and
+    # neither can be recovered afterwards: reasoning-spike detection
+    # becomes a pure function over a saved record, and the B and D terms
+    # of  input ~ B*T + D*T(T-1)/2  can be read off directly, per model.
+    turn_tokens = []
 
     # On the scripted backend the gate auto-approves so the run stays
     # deterministic. The RECORD still shows the gate was reached and
@@ -90,6 +95,7 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
             move = backend.next_move(transcript)
             ti, to = backend.token_estimate(transcript)
             tokens_in, tokens_out = tokens_in + ti, tokens_out + to
+            turn_tokens.append([ti, to])
             guards.check_budget(tokens_in + tokens_out)
 
             if verbose:
@@ -160,6 +166,22 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
                   "reason": "halted by the %s guardrail - %s"
                             % (stop.reason, stop.detail)}
 
+    except LiveTransportError as err:
+        # NOT a model failure, and the distinction is worth money. The
+        # tokens already spent on turns 1..n-1 of this run are real; if
+        # this exception escaped run_case it would unwind through the
+        # harness and that spend would go unrecorded. Handled here, the
+        # record below still carries the accumulated counts.
+        #
+        # `stopped_by == "transport"` is what tells the battery aggregator
+        # to leave this trial OUT of the pass-rate denominator and report
+        # it in its own column. A network problem is not evidence about a
+        # model.
+        stopped_by = "transport"
+        record = {"decision": "escalate",
+                  "reason": "transport failure, not a model answer - %s"
+                            % err}
+
     cost = (tokens_in / 1e6) * config.PRICE_IN + (tokens_out / 1e6) * config.PRICE_OUT
 
     record.update({
@@ -170,10 +192,20 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
         "tokens_out": tokens_out,
         "cost_usd": round(cost, 6),
         "seconds": round(time.time() - started, 3),
+        "turn_tokens": turn_tokens,
         "guardrails_fired": guards.fired,
         "stopped_by": stopped_by,
         "backend": backend.name,
     })
+    if backend.name == "live":
+        record.update({
+            "model": config.MODEL,
+            "prompt_version": config.PROMPT_VERSION,
+            "served_model": (backend.last_meta or {}).get("served_model"),
+            "provider": (backend.last_meta or {}).get("provider"),
+            "usage_complete": backend.usage_seen,
+            "turn_usage": backend.turn_usage,
+        })
     return record
 
 

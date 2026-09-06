@@ -947,6 +947,38 @@ DESCRIPTORS = {
 }
 
 
+# =====================================================================
+# THE v1 DESCRIPTOR SET  (D2b) - Huang Yu owns the content
+# =====================================================================
+# WHAT THIS IS FOR. D2(b) asks us to ship two versions of our tool
+# descriptors and MEASURE what the rewrite did - tokens returned per
+# call, evaluation pass rate, guardrail cases passed - holding the model
+# fixed. The v1 set is the deliberately worse one: the descriptors as a
+# team writes them before thinking about the agent-computer interface.
+#
+# WHY IT IS EMPTY RIGHT NOW, AND WHY THAT IS SAFE. Until this dict is
+# populated, prompt.descriptor_set("v1") returns {} and the assembled v1
+# prompt differs from v2 - so the hashes differ and nothing silently
+# passes. Before this dict existed at all, config.PROMPT_VERSION
+# selected NOTHING and sha(v1) == sha(v2): the member running the v1
+# pass would have paid for a full battery and produced a file labelled
+# v1 containing a v2 run.
+#
+# evals/run_battery.py refuses to start a v1 battery unless
+# sha(v1) != sha(v2) AND every callable tool has a v1 descriptor, so an
+# unfinished rewrite costs nothing instead of costing a battery.
+#
+# HOW TO WRITE IT. Copy DESCRIPTORS above, then make it genuinely worse
+# in ways a real team would: drop the size bound from `returns`, replace
+# a specific `failure` line with "returns null on error", remove the
+# poka-yoke note from check_coverage's policy_id, delete the
+# IRREVERSIBLE? field, and let `when` go vague. Do NOT make it worse by
+# adding nonsense - the finding is only interesting if v1 is a plausible
+# first draft. A rewrite that did not help, honestly reported, scores
+# better than one that was never measured.
+DESCRIPTORS_V1 = {}
+
+
 def call(problem, name, args):
     """Dispatch a tool call by name.
 

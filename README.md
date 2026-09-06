@@ -55,6 +55,7 @@ python3 experiments/demo_loop_failure.py   # D7 failure 1, before/after
 
 ```
 run_eval.py                      the entry point a marker types
+run_battery.py                   the entry point a member types on battery day
 src/
   config.py                      BACKEND / MODEL / PROMPT_VERSION / caps — one block
   loop_agent.py                  the ReAct loop: multi-call turns, instrumentation
@@ -67,6 +68,12 @@ src/
 evals/
   harness.py                     code check + judgement queue
   run_eval.py                    argument handling and result-file naming
+  run_battery.py                 D5(b) the live battery — the ONE script that spends
+  battery_roster.json            one member, one model, one key — fill on the day
+  battery_provenance.py          fingerprint, roster rules, derived trial count
+  battery_checkpoint.py          fsync'd JSONL, resume, lock
+  aggregate_battery.py           the report §3 table + the v1/v2 delta
+  test_battery_fake.py           35 checks against a fake vendor, free
   guardrail_cases.json           D3(b) checklist            <- Huang Yu, in progress
 data/
   make_fixtures_A.py             the generator — EXTRA_* block is where cases are added
@@ -235,6 +242,52 @@ of the agent.
 
 ---
 
+## The live battery (D5b)
+
+Six members, six keys, one evaluation set. The brief's warning is the design
+constraint: *"with three runners drift is survivable; with six it silently voids the whole
+battery."* **Silently** is the word — a drifted run produces a pass rate in the right format
+at the right cost that is simply not comparable, and nobody gets an error.
+
+```bash
+python3 evals/test_battery_fake.py             # 35 checks, no key, no cost
+python3 run_battery.py --member <name> --dry-run
+python3 run_battery.py --member <name> --verify-drift   # paste this in the group chat
+python3 run_battery.py --member <name>         # the live run. Spends YOUR key.
+python3 evals/aggregate_battery.py             # the report §3 table
+```
+
+**Nobody edits `config.py`.** The runner mutates the module in memory from
+`evals/battery_roster.json`. That is what makes the other controls possible: the worktree
+stays genuinely clean so the dirty-refusal can fire, `config.py`'s hash can be pinned across
+all six members, and six people are not editing the same three lines.
+
+| Control | What it stops |
+|---|---|
+| Fingerprint over answer key, fixtures, plan, prompt text, pinned sources, invariants, commit | A run that is not comparable. Refuses and **names the component that moved** |
+| Trial count **derived** from the fixtures | A roster that says 60 while the data says something else |
+| `validate_roster()` | Two members on one family; a single price tier; a v1 pass on a model nobody ran |
+| `getpass` → one local → `set_api_key()` | The key reaching `.env`, `os.environ`, a results file or a traceback |
+| Canary on three case shapes | Committing to 60 runs on an estimate instead of a measurement |
+| `--max-spend`, checked on **measured** cost after every trial | A battery quietly costing ten times its estimate |
+| `max_tokens` on the request | A runaway completion. `MAX_TOKENS_PER_RUN` fires only *after* billing |
+| `reasoning: {enabled: false}` | Hidden thinking billed as output at 4–5× |
+| Retry at the **transport** layer | Re-spending turns 1–5 to retry a failure at turn 6 |
+| 401/402/404 → immediate abort | Sixty exponential backoffs against a typo'd model id |
+| fsync'd JSONL checkpoint + lock file | Losing 45 paid trials to a closed laptop; double-spending from a second terminal |
+
+**Two negative numbers are reported, not one.** The negative *trial* rate and the negative
+*3-of-3* rate are different findings, and the 3× policy exists to produce the second. A model
+at 90% trial / 70% three-of-three is unreliable on refusals; one at 90%/90% is consistently
+wrong about a single case.
+
+**Before anyone spends:** the roster is filled on the day with prices verified that day, the
+`v2-freeze` tag is cut, `--freeze` stamps the hashes, and all six paste identical
+`--verify-drift` blocks. Member 1 then runs alone and everyone reads the file before the rest
+follow.
+
+---
+
 ## Contribution
 
 | Strand | Feeds | Owner(s) |
@@ -259,13 +312,13 @@ See `CONTRIBUTIONS.md`; the commit history corroborates it.
 | D0 · Why an agent | `docs/D0c_what_good_looks_like.md` committed before any agent code |
 | D1 · The agent | Done — multi-call turns, instrumented per run |
 | D2(a) · Tool set | 7 tools, none added: `check_coverage` was widened instead |
-| D2(b) · Descriptors | v2 shipped; v1 comparison outstanding |
+| D2(b) · Descriptors | v2 shipped; the v1 *mechanism* is in (`tools.DESCRIPTORS_V1` + `prompt.descriptor_set`), the v1 *content* is Huang Yu's |
 | D2(c) · Multi-tool turns | Measured both ways |
 | D3(a) · Guardrail code | Step cap · budget ceiling · de-duplication · gate · narrative guard |
 | D3(b) · Checklist | Outstanding |
 | D4 · Evaluation set | 40 cases, 10 negative, code + judgement checks |
 | D5(a) · Scripted run | Reproduces from a clean clone, no key |
-| D5(b) · Live battery | Outstanding — one model per member |
+| D5(b) · Live battery | Runner, provenance, checkpoint, aggregator and 35-check rehearsal all in. Roster unfilled; no live run yet |
 | D6 · Cost model | Outstanding |
 | D7 · Two failures | Failure 1 done; failure 2 outstanding |
 

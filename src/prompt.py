@@ -127,7 +127,27 @@ def format_descriptor(d):
     return text
 
 
-def build_system_prompt(problem=None):
+def descriptor_set(version=None):
+    """The descriptor dict for a prompt version. THE D2(b) SWITCH.
+
+    Until this existed, config.PROMPT_VERSION selected NOTHING:
+    build_system_prompt ignored it, tools.py had one DESCRIPTORS dict,
+    and v1 and v2 hashed identically. The member assigned the v1 pass
+    would have paid for a full battery and produced a results file
+    stamped "prompt_version": "v1" containing a v2 run - a confident
+    wrong number, which is worse than a missing one, and D2(b) rests
+    on it.
+
+    evals/run_battery.py refuses to start a v1 run while
+    sha(v1) == sha(v2), so the gap is loud rather than expensive.
+    """
+    version = version or config.PROMPT_VERSION
+    if version == "v1":
+        return tools.DESCRIPTORS_V1
+    return tools.DESCRIPTORS
+
+
+def build_system_prompt(problem=None, version=None):
     """Assemble everything the model is told, once, before turn 1.
 
     THREE PARTS, and you should be able to say why each is there:
@@ -137,12 +157,13 @@ def build_system_prompt(problem=None):
 
     THIS IS YOUR v1/v2 ARTEFACT. Print it, change a descriptor, print it
     again, and the diff is exactly what you are claiming to have
-    measured.
+    measured. `version` defaults to config.PROMPT_VERSION.
     """
     problem = problem or config.PROBLEM
+    descriptors = descriptor_set(version)
     names = sorted(tools.REGISTRY[problem])
-    described = [tools.DESCRIPTORS[n] for n in names if n in tools.DESCRIPTORS]
-    undescribed = [n for n in names if n not in tools.DESCRIPTORS]
+    described = [descriptors[n] for n in names if n in descriptors]
+    undescribed = [n for n in names if n not in descriptors]
 
     parts = [RULES[problem], "", "TOOLS AVAILABLE", ""]
     parts += [format_descriptor(d) for d in described]
@@ -169,11 +190,10 @@ def audit(problem=None):
     problem = problem or config.PROBLEM
     text = build_system_prompt(problem)
     names = sorted(tools.REGISTRY[problem])
-    missing = [n for n in names if n not in tools.DESCRIPTORS]
+    missing = [n for n in names if n not in descriptor_set()]
 
     print("=" * 68)
-    print("  SYSTEM PROMPT - Problem %s - what the model is told before turn 1"
-          % problem)
+    print("  SYSTEM PROMPT - Problem %s - prompt version %s - what the\n  model is told before turn 1" % (problem, config.PROMPT_VERSION))
     print("=" * 68)
     print(text)
     print("=" * 68)

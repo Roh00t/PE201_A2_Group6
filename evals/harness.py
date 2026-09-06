@@ -212,18 +212,37 @@ def prepare_judgement_check(record, expected):
 # =====================================================================
 # RUNNING THE SET
 # =====================================================================
-def run_set(case_ids=None, problem=None, trials_for=None, verbose=False):
+def run_set(case_ids=None, problem=None, trials_for=None, verbose=False,
+            run_one=None, on_result=None, skip=None):
     """Run cases and grade them.
 
     `trials_for(case_id) -> int` decides how many trials each case gets.
     D4: ordinary cases get ONE trial; NEGATIVE cases get THREE, because
     negatives are the ones that flip between runs and a single trial
     cannot tell a real refusal from a lucky one.
+
+    THE THREE HOOKS EXIST SO THE LIVE BATTERY DOES NOT FORK THIS LOOP.
+    Duplicating the 1-vs-3 policy in a second runner would recreate the
+    exact drift the battery's whole provenance layer exists to prevent -
+    two definitions of "how many trials" is one more than is safe.
+
+      run_one(case_id, problem=, verbose=)  defaults to run_case. The
+                  battery passes a wrapper that adds per-trial exception
+                  isolation, spend accounting and the budget cap.
+      on_result(result)  called after each graded trial, before the next
+                  one starts. The battery checkpoints here, so a crash
+                  costs one trial rather than the whole run.
+      skip  a set of (case_id, trial) already completed. The resume hook.
+
+    All three default to today's behaviour, so run_eval.py and the D2(c)
+    experiment are untouched.
     """
     problem = problem or config.PROBLEM
     key = load_key(problem)
     case_ids = case_ids or load_cases(problem)
     trials_for = trials_for or (lambda cid: 3 if _is_negative(key.get(cid)) else 1)
+    run_one = run_one or run_case
+    skip = skip or set()
 
     results, judgement_queue = [], []
 
@@ -236,15 +255,27 @@ def run_set(case_ids=None, problem=None, trials_for=None, verbose=False):
             continue
 
         for trial in range(1, trials_for(cid) + 1):
-            record = run_case(cid, problem=problem, verbose=verbose)
+            if (cid, trial) in skip:
+                continue
+            record = run_one(cid, problem=problem, verbose=verbose)
             passed, fails = code_check(record, expected)
-            results.append({"case_id": cid, "trial": trial, "passed": passed,
-                            "fails": fails, "record": record,
-                            "family": expected.get("family")})
+            result = {"case_id": cid, "trial": trial, "passed": passed,
+                      "fails": fails, "record": record,
+                      "family": expected.get("family")}
+            results.append(result)
+            if on_result is not None:
+                on_result(result)
             if trial == 1:
                 judgement_queue.append(prepare_judgement_check(record, expected))
 
     return results, judgement_queue
+
+
+def is_negative(expected):
+    """Public alias. build_plan and the battery aggregator must share ONE
+    definition of "negative" with the trial policy above - three copies of
+    this list is three chances to disagree about the trial count."""
+    return _is_negative(expected)
 
 
 def _is_negative(expected):
