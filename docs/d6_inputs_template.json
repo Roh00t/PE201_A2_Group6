@@ -1,0 +1,47 @@
+{
+  "_note": "Copy this template to results/d6_inputs.json after the live battery. Replace every null from committed evidence; the calculator refuses placeholders.",
+  "monthly_volume": 8000,
+  "failure_cost_usd": 7.6,
+  "deployed_model": "cheap_candidate",
+  "cheap_model": "cheap_candidate",
+  "expensive_model": "expensive_candidate",
+  "models": {
+    "cheap_candidate": {
+      "source_result": "results/live/battery__<member>__<model>__v2.json",
+      "source_judgement_summary": "results/live/<run>__judgements__summary.json",
+      "cost_task_count": null,
+      "success_passed": null,
+      "success_total": null,
+      "tokens_in": null,
+      "tokens_out": null,
+      "price_in_per_million": null,
+      "price_out_per_million": null,
+      "tool_fees_total": 0,
+      "retrieval_fees_total": 0
+    },
+    "expensive_candidate": {
+      "source_result": "results/live/battery__<member>__<model>__v2.json",
+      "source_judgement_summary": "results/live/<run>__judgements__summary.json",
+      "cost_task_count": null,
+      "success_passed": null,
+      "success_total": null,
+      "tokens_in": null,
+      "tokens_out": null,
+      "price_in_per_million": null,
+      "price_out_per_million": null,
+      "tool_fees_total": 0,
+      "retrieval_fees_total": 0
+    }
+  },
+  "fixed_monthly_usd": {
+    "monitoring": null,
+    "storage_infrastructure": null,
+    "evaluation": null,
+    "maintenance": null
+  },
+  "caps": {
+    "step_cap": 8,
+    "budget_ceiling_tokens_per_run": 60000,
+    "monthly_limit_per_user": null
+  }
+}
