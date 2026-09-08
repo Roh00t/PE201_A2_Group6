@@ -30,12 +30,37 @@ from backends import SCRIPTS
 from evals.harness import load_cases, load_key, report, run_set
 
 
+def _flag_value(argv, name):
+    """`--flag value` -> "value", or None. The file parses flags by hand
+    already; this keeps that style rather than importing argparse for two
+    options."""
+    argv = list(argv or [])
+    if name in argv:
+        i = argv.index(name)
+        if i + 1 < len(argv) and not argv[i + 1].startswith("-"):
+            return argv[i + 1]
+    return None
+
+
 def main(argv):
     print()
     print(config.summary())
     print("data: %s" % config.data_root())
 
-    args = [a for a in argv[1:] if not a.startswith("-")]
+    # Flags that TAKE a value, so their value is not mistaken for a case
+    # id. `--judge-model meta-llama/llama-3.1-8b-instruct` would otherwise
+    # be read as "run the single case named meta-llama/...".
+    _VALUED = ("--judge-model", "--judge-limit")
+    rest, skip = [], False
+    for a in argv[1:]:
+        if skip:
+            skip = False
+            continue
+        if a in _VALUED:
+            skip = True
+            continue
+        rest.append(a)
+    args = [a for a in rest if not a.startswith("-")]
     flags = {a for a in argv[1:] if a.startswith("-")}
 
     # ---- show exactly what the model is told, then stop ----------------
@@ -127,6 +152,41 @@ def main(argv):
     print("  Wrote %s" % os.path.relpath(out_path, ROOT))
     print("  Commit it. Your result tables come from here, and a marker")
     print("  reads it alongside your report.")
+    print()
+
+    # ---- D4's SECOND CHECK -------------------------------------------
+    # The judgement check runs as a PASS OVER THE RESULTS FILE, not inside
+    # run_set. Three reasons, and each one is a bug avoided:
+    #
+    #   1. evals/harness.py is in battery_provenance.PINNED_SOURCES. A
+    #      network call inside run_set changes the fingerprint every six
+    #      members compare against.
+    #   2. It would make the battery non-deterministic and non-resumable -
+    #      a judge call inside a checkpointed loop cannot be replayed.
+    #   3. It would spend live tokens DURING the battery, which is priced
+    #      at 60 trials, not 60 trials plus 115 judge calls. The US$3
+    #      ceiling is computed against the battery alone.
+    #
+    # Run as a pass, it is re-runnable, separately budgeted, and its spend
+    # lands in results/judge/ where D6 can find it.
+    if "--judge" in flags:
+        judge_model = _flag_value(argv, "--judge-model")
+        by = "model" if judge_model else "person"
+        print("  Running D4's judgement check over that file...")
+        print()
+        from evals.graders import judge as judge_mod
+        inner = [out_path, "--by", by]
+        if judge_model:
+            inner += ["--model", judge_model]
+        limit = _flag_value(argv, "--judge-limit")
+        if limit:
+            inner += ["--limit", limit]
+        return judge_mod.main(inner)
+
+    print("  HALF THE CHECK IS DONE. D4 needs both kinds:")
+    print("      python3 evals/graders/judge.py %s"
+          % os.path.relpath(out_path, ROOT))
+    print("  or re-run with --judge (add --judge-model <id> for a model).")
     print()
     return 0
 
