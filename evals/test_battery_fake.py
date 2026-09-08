@@ -357,8 +357,9 @@ def scenario_prompt_versions():
     v1_member = next(m for m in roster["members"]
                      if m["prompt_version"] == "v1")
     v = prov.check_drift(fp, roster, v1_member)
-    check("16b a v1 run is refused while DESCRIPTORS_V1 is unwritten",
-          any(x.check == "v1_descriptors_missing" for x in v))
+    check("16b every Problem-A tool has a v1 descriptor",
+          not any(x.check == "v1_descriptors_missing" for x in v),
+          "DESCRIPTORS_V1 is complete")
     check("16c that refusal cannot be overridden",
           "v1_descriptors_missing" in prov.UNOVERRIDABLE)
 

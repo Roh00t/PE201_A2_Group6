@@ -52,8 +52,18 @@ against no policy at all.
 import datetime
 import json
 import os
+from typing import Any, Dict, List, Literal, Optional, Union
 
 import config
+
+
+Decision = Literal["approve_in_principle", "request_document", "escalate"]
+
+# This is both a static contract for callers and a runtime allow-list for
+# untrusted model output. Literal alone is not runtime validation in Python.
+_ALLOWED_DECISIONS = {
+    "approve_in_principle", "request_document", "escalate"
+}
 
 _CACHE = {}
 
@@ -334,7 +344,7 @@ def as_of():
 # PROBLEM A · health-insurance claim first response
 # =====================================================================
 
-def get_claim(claim_id):
+def get_claim(claim_id: str) -> Optional[Dict[str, Any]]:
     """Fetch the one claim the agent has been asked to decide.
 
     WHAT IT DOES   turns an id into the record: member, hospital, date,
@@ -361,7 +371,7 @@ def get_claim(claim_id):
     return None
 
 
-def lookup_policy(member_id):
+def lookup_policy(member_id: str) -> Optional[Dict[str, Any]]:
     """Follow the claim to the money and the rules.
 
     WHAT IT DOES   claim -> member -> policy, and does the headroom
@@ -399,7 +409,7 @@ def lookup_policy(member_id):
             "remaining": p["annual_limit"] - p["used_to_date"]}
 
 
-def lookup_hospital(hospital_id):
+def lookup_hospital(hospital_id: str) -> Optional[Dict[str, Any]]:
     """Is the hospital inside the insurer's network?
 
     WHAT IT DOES   one boolean and a name.
@@ -418,7 +428,9 @@ def lookup_hospital(hospital_id):
                  if h["hospital_id"] == hospital_id), None)
 
 
-def check_coverage(code, policy_id, documents_attached=None):
+def check_coverage(code: str, policy_id: str,
+                   documents_attached: Optional[List[str]] = None
+                   ) -> Optional[Dict[str, Any]]:
     """Is this ONE procedure payable under THIS policy?
 
     WHAT IT DOES   resolves one line item: what the code means, whether
@@ -427,7 +439,9 @@ def check_coverage(code, policy_id, documents_attached=None):
     READS          data_A/procedures.json AND data_A/policies.json
     RETURNS        {"code", "description", "requires_preauth" (bool),
                     "excluded" (bool), "exclusion_rule" (str or None)}
-    RETURNS NONE   when the code or the policy does not exist.
+    RETURNS NONE   when the policy record does not exist. An unknown
+                   procedure code or malformed argument is rejected at the
+                   boundary, before the lookup.
     WATCH OUT      CALL THIS ONCE PER LINE. A three-line claim needs
                    three calls - and because they are independent of each
                    other, all three belong in the same turn.
@@ -482,6 +496,14 @@ def check_coverage(code, policy_id, documents_attached=None):
     turns. That trade is the whole of lever 1 vs lever 3 in D6, and it is
     measurable: run `python3 run_eval.py --prompt` before and after.
     """
+    _validate_procedure_code(code)
+    _validate_text(policy_id, "policy_id")
+    if documents_attached is not None:
+        if not isinstance(documents_attached, list):
+            raise TypeError("documents_attached must be a list of strings")
+        if not all(isinstance(item, str) for item in documents_attached):
+            raise TypeError("documents_attached must be a list of strings")
+
     proc = next((p for p in _load("A", "procedures") if p["code"] == code), None)
     pol = next((p for p in _load("A", "policies")
                 if p["policy_id"] == policy_id), None)
@@ -508,7 +530,9 @@ def check_coverage(code, policy_id, documents_attached=None):
             "document_attached": attached}
 
 
-def get_preauthorisation(member_id, procedure_code, date_of_service):
+def get_preauthorisation(member_id: str, procedure_code: str,
+                         date_of_service: str
+                         ) -> Optional[Dict[str, Any]]:
     """Was permission granted BEFORE treatment, and is it still good?
 
     WHAT IT DOES   looks for an approval matching this member AND this
@@ -535,6 +559,10 @@ def get_preauthorisation(member_id, procedure_code, date_of_service):
 
     Call this ONLY when check_coverage said requires_preauth is True.
     """
+    _validate_text(member_id, "member_id")
+    _validate_procedure_code(procedure_code)
+    _validate_iso_date(date_of_service, "date_of_service")
+
     for pa in _load("A", "preauthorisations"):
         if (pa["member_id"] == member_id
                 and pa["procedure_code"] == procedure_code
@@ -543,7 +571,9 @@ def get_preauthorisation(member_id, procedure_code, date_of_service):
     return None
 
 
-def check_duplicate_claim(member_id, hospital_id, date_of_service, lines):
+def check_duplicate_claim(member_id: str, hospital_id: str,
+                          date_of_service: str, lines: List[Dict[str, Any]]
+                          ) -> Optional[Dict[str, Any]]:
     """Has this episode already been decided?
 
     WHAT IT DOES   compares the claim against the claims history on ALL
@@ -582,8 +612,13 @@ def check_duplicate_claim(member_id, hospital_id, date_of_service, lines):
     return None
 
 
-def issue_decision_letter(claim_id, decision, lines_resolved, approved_total,
-                          refused_total=0):
+def issue_decision_letter(
+        claim_id: str,
+        decision: Decision,
+        lines_resolved: int,
+        approved_total: Union[int, float],
+        refused_total: Union[int, float] = 0,
+        ) -> Dict[str, Any]:
     """>>> THE IRREVERSIBLE STEP FOR PROBLEM A <<<
 
     WHAT IT DOES   sends the decision to the member. The insurer is now
@@ -626,6 +661,29 @@ def issue_decision_letter(claim_id, decision, lines_resolved, approved_total,
     NOTHING to the ledger. The block is loud: the agent reads the error as
     its observation and the reason appears in the run record.
     """
+    # Literal annotations help type checkers, but Python does not enforce
+    # them at runtime. This explicit check prevents a model's free string
+    # from becoming an unrecognised decision in the ledger.
+    if (not isinstance(decision, str)
+            or decision not in _ALLOWED_DECISIONS):
+        return {"sent": False,
+                "error": "BLOCKED: invalid decision %r; expected one of %s"
+                         % (decision, ", ".join(sorted(_ALLOWED_DECISIONS)))}
+    if not isinstance(claim_id, str) or not claim_id.strip():
+        return {"sent": False,
+                "error": "BLOCKED: claim_id must be a non-empty string"}
+    if (isinstance(lines_resolved, bool)
+            or not isinstance(lines_resolved, int)
+            or lines_resolved < 0):
+        return {"sent": False,
+                "error": "BLOCKED: lines_resolved must be a non-negative integer"}
+    if not _is_non_negative_number(approved_total):
+        return {"sent": False,
+                "error": "BLOCKED: approved_total must be non-negative"}
+    if not _is_non_negative_number(refused_total):
+        return {"sent": False,
+                "error": "BLOCKED: refused_total must be non-negative"}
+
     # 1 · ONCE ONLY, per run.
     if claim_id in _DECIDED_THIS_RUN:
         return {"sent": False,
@@ -795,6 +853,8 @@ DESCRIPTORS = {
     # ---- Problem A -------------------------------------------------
     "get_claim": {
         "name": "get_claim",
+        "signature": "get_claim(claim_id: str) -> ClaimRecord",
+        "what": "Resolve the supplied claim id to the claim record needed for the first response.",
         "purpose": "Fetch the claim you have been asked to decide.",
         "when": "Turn 1, alone. Everything else needs the member, hospital "
                 "and line items it returns.",
@@ -804,9 +864,12 @@ DESCRIPTORS = {
         "failure": "Returns None when no claim has that id - a broken case. "
                    "NOTE lines is a LIST: every line needs its own coverage "
                    "check and its own disposition.",
+        "irreversible": "NO. This is a read-only lookup.",
     },
     "lookup_policy": {
         "name": "lookup_policy",
+        "signature": "lookup_policy(member_id: str) -> PolicyContext",
+        "what": "Resolve the member's policy and remaining annual headroom.",
         "purpose": "The member's policy, and how much of the annual limit is "
                    "left.",
         "when": "After get_claim. Independent of the coverage checks and the "
@@ -820,9 +883,12 @@ DESCRIPTORS = {
                    "live here: lapsed status, a date of service outside "
                    "start_date..end_date EVEN IF status is active, and lines "
                    "exceeding `remaining`.",
+        "irreversible": "NO. This is a read-only lookup.",
     },
     "lookup_hospital": {
         "name": "lookup_hospital",
+        "signature": "lookup_hospital(hospital_id: str) -> HospitalRecord | None",
+        "what": "Resolve whether the hospital is on the insurer's panel.",
         "purpose": "Whether the hospital is on the insurer's panel.",
         "when": "After get_claim, alongside the other independent lookups.",
         "args": {"hospital_id": "str, from the claim"},
@@ -831,23 +897,20 @@ DESCRIPTORS = {
                    "false does NOT decide the claim - it changes what the "
                    "record must SAY, not what the decision is. Record it "
                    "either way.",
+        "irreversible": "NO. This is a read-only lookup.",
     },
     "check_coverage": {
         "name": "check_coverage",
+        "signature": "check_coverage(code: str, policy_id: str, documents_attached: list[str] | None = None) -> CoverageResult | None",
+        "what": "Resolve coverage, exclusion, pre-authorisation and required-document facts for one procedure line.",
         "purpose": "Whether ONE procedure code is payable under ONE policy.",
         "when": "ONCE PER LINE. A three-line claim needs three calls, and "
                 "they are independent, so they belong in the same turn.",
-        "args": {"code": "str, one line's procedure code",
-                 "policy_id": "str, REQUIRED, from lookup_policy",
-                 "documents_attached": "the claim's documents[] list, "
-                                       "unchanged, so this call can also tell "
-                                       "you whether the document this "
-                                       "procedure requires is present"},
-        "returns": "{code, description, requires_preauth (bool), excluded "
-                   "(bool), exclusion_rule (str|None), required_document "
-                   "(str|None), document_attached (bool|None)} - 7 fields, "
-                   "one line, ~45 tokens. Never a list.",
-        "failure": "Returns None when the code or policy does not exist. "
+        "args": {"code": "str, a known procedure code from procedures.json; an unknown code is rejected at the boundary",
+                 "policy_id": "str, REQUIRED, from lookup_policy; an empty or non-string value is rejected",
+                 "documents_attached": "list[str] | None, the claim's documents[] list; malformed lists are rejected; used to test required-document presence"},
+        "returns": "{code, description, requires_preauth (bool), excluded (bool), exclusion_rule (str|None), required_document (str|None), document_attached (bool|None)}; exactly one line, <= 7 fields, <= 60 tokens; never a list.",
+        "failure": "Returns None when the policy record is absent. Rejects a non-string/unknown procedure code or malformed arguments before lookup. "
                    "THREE FIELDS DRIVE WHAT HAPPENS NEXT: requires_preauth "
                    "true means look for an approval, false means do not. "
                    "excluded refuses THAT LINE, not the claim - cite "
@@ -856,37 +919,43 @@ DESCRIPTORS = {
                    "naming it and the line; document_attached null means no "
                    "document rule applies to this code, which is not the same "
                    "thing and is not a problem.",
+        "irreversible": "NO. This is a read-only lookup.",
     },
     "check_duplicate_claim": {
         "name": "check_duplicate_claim",
+        "signature": "check_duplicate_claim(member_id: str, hospital_id: str, date_of_service: str, lines: list[dict]) -> PriorDecision | None",
+        "what": "Compare the episode against decided-claim history using all four business facts.",
         "purpose": "Whether this episode has already been decided.",
         "when": "Before issuing any decision.",
         "args": {"member_id": "str, from the claim",
                  "hospital_id": "str, from the claim",
                  "date_of_service": "str, from the claim",
                  "lines": "the claim's lines list, unchanged"},
-        "returns": "the prior decided claim, or None",
+        "returns": "one prior decided-claim record <= 8 fields and <= 80 tokens, or None",
         "failure": "Returns None when nothing matches - the normal case, "
                    "carry on. MATCH ON ALL FOUR FACTS. The claim id is NOT "
                    "one of them: a resubmission arrives with a new id. The "
                    "history contains near-misses that differ on exactly one "
                    "fact each, so any shortcut match wrongly escalates a "
                    "perfectly good claim.",
+        "irreversible": "NO. This is a read-only lookup.",
     },
     "issue_decision_letter": {
         "name": "issue_decision_letter",
+        "signature": "issue_decision_letter(claim_id: str, decision: Literal['approve_in_principle','request_document','escalate'], lines_resolved: int, approved_total: int|float, refused_total: int|float = 0) -> DecisionWriteResult",
+        "what": "Append exactly one simulated first-response decision record after the loop's autonomy gate.",
         "purpose": "Send the decision to the member. THE IRREVERSIBLE STEP.",
         "when": "Last, once every line has a disposition.",
-        "args": {"claim_id": "str, the case id",
-                 "decision": "str, one of the three outcomes",
-                 "lines_resolved": "int, how many lines you actually decided",
-                 "approved_total": "int, dollars approved",
-                 "refused_total": "int, dollars refused (default 0)"},
+        "args": {"claim_id": "str, the case id; unknown ids are refused",
+                 "decision": "Literal['approve_in_principle','request_document','escalate']; any other value is refused",
+                 "lines_resolved": "int >= 0, how many lines you actually decided",
+                 "approved_total": "int|float >= 0, dollars approved",
+                 "refused_total": "int|float >= 0, dollars refused (default 0)"},
         "returns": "on success {sent: true, claim_id, decision, "
                    "lines_resolved, approved_total, refused_total} - at most "
                    "6 fields, ~40 tokens. On a refused call {sent: false, "
                    "error} - one line naming what was wrong.",
-        "failure": "This call is GATED and may be held for human approval. "
+        "failure": "This call is GATED by the loop and may be held for human approval. "
                    "If held, that is the correct outcome, not an error. It is "
                    "also REFUSED, with sent:false, in three cases, and these "
                    "are checked in code rather than trusted: (1) you have "
@@ -926,6 +995,8 @@ DESCRIPTORS = {
     },
     "get_preauthorisation": {
         "name": "get_preauthorisation",
+        "signature": "get_preauthorisation(member_id: str, procedure_code: str, date_of_service: str) -> Preauthorisation | None",
+        "what": "Find evidence that a member's procedure was authorised and valid on the service date.",
         "purpose": "Find a pre-authorisation covering one member for one "
                    "procedure on one date.",
         "when": "ONLY when check_coverage said requires_preauth is true. "
@@ -936,13 +1007,13 @@ DESCRIPTORS = {
             "date_of_service": "str date, from the claim - the approval must "
                                "be valid ON this date",
         },
-        "returns": "{preauth_id, member_id, procedure_code, valid_from, "
-                   "valid_to} or None",
+        "returns": "one preauthorisation record <= 5 fields and <= 60 tokens, or None",
         "failure": "Returns None when no approval exists OR when one exists "
                    "but had expired before the date of service. NONE DOES NOT "
                    "MEAN UNCOVERED. It means the evidence is missing, which is "
                    "a REQUEST for the reference - naming the code and the date "
                    "- not a refusal. Deciding otherwise fails the case.",
+        "irreversible": "NO. This is a read-only lookup.",
     },
 }
 
@@ -976,7 +1047,107 @@ DESCRIPTORS = {
 # adding nonsense - the finding is only interesting if v1 is a plausible
 # first draft. A rewrite that did not help, honestly reported, scores
 # better than one that was never measured.
-DESCRIPTORS_V1 = {}
+DESCRIPTORS_V1 = {
+    "get_claim": {
+        "name": "get_claim",
+        "signature": "get_claim(claim_id: str) -> dict",
+        "what": "Get the claim record for the supplied id.",
+        "when": "Use it first.",
+        "args": {"claim_id": "string claim id"},
+        "returns": "the claim record, including its line items",
+        "failure": "Returns null if the claim cannot be found.",
+        "irreversible": "NO",
+    },
+    "lookup_policy": {
+        "name": "lookup_policy",
+        "signature": "lookup_policy(member_id: str) -> dict",
+        "what": "Get the policy associated with a member.",
+        "when": "Use after getting the claim.",
+        "args": {"member_id": "string member id"},
+        "returns": "the member and policy details, including the remaining limit",
+        "failure": "Returns null if the member or policy cannot be found.",
+        "irreversible": "NO",
+    },
+    "lookup_hospital": {
+        "name": "lookup_hospital",
+        "signature": "lookup_hospital(hospital_id: str) -> dict",
+        "what": "Get the hospital information.",
+        "when": "Use after getting the claim, with other lookups if useful.",
+        "args": {"hospital_id": "string hospital id"},
+        "returns": "the hospital record and panel status",
+        "failure": "Returns null if the hospital cannot be found.",
+        "irreversible": "NO",
+    },
+    "check_coverage": {
+        "name": "check_coverage",
+        "signature": "check_coverage(code: str, policy_id: str, documents_attached: list[str] | None = None) -> dict",
+        "what": "Check whether a procedure is covered.",
+        "when": "Use for each line after finding the policy.",
+        "args": {"code": "string procedure code", "policy_id": "string policy id", "documents_attached": "the claim documents, if available"},
+        "returns": "coverage, exclusion, preauthorisation and document information",
+        "failure": "Returns null on an invalid or missing procedure or policy.",
+        "irreversible": "NO",
+    },
+    "check_duplicate_claim": {
+        "name": "check_duplicate_claim",
+        "signature": "check_duplicate_claim(member_id: str, hospital_id: str, date_of_service: str, lines: list[dict]) -> dict | None",
+        "what": "Check whether this claim was already decided.",
+        "when": "Use before issuing a decision.",
+        "args": {"member_id": "string", "hospital_id": "string", "date_of_service": "date string", "lines": "claim lines"},
+        "returns": "a matching prior claim or null",
+        "failure": "Returns null if there is no matching decided claim.",
+        "irreversible": "NO",
+    },
+    "issue_decision_letter": {
+        "name": "issue_decision_letter",
+        "signature": "issue_decision_letter(claim_id: str, decision: str, lines_resolved: int, approved_total: int|float, refused_total: int|float = 0) -> dict",
+        "what": "Record the decision for the member.",
+        "when": "Use after the checks and at the end of the process.",
+        "args": {"claim_id": "string", "decision": "one of the three outcomes", "lines_resolved": "number of resolved lines", "approved_total": "approved amount", "refused_total": "refused amount"},
+        "returns": "a confirmation or an error",
+        "failure": "Returns a blocked result if the gate, claim, totals or duplicate check is not satisfied.",
+        "irreversible": "YES - the action is covered by the autonomy gate.",
+    },
+    "get_preauthorisation": {
+        "name": "get_preauthorisation",
+        "signature": "get_preauthorisation(member_id: str, procedure_code: str, date_of_service: str) -> dict | None",
+        "what": "Look for a procedure authorisation.",
+        "when": "Use when the coverage result says it may be needed.",
+        "args": {"member_id": "string", "procedure_code": "string procedure code", "date_of_service": "date string"},
+        "returns": "the first matching authorisation or null",
+        "failure": "Returns null if no usable authorisation is found.",
+        "irreversible": "NO",
+    },
+}
+
+
+def _validate_text(value: Any, field: str) -> None:
+    if not isinstance(value, str):
+        raise TypeError("%s must be a string" % field)
+    if not value.strip():
+        raise ValueError("%s must not be empty" % field)
+
+
+def _validate_procedure_code(value: Any) -> None:
+    """Runtime boundary validation for the typed procedure-code contract."""
+    _validate_text(value, "procedure_code")
+    known = {row["code"] for row in _load("A", "procedures")}
+    if value not in known:
+        raise ValueError("unknown procedure_code %r" % value)
+
+
+def _validate_iso_date(value: Any, field: str) -> None:
+    _validate_text(value, field)
+    try:
+        datetime.date.fromisoformat(value)
+    except ValueError:
+        raise ValueError("%s must be an ISO date (YYYY-MM-DD)" % field)
+
+
+def _is_non_negative_number(value: Any) -> bool:
+    return (not isinstance(value, bool)
+            and isinstance(value, (int, float))
+            and value >= 0)
 
 
 def call(problem, name, args):
@@ -993,4 +1164,10 @@ def call(problem, name, args):
         raise KeyError(
             "No tool named %r for Problem %s. Available: %s"
             % (name, problem, ", ".join(sorted(table))))
-    return table[name](**args)
+    try:
+        return table[name](**args)
+    except (TypeError, ValueError) as exc:
+        # Keep a bad model call inside the observable transcript while
+        # retaining the direct function's runtime enforcement.
+        return {"status": "ERROR", "error": "INVALID_ARGUMENTS",
+                "detail": str(exc)}

@@ -10,7 +10,7 @@
     "passed": 60,
     "pass_rate": 1.0,
     "median_turns": 4.0,
-    "cost_usd": 0.12132
+    "cost_usd": 0.12131999999999997
   },
   "results": [
     {
@@ -36,7 +36,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.051,
+        "seconds": 0.001,
         "turn_tokens": [
           [
             1800,
@@ -100,7 +100,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.036,
+        "seconds": 0.003,
         "turn_tokens": [
           [
             1800,
@@ -172,7 +172,7 @@
         "tokens_in": 28800,
         "tokens_out": 720,
         "cost_usd": 0.003168,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -240,7 +240,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -1654,7 +1654,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -1718,7 +1718,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -1782,7 +1782,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -1912,7 +1912,7 @@
         "tokens_in": 28800,
         "tokens_out": 720,
         "cost_usd": 0.003168,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -1987,7 +1987,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -2069,7 +2069,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -2133,7 +2133,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -2199,7 +2199,7 @@
         "tokens_in": 28800,
         "tokens_out": 720,
         "cost_usd": 0.003168,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -2337,7 +2337,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -2465,7 +2465,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -2537,7 +2537,7 @@
         "tokens_in": 28800,
         "tokens_out": 720,
         "cost_usd": 0.003168,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -2619,7 +2619,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -2969,7 +2969,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -3048,7 +3048,7 @@
         "tokens_in": 28800,
         "tokens_out": 720,
         "cost_usd": 0.003168,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -3122,7 +3122,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -3187,7 +3187,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -3257,7 +3257,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -3329,7 +3329,7 @@
         "tokens_in": 28800,
         "tokens_out": 720,
         "cost_usd": 0.003168,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -3397,7 +3397,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,

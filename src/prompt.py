@@ -110,21 +110,19 @@ def format_descriptor(d):
     the one teams most often leave as 'returns null'.
     """
     args = "\n".join("      %-16s %s" % (k, v) for k, v in d["args"].items())
-    text = ("  %s\n"
-            "    purpose : %s\n"
-            "    when    : %s\n"
-            "    args    :\n%s\n"
-            "    returns : %s\n"
-            "    IF NOT FOUND : %s\n"
-            % (d["name"], d["purpose"], d["when"], args,
-               d["returns"], d["failure"]))
-    # IRREVERSIBLE? is the sixth field of the D2(b) contract. Only the
-    # gated tools carry one; for everything else its absence IS the
-    # statement, and saying "No" thirteen times would pay prefix tokens on
-    # every turn of every run to repeat the default.
-    if d.get("irreversible"):
-        text += "    IRREVERSIBLE? : %s\n" % d["irreversible"]
-    return text
+    # The six contract fields are explicit in the model-facing prompt.
+    # Older Problem-B entries still work through the fallbacks; Problem-A's
+    # descriptors provide the stronger signature/what fields directly.
+    return ("  %s\n"
+            "    NAME + SIGNATURE : %s\n"
+            "    WHAT             : %s\n"
+            "    INPUT            :\n%s\n"
+            "    RETURNS          : %s\n"
+            "    FAILS WHEN       : %s\n"
+            "    IRREVERSIBLE?    : %s\n"
+            % (d["name"], d.get("signature", d["name"]),
+               d.get("what", d.get("purpose", "")), args,
+               d["returns"], d["failure"], d.get("irreversible", "NO")))
 
 
 def descriptor_set(version=None):
