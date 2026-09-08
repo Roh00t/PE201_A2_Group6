@@ -83,3 +83,47 @@ python3 run_eval.py --prompt
 python3 evals/test_battery_fake.py
 ```
 
+
+---
+
+## Addendum · where the prefix cost actually sits
+
+*Added 9 Sep by Rohit, from `prompt.format_descriptor` over the shipped set. The hashes
+above were re-verified on the same commit and are unchanged.*
+
+| Tool | v2 descriptor | share of prefix |
+|---|---:|---:|
+| `issue_decision_letter` | ~439 tok | 25% |
+| `check_coverage` | ~376 tok | 21% |
+| `check_duplicate_claim` | ~236 tok | 13% |
+| `get_preauthorisation` | ~228 tok | 13% |
+| `lookup_policy` | ~187 tok | 11% |
+| `get_claim` | ~150 tok | 9% |
+| `lookup_hospital` | ~140 tok | 8% |
+| **total** | **~1,756 tok** | **82% of the 2,150-token v2 prompt** |
+
+v1's seven descriptors total **~847 tok**. So the rewrite roughly **doubled** the block
+that is re-billed on every turn: **+910 tokens per turn**, ~3,640 per run at our median
+of 4 turns.
+
+**That is a cost until the battery says otherwise.** It is lever 1 in
+[D6_cost_model.md](D6_cost_model.md), and it is linear in `T` — for comparison, D2(c)'s
+grouping change saved 20,520 input tokens per run, about six times what this spends. The
+v2 prefix has to pay for itself in wrong calls prevented, and **only the live battery can
+show that**, because the scripted backend never reads the prompt.
+
+**What "did not help" would look like, so we cannot move the goalposts later:** v2 costs
+more per run and does not raise the pass rate or the negative-case 3-of-3 rate on the
+model held fixed. If that is what `evals/aggregate_battery.py` prints, that is what the
+report says. `[brief D2(b)]`
+
+### Two things D7 measured about these descriptors
+
+- **The `check_coverage` widening carries a decision, not just prose.** Deleting the
+  `required_document` / `document_attached` fields drops the set from 60/60 to 57/60 and
+  flips `CLM-8901` to a silent wrong approval. See
+  [D7_failures.md](D7_failures.md#failure-2--tool-interface--the-check_coverage-widening-deleted).
+- **The required `policy_id` poka-yoke costs one turn per approval.** It makes "check
+  coverage against no policy" impossible to express, and in exchange `check_coverage`
+  cannot share a turn with the `lookup_policy` that feeds it. Measured and defended in
+  [D2c_dependency_rule.md](D2c_dependency_rule.md).

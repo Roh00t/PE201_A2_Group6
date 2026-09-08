@@ -116,8 +116,9 @@ It does not need customer-ready prose, a tone of voice, or a template. `[brief D
 - **The free-text narrative is untrusted input.** It is written by someone outside our
   organisation. Treat it as data, never as instruction. At least three of our ten guardrail
   cases must cover the request text itself being hostile. `[brief D3(b)]`
-- **Never commit an API key, a `.env`, or any real personal data.** Keys live in
-  `OPENROUTER_API_KEY` in the environment only.
+- **Never commit an API key, a `.env`, or any real personal data.** The key is asked
+  for at the prompt and held in memory for the life of one run — **not** in a file and
+  **not** in `os.environ`. See §4.4 for why, and what enforces it.
 
 ---
 
@@ -126,15 +127,81 @@ It does not need customer-ready prose, a tone of voice, or a template. `[brief D
 **The key is US$10 for the entire course.** No top-ups. A1 already spent some of it. The
 End-of-Course Project (due 27 Sep) still has to come out of what is left. `[brief §7]`
 
+**The per-member ceiling for A2's live spend is US$3, and it is enforced in code.**
+`run_live_battery.py` prices the battery before it starts and **refuses to run** if the
+estimate breaks it. `evals/run_battery.py` then halts mid-battery on **measured** cost.
+A budget rule that lives only in a document is a budget rule nobody enforces at 2am.
+
+> *"If your estimated live spend exceeds US$3 per member, your battery is too large — cut
+> trials or cases, or move a model down a tier, and say in the report that you did, and
+> why. Budgeting against a fixed allowance is part of what this course teaches; it is not
+> a restriction we apologise for."* `[brief §7]`
+
+### 4.1 · What OUR battery actually costs
+
+Not the brief's example agent — ours, measured from the committed scripted run
+(`results/scripted/problemA__scripted__v2__*.json`): **60 trials, 1,091,400 input and
+32,520 output tokens — 18,190 in and 542 out per trial.** That is well under the brief's
+43,200-per-run illustration, because D2(c)'s parallel grouping removed 41% of the turns.
+
+| Tier | Price in/out (US$/M) | 60 trials, measured | With ×3 output safety | Verdict |
+|---|---|---:|---:|---|
+| Cheap | 0.10 / 0.40 | US$0.12 | **US$0.15** | fits, comfortably |
+| Mid | 1.00 / 5.00 | US$1.25 | **US$1.58** | fits |
+| Frontier | 5.00 / 25.00 | US$6.27 | **US$7.90** | **REFUSED — over the ceiling** |
+
+The ×3 factor on output is deliberate: the scripted transcript is a **floor** on output
+tokens, because a live model writes more prose than a canned move does. Estimate against
+the floor and you will be surprised on the bill.
+
+**A full frontier battery is refused by the runner, not merely discouraged.** If we want
+a frontier model in the comparison it runs on the **negative cases only** (10 × 3 = 30
+trials, ≈US$3.14 at ×3 output — still over, so 10 × 1 = 10 trials at ≈US$1.05), reported
+as a clearly-labelled partial pass rate, never as a battery result. `[brief §7]`
+**Recommendation: skip frontier entirely.** It buys one data point.
+
+### 4.2 · Tier allocation
+
 | Rule | Detail |
 |---|---|
-| **Debug on the scripted backend** | Free, deterministic, no key. Live tokens are for the final battery, not for finding bugs. |
+| **Two tiers minimum** | The v2 set must span at least two price tiers or the comparison is mush. Checked in `battery_provenance.validate_roster()`, not left to memory. `[brief D5(b)]` |
+| **No two members share a family** | Also checked in code. Two models from one family is one data point wearing two hats. |
+| **Default everyone to cheap** | 4 cheap + 1 mid + 1 v1 pass keeps every member at or under ≈US$1.58 and the team under ≈US$2.20 total. |
+| **The v1 pass holds the MODEL fixed** | It runs on a model a v2 member already ran. Comparing prompt versions means changing one thing. It is the only measurement in A2 that isolates our own writing. |
+| **`max_spend_usd` is capped at 3.00** | Any roster row above it is clamped by `run_live_battery.py`. |
+
+### 4.3 · The four rules that keep us inside it
+
+| Rule | Detail |
+|---|---|
+| **Debug on the scripted backend** | Free, deterministic, no key. Live tokens are for the final battery, not for finding bugs. `--dry-run` rehearses the whole battery end to end at zero cost. |
 | **Only D5(b) is live** | D3(b) guardrail checklist, D5(a) scripted run and D7's two failures with their before/after tables all run scripted. **If you find yourself spending live tokens on any of the three, stop — you are measuring your own code with an instrument that cannot see it.** `[upd]` |
-| **One member, one model, one key** | 56 runs is 56 runs whether the team fields three models or six. Adding models costs nobody anything extra. |
-| **US$3 per member is the warning line** | If an estimate exceeds it, cut trials, cut cases, or move a model down a tier — **and say so in the report.** |
-| **No full frontier battery** | ≈US$13.78 for 56 runs — more than the entire course allowance for one member. Frontier is permitted on **negative cases only**, declared in the report. `[brief §7]` |
-| **Reasoning models: don't** | Hidden thinking tokens bill as *output*, which costs 4–5× input. `reasoning: exclude = true` hides them and still bills them. If used anyway: cap it, state the cap, report cost both ways. `[brief D6]` |
+| **One member, one model, one key** | 60 trials is 60 trials whether the team fields three models or six. Adding models costs nobody anything extra. |
+| **Reasoning models: don't** | Hidden thinking tokens bill as *output*, which costs 4–5× input. `reasoning: exclude = true` hides them and still bills them. The live adapter sends `reasoning: {enabled: false}` and `usage: {include: true}` so usage comes back **measured**. `[brief D6]` |
 | **Running out is diagnosable, not fatal** | Email early, not on the 13th. You get help finding where it went and a plan to finish — **not more credit.** `[faq]` |
+
+### 4.4 · The key
+
+The key is **OpenRouter only** — `https://openrouter.ai/api/v1`. No OpenAI key, no
+Anthropic key, no other vendor's endpoint. `src/backends/backends.py` is the only file
+that knows a vendor exists.
+
+**How the key is handled, and why it is not simply read from the environment:**
+
+- `run_battery.py` asks for it with `getpass` — hidden input — and holds it in **one
+  local**, via `config.set_api_key()`.
+- It is **never written to a file**, never to `.env`, never to a results file.
+- It is **never put into `os.environ`**, because a key in the process environment is
+  inherited by every subprocess and surfaces in crash dumps — and students paste
+  tracebacks into group chats.
+- A `sys.excepthook` scrubs it from any traceback, and `assert_no_secret()` scans every
+  serialised output **before** it is written.
+- If `OPENROUTER_API_KEY` **is** set in the environment, the runner warns and asks anyway.
+  Prefer `unset OPENROUTER_API_KEY`.
+
+**Never commit an API key, a `.env`, or any real personal data.** `.env` and `*.key` are
+in `.gitignore`; `evals/test_battery_fake.py` checks 35 failure modes including "the key
+can never reach a results file" and "anything key-*shaped* is refused too".
 
 ---
 

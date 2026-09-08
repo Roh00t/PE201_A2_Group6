@@ -91,10 +91,39 @@ DECISION_LOG_PATH = os.path.join(_REPO_ROOT, "logs", "decisions.jsonl")
 # is the reason this set is per-run rather than per-process.
 _DECIDED_THIS_RUN = set()
 
+# WHAT THE LOOP KNOWS AND THE TOOL DOES NOT.
+#
+# Rubric 1, Technical Execution: "the gated action logs a decision with
+# its evidence trail and its gate." The tool cannot see either. It is
+# handed five totals; it has no idea which tools were called before it,
+# how many turns that took, what the run has cost, or whether a human
+# approved anything. Only the loop has those.
+#
+# So the loop deposits them here immediately before the gated call, and
+# the ledger row is still written in ONE place - inside the gated action
+# itself. That matters: a blocked call must leave no ledger line, and
+# the only way to guarantee that is for the writer to be the thing doing
+# the blocking. Writing the row from the loop instead would separate the
+# refusal from the record and eventually they would disagree.
+#
+# Cleared per run, for the same isolation reason as _DECIDED_THIS_RUN.
+_RUN_CONTEXT = {}
+
 
 def reset_decision_state():
     """Clear per-run gated-action state. Called at the top of every run."""
     _DECIDED_THIS_RUN.clear()
+    _RUN_CONTEXT.clear()
+
+
+def set_run_context(**fields):
+    """The loop's view of the run so far, for the ledger.
+
+    Called by loop_agent just before the gated action. Never by a tool,
+    never by the model, and nothing here can change what the gate
+    DECIDES - it only changes what the ledger can SAY afterwards.
+    """
+    _RUN_CONTEXT.update(fields)
 
 
 def _load(problem, table):
@@ -716,6 +745,11 @@ def issue_decision_letter(
 
     # ---- the write ---------------------------------------------------
     _DECIDED_THIS_RUN.add(claim_id)
+    # THE LEDGER ROW. Not a letter, not a template, not prose - the
+    # brief is explicit that no marks live in the wording. What earns
+    # the mark is that the row is auditable on its own: months later,
+    # somebody must be able to read one line and say what was decided,
+    # on what evidence, through which gate, and what it cost.
     record = {
         "ts": datetime.datetime.now().isoformat(timespec="seconds"),
         "case_id": claim_id,
@@ -724,6 +758,22 @@ def issue_decision_letter(
         "approved_total": approved_total,
         "refused_total": refused_total,
         "autonomy": config.AUTONOMY,
+        # WHY, in the agent's own words at the moment it committed - not
+        # the tidied-up reason it writes afterwards. If the two ever
+        # disagree, this is the one that tells you what it believed.
+        "reason": _RUN_CONTEXT.get("thought_at_issue"),
+        # THE EVIDENCE TRAIL: every tool actually called, in order,
+        # before this write. A decision whose trail does not contain
+        # check_coverage is a decision nobody checked coverage for, and
+        # that is readable straight off the row.
+        "evidence": list(_RUN_CONTEXT.get("evidence") or []),
+        # THE GATE: which one, and whether a human passed it.
+        "gate": _RUN_CONTEXT.get("gate"),
+        "turns": _RUN_CONTEXT.get("turns"),
+        "tokens_in": _RUN_CONTEXT.get("tokens_in"),
+        "tokens_out": _RUN_CONTEXT.get("tokens_out"),
+        "cost_usd": _RUN_CONTEXT.get("cost_usd"),
+        "backend": _RUN_CONTEXT.get("backend", config.BACKEND),
     }
     os.makedirs(os.path.dirname(DECISION_LOG_PATH), exist_ok=True)
     with open(DECISION_LOG_PATH, "a", encoding="utf-8") as fh:

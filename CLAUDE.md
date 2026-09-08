@@ -19,6 +19,85 @@ Source tags used throughout: `[brief]` = PE6201_A2_Applied_AI_System.pdf ·
 
 ---
 
+## 0 · CURRENT STATE — 9 September 2026
+
+**Read this first. It is the only section that changes daily.**
+
+### Merge status — all branches are on `main`
+
+| Branch | Merged | Brought |
+|---|---|---|
+| `hy/descriptors/guardrail-layer` | `c824aa9`, 8 Sep | D2(b) descriptors + `DESCRIPTORS_V1`, D3(a) code layer, D3(b) 15-case checklist |
+| `codex/zhaoyujia-d6-initial` | `78cfb03`, 9 Sep | `src/cost_model.py`, `docs/D6_cost_model.md`, `d6_inputs_template.json` |
+
+### The shape of the evaluation set — DERIVED, never typed
+
+**40 cases · 10 negative · 30 ordinary · 60 trials.** Not 40/8/56.
+
+Nine of the fifteen **shipped** cases are already negative and the extension rule
+forbids deleting a shipped row, so 8 negatives is unreachable. 10 sits at the top of
+the brief's stated 6–10 band, and the requirement is **30–50 cases** — confirmed in
+three places (`[brief D4]`, `[upd]`, `PE6201_A2_Adding_Extra_Cases.pdf`).
+
+**Never hardcode 40, 10, 30 or 60.** `battery_provenance.plan_shape()` derives them
+from the fixtures, and `run_battery` refuses to start if a typed number disagrees.
+
+### Green as of today — all free, all reproducible from a clean clone
+
+```bash
+python3 run_eval.py                                   # 60 of 60 trials
+python3 evals/run_guardrails.py --twice               # 13/13, 1/1, 1 known limit
+python3 evals/test_battery_fake.py                    # 35 passed
+python3 evals/test_cost_model.py                      # 4 passed
+python3 experiments/d2c_parallel_vs_sequential.py     # 41% turns, 53% input tokens
+python3 experiments/demo_loop_failure.py              # D7 failure 1 · loop control
+python3 experiments/demo_tool_interface_failure.py    # D7 failure 2 · tool interface
+```
+
+### OpenRouter model mapping — `evals/battery_roster.json`
+
+**Still placeholders. Nobody can run until it is filled.** One member, one model, one
+key. `validate_roster()` refuses a `<placeholder>` model, refuses a `price_checked_on`
+older than 14 days, and enforces both conditions in code: **no two v2 members share a
+family**, and **the v2 set spans ≥2 tiers**.
+
+| Member | Roster key | Tier | Family | Prompt | Est. spend |
+|---|---|---|---|---|---:|
+| Rohit Panda | `rohit` | cheap | A | v2 | ≈$0.15 |
+| Huang Yu | `huangyu` | cheap | B | v2 | ≈$0.15 |
+| Li Yunke | `yunke` | cheap | C | v2 | ≈$0.15 |
+| Xia Yanran | `yanran` | cheap | D | v2 | ≈$0.15 |
+| Shen Bowen | `bowen` | mid | E | v2 | ≈$1.58 |
+| Zhao Yujia | `yujia` | cheap | **A — same model as Rohit** | **v1** | ≈$0.15 |
+
+Yujia's row is the D2(b) v1 pass and **must** hold the model fixed against a v2 member's.
+It is unblocked: `sha(v1)=36992f7881ec` ≠ `sha(v2)=4accfcfacda4`.
+
+### The evaluation workflow — the order is not optional
+
+1. **Fill the roster** with real model ids and prices verified **on the day**, with the
+   date recorded. `[brief D5(b)]`
+2. `python3 run_battery.py --freeze` — **once**, at the frozen commit. Stamps the
+   fingerprint hashes.
+3. Cut and push the `v2-freeze` tag. **Nobody merges to `main` until results land.**
+4. Every member: `python3 run_live_battery.py --name "<Your Name>"` — bilingual,
+   prices the run, refuses over US$3, then hands over to the hardened runner.
+5. Everyone commits their own `results/live/battery__*.json`. **No editing of numbers.**
+6. `python3 evals/aggregate_battery.py` — builds the D5(b) table and the v1→v2 delta.
+
+### Blocking, as of today
+
+| Blocker | Owner | Why it blocks |
+|---|---|---|
+| **Roster is placeholders** | all | Nothing live can run |
+| **`v2-freeze` not cut** | Rohit | Six runners with no frozen commit is guaranteed drift |
+| **Eval cases under one identity** | all | "Everyone writes 5–8" is NOT OPTIONAL on the declaration `[brief §8]` |
+| **No commits from Xia Yanran, Shen Bowen** | those two | The history has to corroborate `CONTRIBUTIONS.md` |
+| **`evals/graders/` is three empty files** | Li Yunke | D4 needs BOTH check kinds; only the code check runs |
+| **`docs/D0_why_an_agent.md` missing** | Zhao Yujia | Report §1 is read first and read hardest |
+
+---
+
 ## 1 · Executive summary
 
 ### What A2 actually is
@@ -68,7 +147,7 @@ both. Escalate when the *claim* cannot be decided — not when a *line* is refus
 | D2(c) | Multi-tool turns, dependency rule, measured both ways | M1 | scripted |
 | D3(a) | Guardrail **code** layer | M2 | code |
 | D3(b) | Guardrail checklist — ≥10 cases, ≥3 hostile text | M2 + M5 | **scripted, free** |
-| D4 | Evaluation set — 40 cases, 8 negative, all members author 5–8 | **all** | scripted + live |
+| D4 | Evaluation set — **40 cases, 10 negative, 60 trials**, all members author 5–8 | **all** | scripted + live |
 | D5(a) | Reproducible scripted end-to-end run | M3 | **scripted, free** |
 | D5(b) | Live model battery — one model per member | **all** | **live (only paid part)** |
 | D6 | Three-layer cost model, four levers, sensitivity, break-even | M4 | analysis |
@@ -92,7 +171,7 @@ three, stop.
 | Mon 7 / Tue 8 Sep | Class 6 — sharpens D3(b), does not start it | Do not wait for it `[brief §10]` |
 | Tue 8 Sep | 40 cases + answer key complete; guardrail checklist passing | Blocks battery |
 | **Wed 9 Sep** | **`v2-freeze` tag cut** | Nobody merges to `main` until battery lands |
-| Wed 9 – Thu 10 Sep | Live battery: 6 members × 56 runs | Blocks D6 |
+| Wed 9 – Thu 10 Sep | Live battery: 6 members × **60 trials** | Blocks D6 |
 | Fri 11 Sep | D6 cost model, sensitivity, break-even complete | Blocks report §4 |
 | Sat 12 Sep | Report at 2,000 words; demo recorded; self-appraisal signed | — |
 | **Sun 13 Sep, 23:59** | **A2 due** — zip, repo, report, self-appraisal, video link | — |
@@ -200,7 +279,7 @@ first `feat(loop)` commit.
 
 ### Phase 3 — Evidence (6–9 Sep) · all
 
-1. **D4 — 40 cases, 8 negative, everyone writes 5–8.** Non-negotiable row on the
+1. **D4 — 40 cases, 10 negative, everyone writes 5–8.** Non-negotiable row on the
    declaration. A set written by one head tests one head's assumptions. `[faq]`
    - Negative-case families for Problem A `[brief App. A]`: policy lapsed or out of dates ·
      one line excluded while others are fine · pre-auth required and absent, or expired
@@ -236,7 +315,7 @@ first `feat(loop)` commit.
 ### Phase 4 — Battery (9–10 Sep) · all
 
 1. Cut tag `v2-freeze` on `main`. Announce it. Nobody merges until results land.
-2. Every member runs **56 runs** on **their own key** against the **identical eval set and
+2. Every member runs **60 trials** on **their own key** against the **identical eval set and
    identical v2 prompt**, from the frozen commit. `MODEL` is the only string that differs.
    *With six runners, drift silently voids the whole battery.* `[brief D5(b)]`
 3. M6 runs the **v1 pass** on a model **already in the battery** — comparing prompt
@@ -318,22 +397,33 @@ replaced. `[upd]`
 
 ### Budget — the arithmetic that constrains the battery
 
-| Tier | Price in/out (US$/M) | One run | 56 runs |
-|---|---|---|---|
-| Cheap | 0.10 / 0.40 | ≈ $0.005 | **≈ $0.27** |
-| Mid | 1.00 / 5.00 | ≈ $0.049 | **≈ $2.76** |
-| Frontier | 5.00 / 25.00 | ≈ $0.246 | **≈ $13.78** |
+**Our measured basis, not the brief's example.** 60 scripted trials cost 1,091,400 input
+and 32,520 output tokens — **18,190 in / 542 out per trial**, well under the brief's
+43,200-per-run illustration because D2(c)'s parallel grouping removed 41% of the turns.
+The ×3 column applies a safety factor to output, because the scripted transcript is a
+**floor**: a live model writes more prose than a canned move does.
 
-`[brief §7]`
+| Tier | Price in/out (US$/M) | 60 trials, measured | ×3 output safety | vs US$3 ceiling |
+|---|---|---:|---:|---|
+| Cheap | 0.10 / 0.40 | ≈ $0.12 | **≈ $0.15** | fits, comfortably |
+| Mid | 1.00 / 5.00 | ≈ $1.25 | **≈ $1.58** | fits |
+| Frontier | 5.00 / 25.00 | ≈ $6.27 | **≈ $7.90** | **REFUSED in code** |
+
+`[brief §7]` · recompute at any time with `python3 run_live_battery.py --name <you> --dry-run`
 
 - The key is **US$10 for the whole course**, no top-ups, already partly spent on A1, and
   it must still cover the End-of-Course Project due 27 Sep.
-- **A full frontier battery exceeds the entire course allowance.** If we want a frontier
-  model in the comparison, run it on the **negative cases only** (8 × 3 = 24 runs) and say
-  so in the report. `[brief §7]` `[team]` Recommendation: skip frontier entirely — 24
-  frontier runs is still ≈ $5.90 and buys one data point.
-- Our allocation (3 cheap + 2 mid + 1 v1 pass) puts every member under the brief's
-  US$3-per-member warning line, with mid-tier members at ≈ $2.76.
+- **A full frontier battery exceeds the entire course allowance**, and
+  `run_live_battery.py` REFUSES it: our measured 60 trials price at ≈US$6.27 (≈US$7.90
+  with the ×3 output safety factor) against a US$3 ceiling. If we want a frontier model
+  in the comparison, run it on the **negative cases only** and say so in the report.
+  `[brief §7]` `[team]` Recommendation: skip frontier entirely — it buys one data point.
+- Our allocation (**4 cheap + 1 mid + 1 v1 pass**) puts every member under the brief's
+  US$3-per-member ceiling, with the mid-tier member at ≈ $1.58 and everyone else at
+  ≈ $0.15. Team total ≈ **US$2.20**, against six US$10 keys.
+- **The ceiling is enforced, not advisory.** `run_live_battery.py` prices the battery
+  before it starts and refuses over US$3; `evals/run_battery.py` then halts mid-battery
+  on MEASURED cost. `max_spend_usd` in the roster is clamped to 3.00.
 - **Debug on the scripted backend.** Live tokens are for the final battery only.
 
 ---
@@ -365,11 +455,12 @@ failing runs by the tool call that immediately preceded the failure.
 **3 · Pass rate** — always with its trial count, model, prompt version and date.
 ```
 pass_rate = passing_trials / total_trials
-40 cases: 32 ordinary × 1 + 8 negative × 3 = 56 trials
+40 cases: 30 ordinary × 1 + 10 negative × 3 = 60 trials   (DERIVED, never typed)
 ```
 > Weak: "our agent is about 85% accurate."
-> Strong: "v2 prompt, `<model>`, 56 trials over 40 cases, 48 passed (85.7%); on the 8
-> negative cases alone, 19/24 (79.2%)." **The second number is the one that matters.** `[faq]`
+> Strong: "v2 prompt, `<model>`, 60 trials over 40 cases, 48 passed (80.0%); on the 10
+> negative cases alone, 19/30 (63.3%)." **The second number is the one that matters.** `[faq]`
+> (Shape is ours; the pass rates above are illustrative until the battery runs.)
 
 **4 · Cost-to-serve — Class 5's escalate-on-failure form, not Class 4's retry form.**
 ```

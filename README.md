@@ -46,7 +46,11 @@ Other entry points:
 ```bash
 python3 run_eval.py CLM-8842        # one case, every turn, with the decision record
 python3 run_eval.py --prompt        # exactly what a live model is sent, and its token cost
-python3 experiments/demo_loop_failure.py   # D7 failure 1, before/after
+python3 evals/run_guardrails.py --twice               # D3(b), 15 guardrail cases
+python3 experiments/demo_loop_failure.py              # D7 failure 1 · loop control
+python3 experiments/demo_tool_interface_failure.py    # D7 failure 2 · tool interface
+python3 evals/test_battery_fake.py                    # 35 battery failure modes rehearsed
+python3 evals/test_cost_model.py                      # D6 arithmetic
 ```
 
 ---
@@ -173,8 +177,8 @@ Measured both ways over the whole set, caps lifted so grouping is the only varia
 
 | grouping | turns | calls | input tokens | cost | pass rate |
 |---|---|---|---|---|---|
-| sequential | 356 | 360 | 2,314,800 | $0.2514 | 60/60 |
-| parallel | 210 | 360 | 1,083,600 | $0.1213 | 60/60 |
+| sequential | 357 | 360 | 2,322,600 | $0.2523 | 60/60 |
+| parallel | 211 | 360 | 1,091,400 | $0.1221 | 60/60 |
 
 **41% fewer turns, 53% fewer input tokens, correctness unchanged.** The call count is
 identical — nothing was removed, the calls were regrouped, so the saving is the transcript
@@ -196,9 +200,9 @@ Measured, not chosen. Reproduce with `experiments/d2c_parallel_vs_sequential.py`
 ```
 turn distribution, 60 trials, parallel grouping
     2 turns  12 runs        median             4
-    3 turns  12 runs        mean               3.50
-    4 turns  30 runs        worst LEGITIMATE   5
-    5 turns   6 runs        hit the cap        0
+    3 turns  12 runs        mean               3.52
+    4 turns  29 runs        worst LEGITIMATE   5
+    5 turns   7 runs        hit the cap        0
 
 per-run tokens: median 21,600 · worst 29,520
 ```
@@ -242,12 +246,46 @@ of the agent.
 
 ---
 
+**The ledger is append-only, so reset it before you commit.** Every dev run appends; the
+artifact a marker should read is **one clean pass — 30 rows, one per approved claim**:
+
+```bash
+rm -f logs/decisions.jsonl && python3 run_eval.py
+```
+
+Each row carries the decision, the reason **in the agent's own words at the moment it
+committed**, the ordered evidence trail, the gate and who passed it, and the turns, tokens
+and cost the decision took. No letter text, no template, no prose — the brief is explicit
+that nothing marks the wording.
+
+---
+
 ## The live battery (D5b)
 
 Six members, six keys, one evaluation set. The brief's warning is the design
 constraint: *"with three runners drift is survivable; with six it silently voids the whole
 battery."* **Silently** is the word — a drifted run produces a pass rate in the right format
 at the right cost that is simply not comparable, and nobody gets an error.
+
+### The way team members should run it
+
+```bash
+python3 run_live_battery.py --name "Zhao Yujia"        # or --name yujia, or just ask
+```
+
+A bilingual (English / 简体中文) front door. It resolves your name to your roster row,
+prices the battery against **measured** tokens from the committed scripted run, **refuses
+to start if the estimate breaks the US$3 per-member ceiling**, shows you the model id and
+the estimate, asks you to type the model id back, and then hands over to the hardened
+runner below. Add `--dry-run` to rehearse the whole thing at zero cost, `--lang zh` or
+`--lang en` for one language only.
+
+It writes your results twice: the canonical `results/live/battery__*.json` that
+`aggregate_battery.py` reads, and a copy at
+`results/live/<member>/problemA__live_<member>_<model>_<date>.json`. **Keep both** —
+deleting the canonical file empties the D5(b) table.
+
+### The runner underneath
 
 ```bash
 python3 evals/test_battery_fake.py             # 35 checks, no key, no cost
@@ -270,6 +308,7 @@ all six members, and six people are not editing the same three lines.
 | `getpass` → one local → `set_api_key()` | The key reaching `.env`, `os.environ`, a results file or a traceback |
 | Canary on three case shapes | Committing to 60 runs on an estimate instead of a measurement |
 | `--max-spend`, checked on **measured** cost after every trial | A battery quietly costing ten times its estimate |
+| **US$3 per-member ceiling, enforced before the first token** | A tier nobody priced. A full frontier battery estimates at ≈US$7.90 against our measured token basis and is **refused**, not warned about |
 | `max_tokens` on the request | A runaway completion. `MAX_TOKENS_PER_RUN` fires only *after* billing |
 | `reasoning: {enabled: false}` | Hidden thinking billed as output at 4–5× |
 | Retry at the **transport** layer | Re-spending turns 1–5 to retry a failure at turn 6 |

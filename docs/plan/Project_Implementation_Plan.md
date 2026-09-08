@@ -1973,9 +1973,13 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
   - Token usage logging.
   - Error handling & retries.
 
-- [ ] **All Members**: Set up personal API keys:
+- [ ] **All Members**: have your personal OpenRouter key to hand. **Do NOT export it.**
+  Superseded 9 Sep — see `GUARDRAILS.md` §4.4. The runner asks for it with `getpass`
+  and holds it in one local; a key in the environment is inherited by every subprocess
+  and surfaces in tracebacks.
   ```bash
-  export OPENROUTER_API_KEY="sk-..."
+  unset OPENROUTER_API_KEY          # then let the prompt take it
+  python3 run_live_battery.py --name "<Your Name>"
   ```
 
 - [ ] **Member 4**: Define model roster in `config.py`:

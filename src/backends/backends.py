@@ -124,14 +124,35 @@ SCRIPTS = {
                     "the hospital and the LINE ITEMS this returns.",
          "calls": [("get_claim", {"claim_id": "CLM-8842"})]},
 
-        {"thought": "Now five calls that depend on nothing but that record. "
-                    "The policy, the hospital, and one coverage check PER LINE "
-                    "- three lines, three checks. All independent, so one turn.",
+        # WHY THIS IS TWO TURNS AND APPENDIX A'S IS ONE.
+        #
+        # Appendix A folds lookup_policy and the three coverage checks
+        # into a single turn and reaches this claim in four turns. We
+        # cannot, and the reason is our own poka-yoke: check_coverage
+        # takes a REQUIRED policy_id, and only lookup_policy can supply
+        # one. A call and its own dependency cannot share a turn.
+        #
+        # This script used to do it anyway - it passed policy_id
+        # "POL-3310" alongside the lookup_policy call that produces it,
+        # which works only because a hand-written script already knows
+        # the answer. No live model could reproduce that turn, so the
+        # scripted baseline was measuring a shape the battery could
+        # never match. Split, it costs one turn on every approval and
+        # the number is honest. [brief D2(c): "a team that parallelises
+        # less than we did and explained why is on stronger ground than
+        # one that copied this page"]
+        {"thought": "Two claim-level lookups that need nothing but the "
+                    "record I already have. They do not need each other, "
+                    "so they share a turn.",
          "calls": [("lookup_policy", {"member_id": "M-2214"}),
-                   ("check_coverage", {"code": "47120", "policy_id": "POL-3310"}),
-                   ("check_coverage", {"code": "31255", "policy_id": "POL-3310"}),
-                   ("check_coverage", {"code": "62480", "policy_id": "POL-3310"}),
                    ("lookup_hospital", {"hospital_id": "H-114"})]},
+
+        {"thought": "Now the policy id exists, so I can price the lines. "
+                    "One coverage check PER LINE - three lines, three "
+                    "checks, independent of each other, so one turn.",
+         "calls": [("check_coverage", {"code": "47120", "policy_id": "POL-3310"}),
+                   ("check_coverage", {"code": "31255", "policy_id": "POL-3310"}),
+                   ("check_coverage", {"code": "62480", "policy_id": "POL-3310"})]},
 
         {"thought": "This one CANNOT join the turn above: I did not know which "
                     "line needed a pre-authorisation until coverage answered. "

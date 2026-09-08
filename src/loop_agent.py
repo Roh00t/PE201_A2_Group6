@@ -127,6 +127,23 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
                             "gate_held",
                             "%s awaits human approval (autonomy=%s)"
                             % (name, config.AUTONOMY))
+                    # The gate PASSED, so a ledger row is about to be
+                    # written. Hand the tool what only the loop knows,
+                    # so the row carries its evidence trail, its gate
+                    # and its cost rather than five bare totals.
+                    # Deliberately AFTER the gate: a held gate writes
+                    # nothing, and there is nothing to describe.
+                    tools.set_run_context(
+                        thought_at_issue=move.get("thought", ""),
+                        evidence=list(evidence),
+                        gate={"name": name, "autonomy": config.AUTONOMY,
+                              "approved": True},
+                        turns=turns,
+                        tokens_in=tokens_in, tokens_out=tokens_out,
+                        cost_usd=round(
+                            (tokens_in / 1e6) * config.PRICE_IN
+                            + (tokens_out / 1e6) * config.PRICE_OUT, 6),
+                        backend=config.BACKEND)
 
                 # A HALLUCINATED TOOL NAME MUST NOT KILL THE BATTERY.
                 # tools.call raises KeyError on an unknown name and
