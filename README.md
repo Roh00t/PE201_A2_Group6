@@ -74,7 +74,7 @@ evals/
   battery_checkpoint.py          fsync'd JSONL, resume, lock
   aggregate_battery.py           the report §3 table + the v1/v2 delta
   test_battery_fake.py           35 checks against a fake vendor, free
-  guardrail_cases.json           D3(b) checklist            <- Huang Yu, in progress
+  guardrail_cases.json           D3(b) checklist            <- Huang Yu
 data/
   make_fixtures_A.py             the generator — EXTRA_* block is where cases are added
   data_A/*.json                  generated; never hand-edited
@@ -312,10 +312,10 @@ See `CONTRIBUTIONS.md`; the commit history corroborates it.
 | D0 · Why an agent | `docs/D0c_what_good_looks_like.md` committed before any agent code |
 | D1 · The agent | Done — multi-call turns, instrumented per run |
 | D2(a) · Tool set | 7 tools, none added: `check_coverage` was widened instead |
-| D2(b) · Descriptors | v2 shipped; the v1 *mechanism* is in (`tools.DESCRIPTORS_V1` + `prompt.descriptor_set`), the v1 *content* is Huang Yu's |
+| D2(b) · Descriptors | Seven Problem-A six-field descriptors, runtime poka-yoke, and measured v1→v2 prompt rewrite shipped |
 | D2(c) · Multi-tool turns | Measured both ways |
 | D3(a) · Guardrail code | Step cap · budget ceiling · de-duplication · gate · narrative guard |
-| D3(b) · Checklist | Outstanding |
+| D3(b) · Checklist | 15 scripted cases: 13/13 must-fire, 1/1 must-not-fire, 1 documented known limit |
 | D4 · Evaluation set | 40 cases, 10 negative, code + judgement checks |
 | D5(a) · Scripted run | Reproduces from a clean clone, no key |
 | D5(b) · Live battery | Runner, provenance, checkpoint, aggregator and 35-check rehearsal all in. Roster unfilled; no live run yet |
