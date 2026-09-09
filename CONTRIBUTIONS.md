@@ -173,7 +173,7 @@ explained away.
 
 | Member | Cases authored (IDs) | Count | Initials |
 |---|---|---:|---|
-| Rohit Panda | `<CLM-…, CLM-…>` | | |
+| Rohit Panda | `CLM1, CLM2, CLM3, CLM4, CLM5, CLM6, CLM7` | `7` | RP |
 | Huang Yu | `<CLM-…, CLM-…>` | | |
 | Li Yunke | `<CLM-…, CLM-…>` | | |
 | Xia Yanran | `<CLM-…, CLM-…>` | | |

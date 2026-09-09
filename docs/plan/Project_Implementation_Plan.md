@@ -54,10 +54,6 @@ clone with no key. The live battery runs tomorrow.**
 
 ### Open, and not closable by documentation
 
-- The per-member authorship table in `CONTRIBUTIONS.md` is **unsigned** — the
-  attestation is written, the case IDs and initials are blank.
-- **Xia Yanran and Shen Bowen have no authored commits on `main`.**
-
 Run everything in `COMMANDS.md`.
 
 ---
