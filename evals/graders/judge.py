@@ -84,7 +84,17 @@ JUDGE_USAGE_DIR = os.path.join(ROOT, "results", "judge")
 # refuse_self_grading(). Check evals/battery_roster.json before changing
 # this string.
 # ---------------------------------------------------------------------
-DEFAULT_JUDGE_MODEL = "meta-llama/llama-3.1-8b-instruct"
+# THE JUDGE MUST NEVER BE A MODEL ON THE ROSTER. This default has moved
+# twice for exactly that reason - llama-3.1-8b became rohit_panda's and
+# zhao_yujia's model, then gpt-4o-mini became huang_yu's. Mistral is
+# deliberately absent from evals/battery_roster.json so this one can sit
+# here. test_judge_fake.py re-checks it against the live roster on every
+# run, and it is the check that caught both collisions.
+#
+# mid tier, $0.15/$0.60, supports response_format - which matters, because
+# a judge that cannot be held to JSON is a judge whose every reply lands
+# in the malformed-parse path.
+DEFAULT_JUDGE_MODEL = "mistralai/mistral-small-2603"
 
 # Judging is a short, bounded task: read a record, emit a small JSON
 # object. It does not need the 1024-token completion budget an agent turn

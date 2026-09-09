@@ -104,7 +104,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.003,
+        "seconds": 0.002,
         "turn_tokens": [
           [
             1800,

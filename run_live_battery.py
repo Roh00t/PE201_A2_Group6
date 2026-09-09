@@ -106,12 +106,12 @@ def rule(char="=", n=70):
 # either script, in either order. Refusing "Zhao Yujia" because the
 # roster says "yujia" would be the tool being difficult for no reason.
 ALIASES = {
-    "rohit": ["rohit", "rohit panda", "panda rohit", "panda", "罗希特"],
-    "huangyu": ["huangyu", "huang yu", "yu huang", "黄煜", "黄宇"],
-    "yunke": ["yunke", "li yunke", "yunke li", "李云可", "李昀可"],
-    "yanran": ["yanran", "xia yanran", "yanran xia", "夏嫣然", "夏艳然"],
-    "bowen": ["bowen", "shen bowen", "bowen shen", "沈博文"],
-    "yujia": ["yujia", "zhao yujia", "yujia zhao", "赵宇佳", "赵雨佳"],
+    "rohit_panda": ["rohit", "rohit panda", "panda rohit", "panda", "罗希特"],
+    "huang_yu":    ["huangyu", "huang yu", "yu huang", "黄煜", "黄宇"],
+    "li_yunke":    ["yunke", "li yunke", "yunke li", "李云可", "李昀可"],
+    "xia_yanran":  ["yanran", "xia yanran", "yanran xia", "夏嫣然", "夏艳然"],
+    "shen_bowen":  ["bowen", "shen bowen", "bowen shen", "沈博文"],
+    "zhao_yujia":  ["yujia", "zhao yujia", "yujia zhao", "赵宇佳", "赵雨佳"],
 }
 
 
@@ -343,6 +343,59 @@ def mirror_result(entry, dry_run):
     return os.path.relpath(dest, ROOT), os.path.relpath(latest, ROOT)
 
 
+
+# =====================================================================
+# THE JUDGEMENT CHECK, chained
+# =====================================================================
+def run_judgement(results_path, args):
+    """D4's second check, after the battery, with its own confirmation.
+
+    THE MONEY RULE THIS ENFORCES. The estimate the member typed a model
+    id to approve priced the BATTERY. Judging is a second instrument on
+    a second model, so it gets a second consent - never a silent
+    continuation of the first.
+    """
+    import json as _json
+    from evals.graders import judge as judge_mod
+
+    with open(results_path, encoding="utf-8") as fh:
+        graded_model = _json.load(fh).get("model")
+    model = args.judge_model or judge_mod.DEFAULT_JUDGE_MODEL
+
+    roster_models = {m.get("model") for m in
+                     prov.load_roster(args.roster).get("members", [])}
+    if model in roster_models or model == graded_model:
+        print()
+        say("REFUSING TO JUDGE with %s - it is on the roster." % model,
+            "拒绝用 %s 评审：它在花名册上。" % model)
+        say("A model may not grade a run from its own family's battery.",
+            "模型不能评审自己参与的实验结果。")
+        say("Pass --judge-model with something else.",
+            "请用 --judge-model 指定其他模型。")
+        print()
+        return 3
+
+    print()
+    rule()
+    say("D4 · THE JUDGEMENT CHECK — A SECOND, SEPARATE LIVE SPEND",
+        "D4 · 语义评审 —— 这是第二笔独立的实盘支出")
+    rule()
+    print("  judge model     %s" % model)
+    print("  grading         %s" % os.path.relpath(results_path, ROOT))
+    print("  spend cap       US$%.2f   (separate from the battery's)"
+          % judge_mod.JUDGE_SPEND_CAP_USD)
+    say("This was NOT included in the estimate you approved above.",
+        "这笔费用不包含在你刚才确认的预算里。")
+    print()
+    answer = input("  Type 'judge' to proceed, anything else skips: ").strip()
+    if answer != "judge":
+        say("Skipped. The battery is saved and nothing more was spent.",
+            "已跳过。评测结果已保存，未产生额外费用。", "\n  ")
+        print()
+        return 0
+    return judge_mod.main([results_path, "--by", "model", "--model", model])
+
+
 # =====================================================================
 # MAIN
 # =====================================================================
@@ -366,6 +419,13 @@ def main(argv=None):
                          "the US$3 per-member ceiling.")
     ap.add_argument("--yes", action="store_true",
                     help="skip the typed confirmation (for --dry-run only)")
+    ap.add_argument("--judge", action="store_true",
+                    help="after the battery, run D4's judgement check over "
+                         "your results. SEPARATE live spend, separately "
+                         "confirmed, separately capped.")
+    ap.add_argument("--judge-model",
+                    help="judge model id. Must not be any model on the roster "
+                         "- a model may not grade its own run.")
     ap.add_argument("--roster", default=prov.ROSTER_PATH)
     args, passthrough = ap.parse_known_args(argv)
     LANG = args.lang
@@ -460,6 +520,25 @@ def main(argv=None):
             say("Commit both, then: python3 evals/aggregate_battery.py",
                 "提交后运行：python3 evals/aggregate_battery.py")
             print()
+
+            # ---- D4's SECOND CHECK -----------------------------------
+            # Deliberately NOT folded into the battery's price. Judging
+            # is a separate instrument with its own model, its own spend
+            # and its own cap, and the US$3 ceiling above was computed
+            # against the battery alone. Chaining it silently would make
+            # the number the member just approved wrong.
+            if args.judge and not args.dry_run:
+                rc = run_judgement(dest, args)
+            else:
+                say("D4 needs BOTH checks. The code check is done; the",
+                    "D4 需要两种检查。代码检查已完成，语义评审还没有：")
+                say("judgement check is not:", "")
+                print()
+                print("      python3 evals/graders/judge.py %s --by person"
+                      % dest)
+                say("  (free) or --by model --model <a model NOT on the roster>",
+                    "  （免费）；或用 --by model 指定一个不在花名册上的模型")
+                print()
     return rc
 
 

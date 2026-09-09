@@ -56,22 +56,25 @@ python3 experiments/demo_tool_interface_failure.py    # D7 failure 2 · tool int
 
 ### OpenRouter model mapping — `evals/battery_roster.json`
 
-**Still placeholders. Nobody can run until it is filled.** One member, one model, one
-key. `validate_roster()` refuses a `<placeholder>` model, refuses a `price_checked_on`
-older than 14 days, and enforces both conditions in code: **no two v2 members share a
-family**, and **the v2 set spans ≥2 tiers**.
+**Filled and live-verified 9 Sep. N−1: six members, FIVE distinct models.**
+`validate_roster()` refuses a `<placeholder>` model, refuses a `price_checked_on`
+older than 14 days, and enforces both conditions in code: **no two v2 members
+share a family**, and **the v2 set spans ≥2 tiers**.
 
-| Member | Roster key | Tier | Family | Prompt | Est. spend |
-|---|---|---|---|---|---:|
-| Rohit Panda | `rohit` | cheap | A | v2 | ≈$0.15 |
-| Huang Yu | `huangyu` | cheap | B | v2 | ≈$0.15 |
-| Li Yunke | `yunke` | cheap | C | v2 | ≈$0.15 |
-| Xia Yanran | `yanran` | cheap | D | v2 | ≈$0.15 |
-| Shen Bowen | `bowen` | mid | E | v2 | ≈$1.58 |
-| Zhao Yujia | `yujia` | cheap | **A — same model as Rohit** | **v1** | ≈$0.15 |
+| Member | Roster key | Model | Tier | Family | Prompt | Est. |
+|---|---|---|---|---|---|---:|
+| Rohit Panda | `rohit_panda` | `meta-llama/llama-3.1-8b-instruct` | cheap | meta-llama | v2 | $0.0624 |
+| Huang Yu | `huang_yu` | `openai/gpt-4o-mini` | mid | openai | v2 | $0.2222 |
+| Xia Yanran | `xia_yanran` | `qwen/qwen-2.5-72b-instruct` | mid | qwen | v2 | $0.4319 |
+| Li Yunke | `li_yunke` | `google/gemma-3-12b-it` | cheap | google | v2 | $0.0692 |
+| Shen Bowen | `shen_bowen` | `anthropic/claude-3-haiku` | mid | anthropic | v2 | $0.3948 |
+| Zhao Yujia | `zhao_yujia` | `meta-llama/llama-3.1-8b-instruct` | cheap | **meta-llama — same model as Rohit** | **v1** | $0.0624 |
 
-Yujia's row is the D2(b) v1 pass and **must** hold the model fixed against a v2 member's.
-It is unblocked: `sha(v1)=36992f7881ec` ≠ `sha(v2)=4accfcfacda4`.
+**Team total ≈ US$1.24.** 2 cheap + 3 mid across 5 families. Yujia's row is the
+D2(b) v1 pass and **must** hold the model fixed against a v2 member's. It is
+unblocked: `sha(v1)=36992f7881ec` ≠ `sha(v2)=4accfcfacda4`.
+
+Re-verify on the day with `python3 evals/check_roster_prices.py` — free, no key.
 
 ### The evaluation workflow — the order is not optional
 
@@ -89,7 +92,7 @@ It is unblocked: `sha(v1)=36992f7881ec` ≠ `sha(v2)=4accfcfacda4`.
 
 | Blocker | Owner | Why it blocks |
 |---|---|---|
-| **Roster is placeholders** | all | Nothing live can run |
+| ~~Roster is placeholders~~ | — | **DONE 9 Sep** — filled, live-verified, N−1, ≈US$1.24 |
 | **`v2-freeze` not cut** | Rohit | Six runners with no frozen commit is guaranteed drift |
 | **Eval cases under one identity** | all | "Everyone writes 5–8" is NOT OPTIONAL on the declaration `[brief §8]` |
 | **No commits from Xia Yanran, Shen Bowen** | those two | The history has to corroborate `CONTRIBUTIONS.md` |

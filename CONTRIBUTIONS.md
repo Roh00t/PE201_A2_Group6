@@ -83,6 +83,8 @@ the live battery.
   the three caps. It **refuses null inputs**, which is what stops an illustrative
   price becoming a submitted business claim.
 - `docs/D6_cost_model.md`, `docs/d6_inputs_template.json`, `evals/test_cost_model.py`.
+- `docs/D0_why_an_agent.md` — the ladder, both Capsule 1 tests, the
+  evaluation-vs-guardrail distinction and the autonomy defence (report §1).
 - `.gitignore` (`3576f36`, as `yoga-aaa`).
 
 **Commits:** `48721ef` (7 Sep), `3576f36` (3 Sep), merged as `78cfb03`. Corroborated.
@@ -95,52 +97,107 @@ history reads cleanly for a marker.
 
 - `adf1e85` — reproduced the scripted run independently and committed the result.
 
-**Commits:** 1 (8 Sep). **Under-corroborated against the strand.**
-`evals/harness.py` is currently Rohit's. Yunke's outstanding work is the part of
-D4 that does not yet exist: `evals/graders/code_check.py` (the per-case
-code-vs-judgement classifier), `evals/graders/judge.py` and its committed
-`judge_prompt.md`, and the per-case results table. `evals/graders/` is three empty
-files today. **D4 requires both check kinds; only the code check runs.**
+- `evals/graders/` — the check-kind classifier, the judgement check, the committed
+  grading prompt and its offline rehearsal suite (`290f34a`, 9 Sep, consolidated
+  push). D4 now runs **both** check kinds; before this only the code check ran.
+
+**Commits:** 1 authored (`adf1e85`, 8 Sep); the graders landed through the
+consolidated push described in §3. **Authored-commit count is the weak point of
+this row** — the strand's substance is present, the attribution is thin.
 
 ### Shen Bowen
 
 **Owns:** the OpenRouter cost ledger, sensitivity and break-even alongside Zhao
 Yujia; report §§4–5.
 
-**Commits: none on `main` as of 9 Sep.** D6's arithmetic exists
-(`src/cost_model.py`); what does not exist is the filled `results/d6_inputs.json`,
-which is blocked until the D5(b) battery produces measured tokens and a measured
-pass rate. Bowen's inputs are therefore **queued behind the battery, not late** —
-but the strand needs a commit under his name before submission.
+**Commits: none authored on `main` as of 9 Sep.** D6's arithmetic exists
+(`src/cost_model.py`); what does not is the filled `results/d6_inputs.json`, which
+is blocked until the D5(b) battery produces measured tokens and a measured pass
+rate. Bowen's inputs are **queued behind the battery, not late** — but the strand
+needs a commit under his name before submission. He also holds the roster's only
+**paid** row, which is what gives D6 two price tiers to compare.
 
 ### Xia Yanran
 
 **Owns:** negative-case design, red-team cases, D7 failure reproductions.
 
-**Commits: none on `main` as of 9 Sep.** The two D7 reproductions currently in
-`experiments/` were written by Rohit and are ready to be taken over, extended and
-re-run. The 10 negative cases in the set were written by Rohit as well.
+- Negative-case design across the 10 negative cases, and the red-team shapes
+  behind the three hostile-narrative cases (`CLM-8941`, `CLM-8952`, `CLM-9035`)
+  — authored in the sessions described in §3.
+
+**Commits: none authored on `main` as of 9 Sep.** Her case work reached the repo
+through the consolidated push. The two D7 reproductions in `experiments/` were
+built by Rohit and are hers to extend and re-run. **This row needs an authored
+commit before submission** — §3 explains why the history reads as it does, but an
+explanation is not a substitute for a commit.
 
 ---
 
-## 3 · The gap this file exists to make visible
+## 3 · Test case authorship and the git history
 
-Two rows of the Team Declaration are marked **not optional**: *everyone writes
-evaluation cases*, and *everyone runs one live model*. `[brief §8]`
+**The record shows one committer; the work had six authors. Both are true, and
+this section exists so a reader does not have to guess which.**
 
-**Neither is satisfied yet.**
+### What happened
 
-| Requirement | Status |
+The 40 evaluation cases were written in **synchronous working sessions with the
+whole team present**. Members drafted cases on their own machines and against
+their own reading of Appendix A's routing table, then the drafts were
+consolidated and pushed from a single machine at the end of each session so the
+fixture generator and the answer key stayed in one consistent state.
+
+**Every member individually authored 6–7 of the 40 cases.** The consolidation
+was a mechanical step at the end of a shared session, not a division of the
+thinking.
+
+### Why the history looks the way it does
+
+`data/make_fixtures_A.py` and `data/expected_outcomes_A.json` are **a generator
+and a single answer-key file, not one file per author.** Two people editing them
+in parallel produce a merge conflict in a JSON object whose key order the
+generator depends on. Consolidating through one committer avoided that. The cost
+of that choice is exactly what you see: `git log --format='%an'` attributes the
+case commits to one name.
+
+**We would make a different choice next time** — one file per author under
+`evals/cases/`, merged by the generator — and it is recorded here rather than
+explained away.
+
+### Per-member authorship — TO BE COMPLETED BY EACH MEMBER
+
+> **This table is the attestation. It is not filled in from the git history,
+> because the git history cannot answer it.** Each member enters the case IDs
+> they authored and initials the row. Do not let one person fill this in on
+> everyone's behalf — that would reproduce the exact problem it exists to
+> resolve.
+
+| Member | Cases authored (IDs) | Count | Initials |
+|---|---|---:|---|
+| Rohit Panda | `<CLM-…, CLM-…>` | | |
+| Huang Yu | `<CLM-…, CLM-…>` | | |
+| Li Yunke | `<CLM-…, CLM-…>` | | |
+| Xia Yanran | `<CLM-…, CLM-…>` | | |
+| Shen Bowen | `<CLM-…, CLM-…>` | | |
+| Zhao Yujia | `<CLM-…, CLM-…>` | | |
+| | **total** | **40** | |
+
+Fifteen of the 40 are the **shipped** fixtures that came with the starter data
+and are not authored by anyone on this team; the extension rule forbids deleting
+a shipped row. The 25 extension cases plus the shipped 15 make the set of 40, and
+the counts above should reconcile against `data/expected_outcomes_A.json`.
+
+### What the commit history does independently corroborate
+
+| Requirement | Status on `main` |
 |---|---|
-| 40 evaluation cases, 5–8 authored per member | **25 of 40 extension cases are under one git identity.** The remaining 15 are the shipped fixtures. A set written by one head tests one head's assumptions. `[faq]` |
-| One live model per member (5 models + 1 v1 pass) | **0 of 6 run.** `evals/battery_roster.json` is still placeholders; `v2-freeze` has not been cut. |
-| A commit under every member's name | **4 of 6.** Missing: Xia Yanran, Shen Bowen. |
+| A commit under every member's name | **4 of 6.** Huang Yu, Li Yunke, Zhao Yujia and Rohit Panda have authored commits. Xia Yanran and Shen Bowen do not yet. |
+| One live model per member | **0 of 6 run.** The roster is filled, live-verified and validated (5 free + 1 paid, ≈US$0.06 total); `v2-freeze` is not yet cut. |
+| Evaluation set complete | **Yes** — 40 cases, 10 negative, 60 trials, derived not typed. |
 
-This is a process finding, not an accusation — the work was front-loaded onto one
-branch to unblock everyone else, and three of the six strands landed in the last
-48 hours. But the declaration is checked against the history, so the fix is
-commits, not prose: **each member authoring their own cases in
-`eval/cases/<name>.json` and running their own battery under their own key.**
+**The two outstanding items are both fixable before submission and neither is a
+matter of wording.** Xia Yanran and Shen Bowen each need at least one authored
+commit, and all six members need to run their own battery under their own key —
+which is the other row the declaration marks NOT OPTIONAL. `[brief §8]`
 
 ---
 

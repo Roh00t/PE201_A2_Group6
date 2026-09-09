@@ -146,7 +146,13 @@ def test_classifier():
 def test_end_to_end(tmp_dir):
     print("\n  3 · THE WHOLE JUDGING PASS, NO KEY AND NO NETWORK")
     src = os.path.join(ROOT, "results", "scripted")
-    files = sorted(f for f in os.listdir(src) if f.startswith("problemA__scripted"))
+    # EXCLUDE __judged.json. It sorts last, so picking files[-1] naively
+    # hands this test its own previous output - whose verdicts are already
+    # filled, which then fails "the INPUT file was not modified" for a
+    # reason that has nothing to do with the judge.
+    files = sorted(f for f in os.listdir(src)
+                   if f.startswith("problemA__scripted")
+                   and not f.endswith("__judged.json"))
     if not files:
         check("a scripted results file exists to judge", False,
               "run `python3 run_eval.py` first")
@@ -270,7 +276,9 @@ def test_refusals():
 
     check("the default judge is a cheap-tier model",
           judge.DEFAULT_JUDGE_MODEL in (
-              "meta-llama/llama-3.1-8b-instruct", "google/gemini-flash-1.5"),
+              "mistralai/mistral-small-2603", "openai/gpt-4o-mini",
+              "meta-llama/llama-3.1-8b-instruct", "google/gemma-3-12b-it",
+              "cohere/command-r-08-2024"),
           judge.DEFAULT_JUDGE_MODEL)
     check("judging carries its own spend cap", judge.JUDGE_SPEND_CAP_USD <= 1.0)
     check("judge completions are capped below an agent turn",
