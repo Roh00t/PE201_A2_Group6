@@ -5,6 +5,63 @@
 
 ---
 
+## BUILD STATUS — 9 September 2026
+
+> **This document is the 2 September DESIGN plan. It is kept as written, because a
+> plan edited to match the outcome stops being evidence of planning.** Where the
+> build diverged, this block is authoritative and the section below it is history.
+
+**Everything provable without spending money is done and reproduces from a clean
+clone with no key. The live battery runs tomorrow.**
+
+| | Then (2 Sep plan) | Now (9 Sep build) |
+|---|---|---|
+| Evaluation set | 40 cases · 32 ordinary · **8 negative** · **56 trials** | 40 cases · 30 ordinary · **10 negative** · **60 trials** |
+| Why it changed | — | Nine of the fifteen **shipped** cases are already negative and a shipped row may not be deleted, so 8 was unreachable. 10 is the top of the brief's 6–10 band. **Derived** by `plan_shape()`; `run_battery` refuses a typed count that disagrees |
+| Negative-case floor | unresolved, emailed | Resolved from the documents: **6 minimum, 8 expected, 6–10 band** (`[brief D4]`, `[upd]`, Adding Extra Cases) |
+| Team shape | unresolved, emailed | Built as **N−1**: six members, five distinct models, one dedicated v1 pass |
+| Tool set | six from Appendix A | **7**, none added — `check_coverage` widened rather than adding `get_required_documents`; injection detection moved to ordinary code |
+| Frontier tier | possible on negatives only | **Refused in code.** Our measured tokens price a frontier battery at ≈US$6.27 against a US$3 ceiling |
+
+### Complete
+
+- **D0** — `docs/D0_why_an_agent.md` and `D0c_what_good_looks_like.md` (committed
+  `c66193f`, before the first agent-code commit).
+- **D1** — hand-rolled ReAct loop, multi-call turns, per-run instrumentation.
+- **D2(a)/(b)/(c)** — 7 scored tools · seven six-field descriptors with runtime
+  poka-yoke · v1→v2 measured · dependency rule measured both ways
+  (**−41% turns, −53% input tokens**, 60/60 either way).
+- **D3(a)/(b)** — four guardrails in code plus the narrative guard; 15 scripted
+  cases, 13/13 must-fire, 1 must-not-fire, 1 documented known limit.
+- **D4** — **40 cases · 10 negative · 60 trials**, custom labels in
+  `data/expected_outcomes_A.json`, **both** check kinds running: the deterministic
+  code check on `decision`/`trigger`/`missing`, and the semantic judge on the prose
+  `must_record` items.
+- **D5(a)** — **60/60** from a clean clone, no key.
+- **D5(b) infrastructure** — runner, provenance fingerprint, checkpointing,
+  aggregator, bilingual launcher, and the filled N−1 roster (**US$1.24** total).
+- **D6 arithmetic** — three layers, ±10pp sensitivity, break-even, three caps.
+  Refuses null inputs by design.
+- **D7** — both failures reproduce as deletions from the working agent.
+
+### Pending — 10 September
+
+1. **Cut `v2-freeze`** (`run_battery.py --freeze`, tag, push). Blocks everything below.
+2. **The live battery** — six members × 60 trials, each on their own key.
+3. **The judgement pass** — `mistralai/mistral-small-2603` over the live logs.
+4. **D6 measured inputs** — `results/d6_inputs.json`, from the battery's tokens and
+   pass rate.
+
+### Open, and not closable by documentation
+
+- The per-member authorship table in `CONTRIBUTIONS.md` is **unsigned** — the
+  attestation is written, the case IDs and initials are blank.
+- **Xia Yanran and Shen Bowen have no authored commits on `main`.**
+
+Run everything in `COMMANDS.md`.
+
+---
+
 ## Executive Summary
 
 This document consolidates all PE6201 Assignment 2 requirements, technical specifications, and governance rules into a **single authoritative implementation guide** for building a single-agent ReAct system that processes insurance claims and issues one of three decisions: `approve_in_principle`, `request_document`, or `escalate`.
@@ -13,9 +70,9 @@ This document consolidates all PE6201 Assignment 2 requirements, technical speci
 
 - **Problem**: Build a health-insurance claim first-response agent using a custom, hand-rolled Python ReAct loop.
 - **Scope**: Single agent, local fixture data, scripted + live evaluation backends.
-- **Evaluation**: 40 evaluation cases (32 ordinary × 1 trial + 8 negative × 3 trials = 56 runs per model).
+- **Evaluation**: 40 evaluation cases (32 ordinary × 1 trial + 8 negative × 3 trials = 56 runs per model). *[Superseded — built as 30 ordinary + 10 negative = 60 trials; see BUILD STATUS.]*
 - **Deliverables**: D0–D7, including architecture justification, tool layer, guardrails, evaluation harness, live model battery, cost analysis, and failure reproductions.
-- **Success Criteria**: Working offline script (scripted backend), N-1 live model runs across at least two price tiers where affordable, and evidence-backed reasoning in the 2,000-word report. Frontier runs, if used, are limited to the 8 negative cases (24 trials) and reported as a partial battery.
+- **Success Criteria**: Working offline script (scripted backend), N-1 live model runs across at least two price tiers where affordable, and evidence-backed reasoning in the 2,000-word report. Frontier runs, if used, are limited to the negative cases and reported as a partial battery. *[Superseded — frontier is refused in code at our measured token volume.]*
 
 **Key Insight from the Brief**: *An agent that does more, proved less, scores lower than an agent that does less, proved properly.* Invest in evaluation cases and evidence, not additional features.
 

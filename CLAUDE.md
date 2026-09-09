@@ -94,10 +94,11 @@ Re-verify on the day with `python3 evals/check_roster_prices.py` — free, no ke
 |---|---|---|
 | ~~Roster is placeholders~~ | — | **DONE 9 Sep** — filled, live-verified, N−1, ≈US$1.24 |
 | **`v2-freeze` not cut** | Rohit | Six runners with no frozen commit is guaranteed drift |
-| **Eval cases under one identity** | all | "Everyone writes 5–8" is NOT OPTIONAL on the declaration `[brief §8]` |
+| **Authorship table unsigned** | all six | `CONTRIBUTIONS.md` §3 carries the attestation; the case IDs and initials are blank, and a marker checks that section against `git log` |
 | **No commits from Xia Yanran, Shen Bowen** | those two | The history has to corroborate `CONTRIBUTIONS.md` |
-| **`evals/graders/` is three empty files** | Li Yunke | D4 needs BOTH check kinds; only the code check runs |
-| **`docs/D0_why_an_agent.md` missing** | Zhao Yujia | Report §1 is read first and read hardest |
+| ~~`evals/graders/` is three empty files~~ | — | **DONE 9 Sep** — check-kind classifier, judge, committed grading prompt, 51-check rehearsal. Both check kinds run |
+| ~~`docs/D0_why_an_agent.md` missing~~ | — | **DONE 9 Sep** — ladder, both Capsule 1 tests, `s = P^(1/T)` pending only `P` |
+| **D6 measured inputs** | Bowen, Yujia | `results/d6_inputs.json` needs the battery's tokens and pass rate. `cost_model.py` refuses nulls by design |
 
 ---
 

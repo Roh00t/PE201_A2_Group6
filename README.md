@@ -340,26 +340,71 @@ follow.
 | **Evaluation cases — 5–8 each** | D4 | **all six** |
 | **Live model battery — one model each** | D5(b) | **all six** |
 
-See `CONTRIBUTIONS.md`; the commit history corroborates it.
+See `CONTRIBUTIONS.md`. The history corroborates four of the six members; §3
+there records how the evaluation cases were authored and what the commit log
+can and cannot show about it.
 
 ---
 
-## Status
+## Status — 9 September 2026
 
-| | |
+**Everything that can be proved without spending money is done and reproducible.
+What remains is the live battery, and it runs tomorrow.**
+
+### Complete
+
+| Deliverable | Evidence |
 |---|---|
-| D0 · Why an agent | `docs/D0c_what_good_looks_like.md` committed before any agent code |
-| D1 · The agent | Done — multi-call turns, instrumented per run |
-| D2(a) · Tool set | 7 tools, none added: `check_coverage` was widened instead |
-| D2(b) · Descriptors | Seven Problem-A six-field descriptors, runtime poka-yoke, and measured v1→v2 prompt rewrite shipped |
-| D2(c) · Multi-tool turns | Measured both ways |
-| D3(a) · Guardrail code | Step cap · budget ceiling · de-duplication · gate · narrative guard |
-| D3(b) · Checklist | 15 scripted cases: 13/13 must-fire, 1/1 must-not-fire, 1 documented known limit |
-| D4 · Evaluation set | 40 cases, 10 negative, code + judgement checks |
-| D5(a) · Scripted run | Reproduces from a clean clone, no key |
-| D5(b) · Live battery | Runner, provenance, checkpoint, aggregator and 35-check rehearsal all in. Roster unfilled; no live run yet |
-| D6 · Cost model | Outstanding |
-| D7 · Two failures | Failure 1 done; failure 2 outstanding |
+| **D0 · Why an agent** | `docs/D0_why_an_agent.md` — ladder placement, both Capsule 1 tests, evaluation-vs-guardrail distinction, autonomy defended against the irreversible step. `docs/D0c_what_good_looks_like.md` committed at `c66193f`, **before** the first agent-code commit |
+| **D1 · The agent** | Hand-rolled ReAct loop, multi-call turns, instrumented per run — turns, tokens in/out, cost, per-turn tokens, guardrail events |
+| **D2(a) · Tool set** | 7 tools scored against the three questions. None added: `check_coverage` was widened instead. `lookup_hospital` named as the weak tool and kept with the reason stated |
+| **D2(b) · Descriptors** | Seven six-field descriptors, runtime poka-yoke at the boundary, v1→v2 measured: 847 → 1,756 descriptor tokens, `sha(v1) ≠ sha(v2)` |
+| **D2(c) · Multi-tool turns** | Measured both ways: 357 → 211 turns, **−41% turns, −53% input tokens**, 60/60 either way |
+| **D3(a) · Guardrail code** | Step cap · budget ceiling · action de-duplication · autonomy gate · narrative guard. All in code, none in the prompt |
+| **D3(b) · Checklist** | 15 scripted cases — 13/13 must-fire, 1/1 must-not-fire, 1 documented `known_limit`, identical across `--twice` |
+| **D4 · Evaluation set** | **40 cases · 10 negative · 30 ordinary · 60 trials**, derived not typed. Custom labels in `data/expected_outcomes_A.json`. **Both** check kinds implemented — the deterministic code check and the semantic judgement check |
+| **D5(a) · Scripted run** | **60 of 60** from a clean clone, no key. `BACKEND = "scripted"` is the committed default |
+| **D6 · Cost model** | Three layers, ±10pp sensitivity, break-even and the three caps in `src/cost_model.py`; four levers documented with measured before/after. **It refuses null inputs** — the measured figures arrive with the battery |
+| **D7 · Two failures** | Both reproduce, each a deletion from the working agent. Loop control: 1.66× cost, same answer. Tool interface: 60/60 → **57/60**, silent wrong approval |
+
+### The evaluation set
+
+**40 cases, 10 negative, 60 trials.** The brief's band is 6–10 negative with 8 as
+the expected shape; 10 sits at the top of that band. Nine of the fifteen *shipped*
+cases are already negative and a shipped row may not be deleted, so 8 was never
+reachable — the number is derived by `battery_provenance.plan_shape()`, and
+`run_battery` refuses to start if a typed count disagrees.
+
+**Two kinds of check, and the split matters.** `decision`, `trigger` and `missing`
+are graded by a **deterministic code check** against
+`data/expected_outcomes_A.json` — no model, no person, free, repeatable. Only the
+prose `must_record` items go to the **judge**, which is explicitly forbidden from
+re-deciding the case. Conflating the two would replace a deterministic comparison
+with a non-deterministic one, which is strictly worse.
+
+### The live battery roster — built and validated, not yet run
+
+**N−1: six members, five distinct models.** 2 cheap + 3 mid across five families,
+every id and price verified live against OpenRouter today. **Team total US$1.24**,
+worst individual row US$0.43 — 14% of the US$3 per-member ceiling. The judge
+(`mistralai/mistral-small-2603`) is deliberately **off** the roster, and
+`test_judge_fake.py` re-checks that on every run.
+
+### Pending — tomorrow
+
+| | Owner | Blocks |
+|---|---|---|
+| **Cut `v2-freeze`** — `run_battery.py --freeze`, then tag and push | Rohit | Everything below. Six runners without a frozen commit is guaranteed drift |
+| **The live battery** — six members × 60 trials, each on their own key | All six | D5(b), D6's measured inputs, report §3 |
+| **The judgement pass** — the Mistral judge over the live logs | Li Yunke | D4's second check on live output |
+| **D6 measured inputs** — `results/d6_inputs.json` from the battery's tokens and pass rate | Shen Bowen, Zhao Yujia | Report §4 |
+
+### Still open, and not fixable by documentation
+
+- **The per-member authorship table in `CONTRIBUTIONS.md` is unsigned.** The
+  attestation is written; the case IDs and initials are blank. A marker checks
+  that section against `git log`, so it needs the members' own entries.
+- **Xia Yanran and Shen Bowen have no authored commits on `main`.**
 
 ## Known limits
 
