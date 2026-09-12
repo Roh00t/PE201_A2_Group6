@@ -45,6 +45,12 @@ ROSTER_PATH = os.path.join(ROOT, "evals", "battery_roster.json")
 # Files whose bytes must be identical across all six runs. Outputs are
 # deliberately excluded: logs/ and results/ change BECAUSE you ran, and
 # a dirty check that trips on your own output is a check nobody obeys.
+# Every prompt version that can appear in the roster. v2_scaffolded is an
+# ADDITIONAL version for models that cannot hold the contract from the
+# descriptors alone; v1 and v2 are unchanged by its presence, which is
+# what keeps the five-model battery and the v1 pass comparable.
+PROMPT_VERSIONS = ("v1", "v2", "v2_scaffolded")
+
 PINNED_SOURCES = [
     "src/config.py",
     "src/prompt.py",
@@ -185,7 +191,7 @@ def fingerprint(problem=None):
         "plan_sha256": sha256_json(plan),
         "plan_shape": plan_shape(problem),
         "prompt_sha256": {v: sha256_text(assembled_prompt(problem, v))
-                          for v in ("v1", "v2")},
+                          for v in PROMPT_VERSIONS},
         "sources_sha256": {p: sha256_file(os.path.join(ROOT, p))
                            for p in PINNED_SOURCES},
         "invariants": {

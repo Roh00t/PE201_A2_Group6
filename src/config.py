@@ -108,6 +108,24 @@ PROBLEM = "A"
 MAX_TURNS = 8                 # step cap
 MAX_TOKENS_PER_RUN = 60000    # budget ceiling
 AUTONOMY = "confirm"          # "suggest" | "confirm" | "act"
+
+# ---------------------------------------------------------------------
+# DUPLICATE-ACTION RECOVERY. How many times a repeated call is answered
+# with a correction instead of halting the run.
+#
+# ZERO IS THE SHIPPED DEFAULT AND IT MUST STAY ZERO. At 0 the guard
+# behaves exactly as D3(a) describes and as D3(b)'s GR-06 asserts: an
+# identical repeat halts the run with stopped_by="duplicate_action".
+# Raising it globally would quietly weaken a guardrail we claim to have.
+#
+# Above 0, the repeat is fed back to the model as an observation and the
+# run continues, up to N times, before the hard stop. The guard still
+# FIRES and is still recorded every time - it stops being a kill-switch
+# and becomes a correction, which is a different claim and has to be
+# reported as one.
+#
+# Set per-run from the roster (`duplicate_recovery_retries`), never here.
+DUPLICATE_RECOVERY_RETRIES = 0
 #   suggest  - the agent proposes; a human does everything
 #   confirm  - the agent does everything EXCEPT the irreversible step,
 #              which waits for a yes. THE GATE GOES IN FRONT OF THE

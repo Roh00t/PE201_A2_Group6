@@ -26,6 +26,7 @@ moves is how you test the parts you wrote.
 ====================================================================
 """
 import json
+import re
 import random
 import time
 import urllib.error
@@ -271,13 +272,52 @@ class LiveBackend:
 
 def _parse_move(text):
     """The model must answer in JSON. Anything else is a run you cannot
-    grade, so say so loudly rather than guessing."""
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        return {"final": {"decision": "escalate",
-                          "reason": "model did not return parseable JSON"},
-                "thought": "unparseable: %s" % text[:200]}
+    grade, so say so loudly rather than guessing.
+
+    TOLERANT ABOUT THE WRAPPER, STRICT ABOUT THE CONTENT. Small
+    instruction-tuned models fence their JSON or introduce it with a
+    sentence. That is a formatting habit, not a wrong answer, and
+    refusing it throws away a run that was otherwise correct.
+
+    THIS WAS NOT A THEORY. rohit_panda's first live battery on
+    meta-llama/llama-3.1-8b-instruct scored 0/60, and 38 of those 60
+    trials died here - `turns: 0`, `evidence: []`, 165 output tokens
+    produced and discarded. The model was answering; a bare json.loads
+    was rejecting it. The three steps below are the same extraction
+    evals/graders/judge.py already needed for the same reason.
+
+    WHAT IT STILL REFUSES. Anything with no JSON object in it at all.
+    The fallback stays loud and now keeps the raw text, because the old
+    one discarded the evidence needed to diagnose exactly this.
+    """
+    raw = (text or "").strip()
+    for candidate in _json_candidates(raw):
+        try:
+            move = json.loads(candidate)
+        except (json.JSONDecodeError, TypeError):
+            continue
+        if isinstance(move, dict) and ("final" in move or "calls" in move
+                                       or "tool" in move):
+            return move
+    return {"final": {"decision": "escalate",
+                      "reason": "model did not return parseable JSON"},
+            "thought": "unparseable: %s" % raw[:200],
+            "unparsed_raw": raw[:2000]}
+
+
+_FENCE_RE = re.compile(r"```(?:json)?\s*(.+?)\s*```", re.S)
+
+
+def _json_candidates(raw):
+    """The substrings worth trying, cheapest and most likely first."""
+    if not raw:
+        return
+    yield raw                                     # 1 · already clean JSON
+    for m in _FENCE_RE.finditer(raw):             # 2 · ```json ... ```
+        yield m.group(1)
+    start, end = raw.find("{"), raw.rfind("}")    # 3 · prose around an object
+    if start != -1 and end > start:
+        yield raw[start:end + 1]
 
 
 _RETRYABLE_STATUS = {408, 409, 429, 500, 502, 503, 504}

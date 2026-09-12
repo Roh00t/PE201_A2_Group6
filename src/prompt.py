@@ -102,6 +102,58 @@ thing in "missing" when you request, and {"clinic","date","time"} in
 """
 
 
+# ---------------------------------------------------------------------
+# THE SCAFFOLD  (prompt version "v2_scaffolded")
+#
+# v2 with a behavioural suffix, for models too small to hold the contract
+# from the descriptors alone. It is an ADDITIONAL version, not a
+# replacement: v2 stays byte-identical, so the five-model battery and
+# zhao_yujia's v1 pass are untouched and still comparable.
+#
+# WHY IT EXISTS. rohit_panda's live run on llama-3.1-8b scored 0/60:
+# 38 trials produced unparseable output and 14 looped on an identical
+# call until the de-duplication guard killed them. The parser fix in
+# backends._parse_move addresses the first group. This addresses the
+# second, and it is a PROMPT fix for a PROMPT-LAYER problem - the model
+# knows the tools and forgets what it has already done.
+#
+# THIS IS A THIRD DATA POINT, NOT A RESCUE. If v2_scaffolded scores
+# better than v2 on the same model, that is a measurement of our own
+# writing and it belongs in D2(b) beside the v1 -> v2 pair. If it does
+# not, we report that. Swapping it in to make a bad number look better
+# would be the one thing the brief calls out by name.
+# ---------------------------------------------------------------------
+SCAFFOLD_SUFFIX = """
+
+HOW TO WORK THIS CLAIM - READ BEFORE YOUR FIRST REPLY
+
+1. USE THE TOOLS. The records are the only source of truth about this
+   claim. You cannot see policies.json, procedures.json or the claim
+   history, and you must not act as though you can.
+
+2. DO NOT GUESS. If you do not have a fact, call the tool that returns
+   it. A decision that names a policy status, an exclusion rule, a
+   pre-authorisation or a total you did not read from a tool result is
+   wrong even when it happens to be right.
+
+3. THINK BEFORE EACH CALL. Every reply starts with "thought", naming
+   what you still need and which tool returns it.
+
+4. NEVER REPEAT A CALL. You can see every tool result so far in this
+   conversation. Re-reading something you already have wastes a turn and
+   halts the run. If you are about to repeat a call, you already have
+   that answer - use it and move to the next unanswered question.
+
+5. WHEN EVERY LINE IS RESOLVED, FINISH. Reply with "final". Do not keep
+   gathering evidence you no longer need.
+
+FORMAT, AND IT IS STRICT
+Reply with a single JSON object and nothing else. No prose before it, no
+prose after it, no markdown fence. The first character you emit is "{"
+and the last is "}".
+"""
+
+
 def format_descriptor(d):
     """One tool, as the model sees it.
 
@@ -142,6 +194,10 @@ def descriptor_set(version=None):
     version = version or config.PROMPT_VERSION
     if version == "v1":
         return tools.DESCRIPTORS_V1
+    # v2 and v2_scaffolded share the SAME descriptors on purpose. The
+    # scaffold changes the instructions around them, not the tool
+    # contracts, so any difference it makes is attributable to the
+    # suffix alone. Changing both at once would measure two things.
     return tools.DESCRIPTORS
 
 
@@ -175,6 +231,8 @@ def build_system_prompt(problem=None, version=None):
                      % ", ".join(undescribed))
 
     parts.append(_HOW_TO_ANSWER)
+    if version == "v2_scaffolded":
+        parts.append(SCAFFOLD_SUFFIX)
     return "\n".join(parts)
 
 

@@ -79,6 +79,7 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
     # becomes a pure function over a saved record, and the B and D terms
     # of  input ~ B*T + D*T(T-1)/2  can be read off directly, per model.
     turn_tokens = []
+    duplicate_recoveries = 0   # see config.DUPLICATE_RECOVERY_RETRIES
 
     # On the scripted backend the gate auto-approves so the run stays
     # deterministic. The RECORD still shows the gate was reached and
@@ -118,7 +119,37 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
             observations = []
 
             for name, args in calls:
-                guards.check_duplicate(name, args)
+                # DUPLICATE ACTION: halt, or correct and continue.
+                #
+                # At the shipped default (0 retries) this is exactly the
+                # old behaviour - check_duplicate raises and the run
+                # stops. Above 0, the model is told what it just did and
+                # given another turn, because a small model repeating a
+                # call has usually lost track rather than gone rogue.
+                #
+                # THE GUARD STILL FIRES EITHER WAY. guards.fired records
+                # every occurrence, so a recovered run is visibly a
+                # recovered run and never looks like a clean one.
+                try:
+                    guards.check_duplicate(name, args)
+                except GuardrailStop:
+                    if duplicate_recoveries >= config.DUPLICATE_RECOVERY_RETRIES:
+                        raise
+                    duplicate_recoveries += 1
+                    observations.append({
+                        "tool": name, "args": args,
+                        "observation": {
+                            "error": "DUPLICATE_CALL",
+                            "detail": ("You already called %s with exactly "
+                                       "these arguments and its result is "
+                                       "above in this conversation. Re-read "
+                                       "it - do not call it again. Move to a "
+                                       "fact you do not yet have, or finish."
+                                       % name),
+                            "recovery": "%d of %d"
+                                        % (duplicate_recoveries,
+                                           config.DUPLICATE_RECOVERY_RETRIES)}})
+                    continue
 
                 # THE GATE goes in front of the irreversible step only.
                 if name == tools.GATED_ACTION.get(problem):

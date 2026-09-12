@@ -164,6 +164,10 @@ def apply_runtime_config(entry, key, run_id, dry_run):
     if entry.get("price_out") is not None:
         config.PRICE_OUT = float(entry["price_out"])
     config.ALLOW_REASONING = bool(entry.get("reasoning_model"))
+    # Per-run, from the roster - never from config.py, so the shipped
+    # default stays 0 and D3(b)'s GR-06 keeps asserting the hard stop.
+    config.DUPLICATE_RECOVERY_RETRIES = int(
+        entry.get("duplicate_recovery_retries") or 0)
     config.set_api_key(key)
 
     # A PER-RUN LEDGER. logs/decisions.jsonl is git-tracked and every run
