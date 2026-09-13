@@ -574,6 +574,48 @@ def scenario_unparsed_raw_persisted():
           str(rec.get("unparsed_raw"))[:60])
 
 
+def scenario_case_id_is_sent():
+    """THE MODEL MUST BE TOLD WHICH CLAIM IT IS DECIDING.
+
+    For every live battery before 2026-09-13, turn 1 was a single system
+    message with no claim id in it. The fake vendor never needed one - it
+    reads FAKE.case directly - which is exactly why this test has to look at
+    the messages rather than at the outcome.
+    """
+    from loop_agent import run_case
+    FAKE.seen = []
+    FAKE.case, FAKE.turn = "CLM-8925", 0
+    run_case("CLM-8925", problem="A")
+    first = FAKE.seen[0] if FAKE.seen else []
+    body = " ".join(m["content"] for m in first if m["role"] != "system")
+    check("29 turn 1 tells the model WHICH claim to decide",
+          "CLM-8925" in body, body[:60] or "no non-system message")
+    check("29a the claim id arrives on EVERY turn, not only the first",
+          all(any("CLM-8925" in m["content"] for m in msgs if m["role"] == "user")
+              for msgs in FAKE.seen), "%d turns" % len(FAKE.seen))
+
+
+def scenario_prompt_sent_is_prompt_hashed():
+    """The prompt the fingerprint attests must be the prompt the loop sends.
+
+    loop_agent builds its prompt with no version argument; provenance builds
+    it WITH one. They diverged for any version-gated section, so a battery
+    could carry the hash of a prompt its model never received.
+    """
+    import prompt
+    from evals import battery_provenance as prov
+    saved = config.PROMPT_VERSION
+    try:
+        for v in prov.PROMPT_VERSIONS:
+            config.PROMPT_VERSION = v
+            sent = prompt.build_system_prompt(config.PROBLEM)
+            hashed = prov.assembled_prompt(config.PROBLEM, v)
+            check("30 %s: the prompt SENT is the prompt HASHED" % v,
+                  sent == hashed, "%d vs %d chars" % (len(sent), len(hashed)))
+    finally:
+        config.PROMPT_VERSION = saved
+
+
 def main():
     import tempfile
     print()
@@ -599,6 +641,8 @@ def main():
     scenario_drift_detected()
     with tempfile.TemporaryDirectory() as tmp:
         scenario_checkpoint(tmp)
+    scenario_case_id_is_sent()
+    scenario_prompt_sent_is_prompt_hashed()
     scenario_transcript_fidelity()
     scenario_observation_truncation()
     scenario_output_truncated()

@@ -214,6 +214,14 @@ def build_system_prompt(problem=None, version=None):
     measured. `version` defaults to config.PROMPT_VERSION.
     """
     problem = problem or config.PROBLEM
+    # RESOLVE THE VERSION ONCE, HERE. loop_agent calls this with no version
+    # and relies on config.PROMPT_VERSION; battery_provenance calls it WITH
+    # an explicit version to hash it. Before this line, descriptor_set()
+    # resolved the version internally but the version-gated sections below
+    # tested the raw argument - which is None on the live path. So the
+    # fingerprint hashed a prompt the live loop never sent, and any
+    # version-only section silently vanished from every live run.
+    version = version or config.PROMPT_VERSION
     descriptors = descriptor_set(version)
     names = sorted(tools.REGISTRY[problem])
     described = [descriptors[n] for n in names if n in descriptors]

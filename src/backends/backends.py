@@ -246,7 +246,29 @@ class LiveBackend:
         self.turn_usage = []      # the whole block, per turn
 
     def next_move(self, transcript):
-        messages = [{"role": "system", "content": self.system_prompt}]
+        # >>> THE MODEL MUST BE TOLD WHICH CLAIM IT IS DECIDING <<<
+        #
+        # Until 2026-09-13 this list held ONLY the system prompt on turn 1:
+        # 8,601 characters of rules and tool descriptors, and no claim id
+        # anywhere. self.case_id was stored in __init__ and never sent. Every
+        # live trial on every model asked for a decision on a claim it had not
+        # been given - no model can pass that, however strong.
+        #
+        # NOTHING CAUGHT IT. ScriptedBackend replays moves with the id already
+        # written in; the fake vendor in test_battery_fake.py is handed the case
+        # directly by the test. Only a real model has to be told.
+        #
+        # Sent here rather than seeded into `transcript` on purpose: the
+        # scripted token estimate is `1800 + 600 * len(transcript)`, so seeding
+        # it would move every scripted, D2(c) and D7 number already in the
+        # docs, for a fix that only the live path needs. JSON, not prose, so
+        # every message after the system prompt keeps one format.
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            {"role": "user", "content": json.dumps(
+                {"task": "Decide the first response to this claim.",
+                 "claim_id": self.case_id})},
+        ]
         for entry in transcript:
             messages.append({"role": entry["role"], "content": entry["content"]})
         raw, usage, meta = LIVE_CALL(messages)
