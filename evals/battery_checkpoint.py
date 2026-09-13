@@ -58,6 +58,17 @@ class Checkpoint(object):
             cp._records, cp._warnings = _read_jsonl(path)
             existing = next((r for r in cp._records
                              if r.get("kind") == "header"), None)
+            # BELT AND BRACES: never let a rehearsal and a paid run share a
+            # file, even if something upstream puts them on the same path.
+            if existing and bool(existing.get("dry_run")) != bool(header.get("dry_run")):
+                raise CheckpointConflict(
+                    "the checkpoint at %s was written by a %s run and this is "
+                    "a %s run.\n  Resuming it would count %s trials as "
+                    "already done. Delete it, or run in the same mode."
+                    % (os.path.basename(path),
+                       "DRY" if existing.get("dry_run") else "LIVE",
+                       "DRY" if header.get("dry_run") else "LIVE",
+                       "scripted" if existing.get("dry_run") else "live"))
             if existing and existing.get("fingerprint") != header.get("fingerprint"):
                 raise CheckpointConflict(
                     "the checkpoint at %s was written for a DIFFERENT "
@@ -168,6 +179,23 @@ def _read_jsonl(path):
     return records, warnings
 
 
-def path_for(root, member, run_id):
-    return os.path.join(root, "results", "live", "checkpoints",
-                        "battery__%s__%s.jsonl" % (member, run_id))
+def path_for(root, member, run_id, dry_run=False):
+    """Where a battery's checkpoint lives - and dry runs live ELSEWHERE.
+
+    A dry run and a live run at the same commit share a fingerprint and
+    therefore a run_id. When both wrote to results/live/checkpoints/, a
+    member who rehearsed with --dry-run and then ran for real had their
+    live run open the rehearsal's checkpoint, count its 60 SCRIPTED trials
+    as already done, skip every one, spend nothing, and write a results
+    file of scripted outcomes labelled with the live model's name.
+
+    That is the exact sequence COMMANDS.md told all six members to follow.
+    Found 2026-09-13 before anyone ran it.
+
+    results/live/dryrun/ is already git-ignored, so rehearsal checkpoints
+    also stop appearing as untracked files.
+    """
+    base = (os.path.join(root, "results", "live", "dryrun", "checkpoints")
+            if dry_run else
+            os.path.join(root, "results", "live", "checkpoints"))
+    return os.path.join(base, "battery__%s__%s.jsonl" % (member, run_id))

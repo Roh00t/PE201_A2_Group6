@@ -616,6 +616,34 @@ def scenario_prompt_sent_is_prompt_hashed():
         config.PROMPT_VERSION = saved
 
 
+def scenario_dry_run_cannot_poison_live():
+    """A rehearsal must never be resumed as a paid run.
+
+    Before 2026-09-13 a dry run and a live run at the same commit shared a
+    run_id AND a checkpoint directory. The documented flow - rehearse, then
+    run for real - made the live run count 60 scripted trials as done, skip
+    them all, spend nothing, and label scripted outcomes with a live model.
+    """
+    import tempfile
+    from evals import battery_checkpoint as ckpt
+    d = tempfile.mkdtemp()
+    check("31 dry and live checkpoints live in different directories",
+          ckpt.path_for(d, "m", "r", dry_run=True)
+          != ckpt.path_for(d, "m", "r", dry_run=False))
+    check("31a the dry-run checkpoint sits under the git-ignored dryrun/ tree",
+          os.sep + "dryrun" + os.sep in ckpt.path_for(d, "m", "r", dry_run=True))
+    path = os.path.join(d, "same.jsonl")
+    ckpt.Checkpoint.open(path, {"run_id": "r", "dry_run": True,
+                                "fingerprint": {"c": 1}}).unlock()
+    try:
+        ckpt.Checkpoint.open(path, {"run_id": "r", "dry_run": False,
+                                    "fingerprint": {"c": 1}})
+        refused = False
+    except ckpt.CheckpointConflict:
+        refused = True
+    check("31b a LIVE run refuses to resume a DRY-run checkpoint", refused)
+
+
 def main():
     import tempfile
     print()
@@ -642,6 +670,7 @@ def main():
     with tempfile.TemporaryDirectory() as tmp:
         scenario_checkpoint(tmp)
     scenario_case_id_is_sent()
+    scenario_dry_run_cannot_poison_live()
     scenario_prompt_sent_is_prompt_hashed()
     scenario_transcript_fidelity()
     scenario_observation_truncation()

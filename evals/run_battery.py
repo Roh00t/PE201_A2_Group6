@@ -649,7 +649,7 @@ def main(argv=None):
               "dry_run": args.dry_run, "fingerprint": fp,
               "price_in": config.PRICE_IN, "price_out": config.PRICE_OUT,
               "started": datetime.datetime.now().isoformat(timespec="seconds")}
-    path = ckpt.path_for(ROOT, entry["member"], rid)
+    path = ckpt.path_for(ROOT, entry["member"], rid, dry_run=args.dry_run)
     try:
         checkpoint = ckpt.Checkpoint.open(path, header)
     except ckpt.CheckpointConflict as err:
