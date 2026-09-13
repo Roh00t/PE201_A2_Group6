@@ -204,10 +204,37 @@ def trajectory_of(doc, case_id):
         if r.get("case_id") == case_id:
             rec = r.get("record") or {}
             calls = rec.get("evidence") or []
-            return ("tool calls: %s\ndecision: %s\nturns: %s"
-                    % (" -> ".join(calls) if calls else "(none recorded)",
-                       rec.get("decision"), rec.get("turns")))
+            lines = ["tool calls: %s" % (" -> ".join(calls) if calls
+                                        else "(none recorded)"),
+                     "decision: %s" % rec.get("decision"),
+                     "turns: %s" % rec.get("turns")]
+            # THE STRUCTURED RECORD, not just the prose. v2's
+            # final_record_checklist asks the model for these fields, and
+            # the judge used to see only `reason` - so a model that filled
+            # the checklist perfectly in fields could still fail must_record.
+            # Only the fields the checklist defines are shown: the judge
+            # grades what the record carries, and internal counters (tokens,
+            # cost, turn usage) are not part of that.
+            recorded = {k: rec[k] for k in RECORD_FIELDS
+                        if rec.get(k) not in (None, "", [], {})}
+            if recorded:
+                lines.append("recorded fields:\n%s"
+                             % json.dumps(recorded, indent=2,
+                                          ensure_ascii=False, default=str))
+            if rec.get("stopped_by"):
+                lines.append("STOPPED BY THE HARNESS: %s - this record is a "
+                             "halt, not a decision the agent completed"
+                             % rec["stopped_by"])
+            return "\n".join(lines)
     return "(no run record found for this case)"
+
+
+# The final-record fields v2's checklist defines (src/prompt.py,
+# V2_PROCESS_SECTION). Kept as an explicit list so the judge never grades
+# on a field the prompt did not ask for.
+RECORD_FIELDS = ("line_dispositions", "approved_total", "refused_total",
+                 "hospital_panel", "policy_status", "duplicate_check",
+                 "trigger", "escalate_to", "missing")
 
 
 def render_prompt(template, item, doc, expected_decision):

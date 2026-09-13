@@ -69,7 +69,10 @@ rough size as `characters / 4`; the hashes below are over the prompt text only.
 | Version | Characters | Rough tokens | SHA-256 |
 |---|---:|---:|---|
 | v1 | 4,963 | 1,240 | `36992f7881ece6174bf6be3990054a7d7a410f62e4a5ea64a367a436d180a0ad` |
-| v2 | 8,601 | 2,150 | `4accfcfacda48e6b01d2dc492aae4351fc210610dc1f3fabb2f977124fabf705` |
+| v2 | 12,050 | 3,012 | `7dc65dcc5d0cdc022f8d27d14d71a41da4e4781b1fbf1fef339f9b25053fe169` |
+
+*v2 re-measured 2026-09-13. The first v2 was 8,601 chars / 2,150 tokens
+(`4accfcfacda4…`); see "The v2 process section" below for what was added.*
 
 The v2 prefix is longer, so it must earn its cost by preventing wrong calls or
 turns. The measurement is intentionally a prompt comparison only; no live
@@ -127,3 +130,45 @@ report says. `[brief D2(b)]`
   coverage against no policy" impossible to express, and in exchange `check_coverage`
   cannot share a turn with the `lookup_policy` that feeds it. Measured and defended in
   [D2c_dependency_rule.md](D2c_dependency_rule.md).
+
+---
+
+## The v2 process section — and what it does to this measurement
+
+*Added 2026-09-13, after the live battery on `meta-llama/llama-3.1-8b-instruct`.*
+
+v2 now carries a section v1 does not: `V2_PROCESS_SECTION` in `src/prompt.py`,
+appended in `build_system_prompt` for v2 only. It adds ~**860 tokens per turn**:
+
+| Part | Tokens | Why |
+|---|---:|---|
+| `<process>` | ~124 | never repeat a call; group only independent calls; escalate early |
+| `<final_record_checklist>` | ~187 | the facts each outcome's record must carry, restated in `reason` |
+| `<example>` | ~517 | one worked case on synthetic ids that cannot leak an answer |
+| `<format>` | ~30 | one JSON object per reply |
+
+**v1 is byte-identical.** `RULES` and `_HOW_TO_ANSWER` are shared by both versions,
+so neither was edited; v1's hash is still `36992f7881ec…`. The example uses
+`CLM-EXAMPLE`, `POL-EX` and procedure codes `10001`/`10002`, verified absent from
+`data/data_A/`, and follows our own dependency rule because a model copies the turn
+structure it is shown.
+
+### The honest limit this creates
+
+**v2 now differs from v1 in three ways at once**: the descriptors, the process
+checklist, and the worked example. A v1→v2 improvement in the live battery
+**cannot be credited to the descriptor rewrite alone**. Report §2 must say so.
+
+Isolating the descriptor effect would need a third version — v1's descriptors plus
+this section — run on the same model. That costs one more cheap-tier battery
+(≈US$0.13 on `qwen3-235b`). We record the limit rather than spend on the
+decomposition.
+
+### A bug this change found
+
+`build_system_prompt` resolved the prompt version inside `descriptor_set` but
+tested the raw argument for version-gated sections. `loop_agent` passes no version;
+`battery_provenance` passes one. **A version-gated section would have been hashed
+into every fingerprint and sent to no live model.** Fixed in `a4043b5`;
+`test_battery_fake.py` now asserts, for every version, that the prompt sent equals
+the prompt hashed.
