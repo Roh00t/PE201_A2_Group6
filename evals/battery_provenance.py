@@ -351,6 +351,16 @@ def validate_roster(roster, today=None):
                     "otherwise it isolates two variables, not one."
                     % v1[0].get("model"))
 
+    # A PROMPT VERSION THAT NO LONGER EXISTS. v2_scaffolded was removed on
+    # 2026-09-13 while a roster row still named it; without this check the
+    # row validated cleanly and would have failed only at the preflight
+    # banner, after the member had typed their model id.
+    for m in members:
+        if m.get("prompt_version") and m.get("prompt_version") not in PROMPT_VERSIONS:
+            errs.append("%s: prompt_version %r is not one of %s"
+                        % (m.get("member"), m.get("prompt_version"),
+                           list(PROMPT_VERSIONS)))
+
     today = today or datetime.date.today()
     for m in members:
         for field in ("member", "model", "family", "tier", "prompt_version"):

@@ -46,7 +46,17 @@ MODELS_URL = "https://openrouter.ai/api/v1/models"
 # tokens. Assigning a tier by vendor reputation is how a "cheap" model
 # turns out to cost more than a mid one; assigning it by measured cost
 # cannot.
-TIER_BANDS = (("free", 0.0), ("cheap", 0.20), ("mid", 1.00),
+#
+# ANCHORED ON THE BRIEF, NOT ON A ROUND NUMBER. Section 7's three reference
+# prices cost, on our tokens: cheap 0.10/0.40 -> $0.148, mid 1.00/5.00 ->
+# $1.579, frontier 5.00/25.00 -> $7.896. The edges sit at the geometric
+# midpoints: sqrt(0.148 * 1.579) = $0.48, and the mid ceiling is the US$3
+# per-member cap itself - so "frontier" and "refused by the runner" are
+# the same set.
+#
+# The previous bands (cheap <= $0.20, mid <= $1.00) classified the brief's
+# OWN mid-tier reference price as frontier. Corrected 2026-09-13.
+TIER_BANDS = (("free", 0.0), ("cheap", 0.48), ("mid", 3.00),
               ("frontier", float("inf")))
 
 
