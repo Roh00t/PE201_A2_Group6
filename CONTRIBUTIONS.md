@@ -209,5 +209,19 @@ submit; every figure in the report is a measurement we ran, not a number a model
 produced; sources and tools are attributed here; and no A2 work appears in
 anyone's End-of-Course Project.
 
+### Ideas adapted from another team
+
+**Karthik (another PE6201 team) — `metrics.py`.** The *definitions* of ghost-loop
+rate, p90 turns, wall clock per run, human agency under confirm autonomy, a
+measured-versus-estimated cost split, session history and best-run-per-model came
+from his module. They are **re-implemented** in `evals/metrics.py` and
+`evals/run_history.py` against this repository's records, not copied: his file
+imports modules this repository does not have, reads a local config file that in his
+repository also holds the API key, and names its guardrails `step_cap_hit` /
+`budget_ceiling_hit`, so used as written it would silently fail to count our step-cap
+and budget halts. His reported 95% pass rate is from a different codebase, harness
+and 38-case set, and is **not** compared against our numbers anywhere in this
+submission.
+
 Course materials (`docs/course/*.pdf`) are the instructor's and are included for
 reference only.

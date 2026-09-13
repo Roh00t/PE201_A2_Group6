@@ -644,6 +644,41 @@ def scenario_dry_run_cannot_poison_live():
     check("31b a LIVE run refuses to resume a DRY-run checkpoint", refused)
 
 
+def scenario_adapted_metrics():
+    """The measures adapted from Karthik's metrics.py must use OUR names.
+
+    His ghost-loop triggers were step_cap_hit and budget_ceiling_hit. Ours
+    are step_cap and budget_ceiling, so a literal port would have counted
+    neither - and reported a clean ghost-loop rate for a looping model.
+    """
+    from evals import metrics
+    def trial(stopped, decision="escalate", events=()):
+        return {"case_id": "X", "trial": 1, "passed": False, "fails": [],
+                "record": {"stopped_by": stopped, "decision": decision,
+                           "turns": 2, "backend": "live", "usage_complete": True,
+                           "cost_usd": 0.001, "seconds": 1.0,
+                           "guardrails_fired": [{"guardrail": e} for e in events]}}
+    rows = [trial("step_cap"), trial("budget_ceiling"), trial("duplicate_action"),
+            trial(None, "approve_in_principle", ("gate_passed",)),
+            trial(None, "escalate")]
+    gl = metrics.ghost_loops(rows)
+    check("32 step_cap and budget_ceiling count as ghost loops",
+          gl["by_trigger"].get("step_cap") == 1
+          and gl["by_trigger"].get("budget_ceiling") == 1, str(gl["by_trigger"]))
+    check("32a ghost-loop rate is 3 of 5", gl["count"] == 3, str(gl["count"]))
+    om = metrics.outcome_mix(rows)
+    check("32b outcome mix excludes halts - 2 completed, not 5",
+          om["escalate"]["d"] == 2 and om["escalate"]["n"] == 1, str(om["escalate"]))
+    ha = metrics.human_agency(rows)
+    check("32c human agency reads the gate events, not the decision",
+          ha["reached_gate"]["n"] == 1 and ha["passed"]["n"] == 1)
+    check("32d an empty list has no percentile, not 0",
+          metrics.percentile([], 90) is None)
+    cp = metrics.cost_provenance(rows)
+    check("32e fully measured live usage is reported as measured",
+          cp["all_measured"] is True)
+
+
 def main():
     import tempfile
     print()
@@ -670,6 +705,7 @@ def main():
     with tempfile.TemporaryDirectory() as tmp:
         scenario_checkpoint(tmp)
     scenario_case_id_is_sent()
+    scenario_adapted_metrics()
     scenario_dry_run_cannot_poison_live()
     scenario_prompt_sent_is_prompt_hashed()
     scenario_transcript_fidelity()

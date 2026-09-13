@@ -264,6 +264,125 @@ def trace(results, case_id, trial=1):
     return None
 
 
+
+# =====================================================================
+# 5 · ADAPTED FROM KARTHIK'S metrics.py  (another PE6201 team)
+# =====================================================================
+# Karthik's module defines several measures ours lacked: a ghost-loop
+# rate, p90 turns, wall clock, human agency under confirm autonomy, and a
+# measured-versus-estimated cost split. His file could not be dropped in:
+# it imports modules this repository does not have, reads a local config
+# file that in his repo also holds the API key, and names its guardrails
+# `step_cap_hit` / `budget_ceiling_hit` - so here step-cap and budget halts
+# would silently never count. The DEFINITIONS are his; the implementation
+# below is written against this repository's records and guard names.
+# Attributed in CONTRIBUTIONS.md section 4.
+
+# OUR guard names, as raised by src/backends/guardrails.py. A ghost loop is
+# a run that burned turns or budget and never reached a decision - not a
+# legitimate escalation, which is a decision.
+GHOST_LOOP_TRIGGERS = ("step_cap", "budget_ceiling", "duplicate_action")
+
+
+def ghost_loops(results):
+    """Runs our code halted before the model could decide."""
+    n = len(results)
+    by = collections.Counter(
+        (r.get("record") or {}).get("stopped_by") for r in results
+        if (r.get("record") or {}).get("stopped_by") in GHOST_LOOP_TRIGGERS)
+    count = sum(by.values())
+    return {"count": count, "rate": frac(count, n), "by_trigger": dict(by)}
+
+
+def percentile(values, p):
+    """Nearest-rank percentile. None, never 0, for an empty list."""
+    if not values:
+        return None
+    ordered = sorted(values)
+    rank = max(1, int(round(p / 100.0 * len(ordered) + 0.5)))
+    return ordered[min(rank, len(ordered)) - 1]
+
+
+def human_agency(results):
+    """Under autonomy=confirm: how often the agent reached the gate, and
+    how often a person let it through.
+
+    Read from guardrails_fired rather than inferred from the decision. An
+    escalation never reaches the gate, and neither does a halted run, so
+    "reached the gate" is a much smaller number than "approved" can look.
+    """
+    reached = passed = held = 0
+    for r in results:
+        events = [g.get("guardrail") for g in
+                  ((r.get("record") or {}).get("guardrails_fired") or [])]
+        if "gate_passed" in events or "gate_held" in events:
+            reached += 1
+            passed += "gate_passed" in events
+            held += "gate_held" in events
+    return {"reached_gate": frac(reached, len(results)),
+            "passed": frac(passed, reached), "held": frac(held, reached)}
+
+
+def outcome_mix(results):
+    """Approve / request / escalate rates over COMPLETED trials only.
+
+    Karthik counts every escalate as a human handover. Here a guardrail
+    halt is also recorded as `escalate`, so counting it would report the
+    model handing claims to people when our code stopped it first. Halts
+    are reported by ghost_loops() instead.
+    """
+    done = split(results)["completed"]
+    mix = collections.Counter((r.get("record") or {}).get("decision") for r in done)
+    return {c: frac(mix.get(c, 0), len(done)) for c in OUTCOMES}
+
+
+def cost_provenance(results):
+    """Measured API cost versus an estimate. Never blended.
+
+    A live record with usage_complete=True carries the token counts the
+    vendor billed. Anything else - the scripted backend, a provider that
+    omitted the usage block - is an estimate, and a D6 figure built on a
+    mixture of the two is neither.
+    """
+    measured = [r for r in results
+                if (r.get("record") or {}).get("backend") == "live"
+                and (r.get("record") or {}).get("usage_complete")]
+    cost_m = sum(float((r.get("record") or {}).get("cost_usd") or 0)
+                 for r in measured)
+    cost_e = sum(float((r.get("record") or {}).get("cost_usd") or 0)
+                 for r in results) - cost_m
+    return {"measured_trials": frac(len(measured), len(results)),
+            "measured_usd": cost_m, "estimated_usd": cost_e,
+            "all_measured": bool(results) and len(measured) == len(results)}
+
+
+def wall_clock(results):
+    secs = [float((r.get("record") or {}).get("seconds") or 0) for r in results]
+    return {"total_seconds": sum(secs),
+            "mean_seconds": (sum(secs) / len(secs)) if secs else None,
+            "p90_seconds": percentile(secs, 90)}
+
+
+def headline(doc):
+    """Everything one battery file says, in one dict. Used by run_history."""
+    results = doc.get("results") or []
+    key = _key_map()
+    oq = outcome_quality(results, key)
+    rs = run_shape(results)
+    turns = [int((r.get("record") or {}).get("turns") or 0) for r in results]
+    return {
+        "member": doc.get("member"), "model": doc.get("model"),
+        "prompt_version": doc.get("prompt_version"), "date": doc.get("date"),
+        "commit": (doc.get("commit") or (doc.get("fingerprint") or {}).get("commit") or "")[:12],
+        "run_id": doc.get("run_id"), "trials": len(results),
+        "passed": rs["passed"], "populations": oq["populations"],
+        "macro_f1": oq["macro_f1"], "ghost_loops": ghost_loops(results),
+        "median_turns": rs["turns"]["median"], "p90_turns": percentile(turns, 90),
+        "cost_usd": rs["cost_usd"], "cost_per_passed_trial": rs["cost_per_passed_trial"],
+        "human_agency": human_agency(results), "outcome_mix": outcome_mix(results),
+        "cost_provenance": cost_provenance(results), "wall_clock": wall_clock(results),
+    }
+
 # =====================================================================
 # HELPERS
 # =====================================================================
@@ -341,6 +460,32 @@ def render(doc, key=None):
     w("    ^ the second is the one D6 layer 1 wants. A model that fails")
     w("      cheaply looks cheap only on the first.")
 
+    gl = ghost_loops(results)
+    ha = human_agency(results)
+    om = outcome_mix(results)
+    cp = cost_provenance(results)
+    wc = wall_clock(results)
+    t_all = [int((r.get("record") or {}).get("turns") or 0) for r in results]
+    w("    p90 turns        %s" % percentile(t_all, 90))
+    w("    wall clock       %.0fs total, %.1fs mean, %.1fs p90"
+      % (wc["total_seconds"], wc["mean_seconds"] or 0, wc["p90_seconds"] or 0))
+    w("")
+    w("  GHOST LOOPS - runs our code halted before the model decided")
+    w("    %s   %s" % (gl["rate"]["text"], gl["by_trigger"] or "none"))
+    w("")
+    w("  OUTCOME MIX - completed trials only")
+    w("    approve %s · request %s · escalate %s"
+      % (om["approve_in_principle"]["text"], om["request_document"]["text"],
+         om["escalate"]["text"]))
+    w("")
+    w("  HUMAN AGENCY - autonomy=confirm")
+    w("    reached the gate %s · passed %s · held %s"
+      % (ha["reached_gate"]["text"], ha["passed"]["text"], ha["held"]["text"]))
+    w("")
+    w("  COST PROVENANCE")
+    w("    measured %s   US$%.5f measured / US$%.5f estimated%s"
+      % (cp["measured_trials"]["text"], cp["measured_usd"], cp["estimated_usd"],
+         "" if cp["all_measured"] else "   <- do NOT quote as a D6 figure"))
     w("")
     w("  WHY %d TRIALS FAILED" % ft["failed"])
     w("    %-32s %-6s %s" % ("cause", "count", "layer the fix belongs in"))
