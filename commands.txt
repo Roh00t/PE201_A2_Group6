@@ -1,5 +1,0 @@
-python3 evals/check_roster_prices.py
-
-python3 evals/check_roster_prices.py on the day.
-
-Each member: python3 run_live_battery.py --name "<Your Name>".
