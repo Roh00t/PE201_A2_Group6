@@ -1,0 +1,2 @@
+member,model,family,tier,prompt,trials,pass_rate,ordinary,neg_trials,neg_3of3,neg_cases,completed,halted,unparseable,macro_f1,median_turns,transport,tokens_in,tokens_out,cost,cost_per_trial,cost_per_passed,clean,dry_run
+"rohit_panda","anthropic/claude-haiku-4.5","anthropic","mid","v2",60,0.9,1.0,0.8,0.8,"8/10",60,0,0,0.9584859584859585,4.0,0,1056826,42269,1.268171,0.021136183333333333,0.023484648148148147,True,False
