@@ -23,6 +23,7 @@ instrumentation afterwards has to run the whole battery again.
 You cannot report a failure you had no way of noticing.
 ====================================================================
 """
+import json
 import time
 
 import config
@@ -30,6 +31,35 @@ import prompt
 from tools import tools
 from backends.backends import LiveTransportError, make_backend
 from backends.guardrails import Guardrails, GuardrailStop
+
+
+def _bounded(observation, guards):
+    """One observation, clipped to config.MAX_OBSERVATION_CHARS.
+
+    A circuit-breaker, not a filter. The limit sits ~5x above the largest
+    result any of our seven tools actually returns, so on this data it
+    never fires and therefore cannot distort a measurement. It exists for
+    the tool we have not written yet.
+
+    WHEN IT DOES FIRE IT SAYS SO, in guards.fired and in the observation
+    itself, because a transcript silently missing half a policy record is
+    a correctness bug wearing a cost bug's clothes.
+    """
+    limit = getattr(config, "MAX_OBSERVATION_CHARS", 2000)
+    body = observation.get("observation")
+    text = json.dumps(body, default=str, ensure_ascii=False)
+    if len(text) <= limit:
+        return observation
+    dropped = len(text) - limit
+    guards._fire("observation_truncated",
+                 "%s returned %d chars, %d over the %d cap"
+                 % (observation.get("tool"), len(text), dropped, limit))
+    clipped = dict(observation)
+    clipped["observation"] = {
+        "truncated": True,
+        "note": "...[truncated, %d chars omitted]" % dropped,
+        "head": text[:limit]}
+    return clipped
 
 
 def run_case(case_id, problem=None, approve=None, verbose=False):
@@ -106,6 +136,11 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
             # ---- conclude -------------------------------------------
             if "final" in move:
                 record = dict(move["final"])
+                # A backend may name the thing that ended the run - an
+                # output cut at max_tokens is not a decision the model
+                # made, and the record must not read as though it were.
+                if record.get("stopped_by"):
+                    stopped_by = record.pop("stopped_by")
                 break
 
             # ---- act: one turn may carry SEVERAL calls ---------------
@@ -201,10 +236,46 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
                 if verbose:
                     print("       %-26s -> %s" % (name, _short(result)))
 
-            transcript.append({"role": "assistant",
-                               "content": move.get("thought", "")})
-            transcript.append({"role": "user",
-                               "content": repr(observations)})
+            # >>> WHAT THE MODEL SEES NEXT TURN. READ THIS BEFORE EDITING <<<
+            #
+            # The assistant turn must replay the model's OWN CALLS, not
+            # just its thought. This block used to be:
+            #
+            #     {"role": "assistant", "content": move.get("thought","")}
+            #     {"role": "user",      "content": repr(observations)}
+            #
+            # and it cost a whole live battery. A model that cannot see
+            # what it already called re-issues it, and our own
+            # de-duplication guard then kills the run: 48 of 60 trials on
+            # meta-llama/llama-3.1-8b-instruct halted on turn 2 with
+            # `duplicate_action`, scoring 1/60. Of the 12 it was allowed
+            # to finish it got 3 right. The model was not the problem.
+            #
+            # TWO RULES, AND THEY ARE BOTH LOAD-BEARING:
+            #
+            # 1. ECHO THE CALLS. The assistant message is the model's own
+            #    move in the shape it emitted it. That is what makes this
+            #    a conversation it can reason over rather than a series
+            #    of amnesiac prompts.
+            #
+            # 2. JSON, NOT repr(). repr() emits Python - single quotes,
+            #    None, True - while the prompt demands strict JSON back.
+            #    Feeding a model one dialect and grading it on another is
+            #    a contract we were breaking on every single turn.
+            #
+            # THE SCRIPTED BACKEND CANNOT CATCH A REGRESSION HERE.
+            # ScriptedBackend.next_move ignores `transcript` on purpose,
+            # so 60/60 scripted says nothing about whether any of this is
+            # well-formed. evals/test_battery_fake.py asserts it instead.
+            transcript.append({
+                "role": "assistant",
+                "content": json.dumps({"thought": move.get("thought", ""),
+                                       "calls": [[n, a] for n, a in calls]},
+                                      default=str, ensure_ascii=False)})
+            transcript.append({
+                "role": "user",
+                "content": json.dumps([_bounded(o, guards) for o in observations],
+                                      default=str, ensure_ascii=False)})
 
     except GuardrailStop as stop:
         # A LOUD STOP. The record says what halted the run and where, so

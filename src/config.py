@@ -126,6 +126,27 @@ AUTONOMY = "confirm"          # "suggest" | "confirm" | "act"
 #
 # Set per-run from the roster (`duplicate_recovery_retries`), never here.
 DUPLICATE_RECOVERY_RETRIES = 0
+
+# ---------------------------------------------------------------------
+# OBSERVATION SIZE CIRCUIT-BREAKER. The most characters of one tool
+# result that may enter the transcript.
+#
+# 2000 IS DELIBERATELY ABOVE ANYTHING OUR TOOLS EMIT. Measured over the
+# whole fixture set: check_duplicate_claim 4 chars, lookup_hospital 85,
+# get_preauthorisation 129, check_coverage 187, the WORST get_claim in
+# the set 416, lookup_policy 442. A five-turn run carries roughly 500
+# tokens of observations against a 131k context, because D2(b)'s
+# RETURNS size bounds already did this job at the descriptor level.
+#
+# WHY NOT SMALLER. A cap BELOW the measured maximum is not a guardrail,
+# it is an uncontrolled variable: clip at 500 and the battery measures
+# our truncation instead of the model. Set above the maximum, it can
+# never fire on our data and so can never quietly reshape a result,
+# while still stopping a pathological payload from a future tool.
+#
+# It fires LOUDLY - see loop_agent._bounded - because a silent cap turns
+# a visible cost problem into an invisible correctness one.
+MAX_OBSERVATION_CHARS = 2000
 #   suggest  - the agent proposes; a human does everything
 #   confirm  - the agent does everything EXCEPT the irreversible step,
 #              which waits for a yes. THE GATE GOES IN FRONT OF THE
@@ -146,7 +167,13 @@ GROUPING = "parallel"         # "parallel" | "sequential"
 # damage of a runaway completion but cannot prevent it. This caps the
 # request itself. Output bills at 4-5x input, so this is the cheapest
 # guardrail in the file.
-MAX_TOKENS_PER_CALL = 1024
+# Raised from 1024 on 2026-09-13. Two live trials returned 1081
+# completion tokens against the old cap and came back severed
+# mid-JSON. backends.py now reports finish_reason="length" as
+# stopped_by="output_truncated" rather than as a parse failure, but
+# the cheaper fix is to stop cutting correct answers in the first
+# place. Still a SPEND CONTROL, not a quality setting.
+MAX_TOKENS_PER_CALL = 1536
 TEMPERATURE = 0
 HTTP_TIMEOUT = 60
 RETRY_MAX = 5

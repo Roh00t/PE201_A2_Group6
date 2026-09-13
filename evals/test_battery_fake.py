@@ -66,9 +66,11 @@ class Fake(object):
         self.script = None          # override the content entirely
         self.raise_seq = []         # exceptions to raise, in order
         self.calls = 0
+        self.seen = []              # every `messages` list, for inspection
 
     def __call__(self, messages):
         self.calls += 1
+        self.seen.append([dict(m) for m in messages])
         if self.raise_seq:
             err = self.raise_seq.pop(0)
             if err is not None:
@@ -445,6 +447,97 @@ def scenario_key_hygiene():
 
 
 # =====================================================================
+def scenario_transcript_fidelity():
+    """THE CHECK THAT WOULD HAVE SAVED A LIVE BATTERY.
+
+    On 2026-09-13 meta-llama/llama-3.1-8b-instruct scored 1/60, with 48
+    trials halted by our own de-duplication guard on turn 2. The cause
+    was here: the assistant turn carried only `thought`, so the model
+    could not see the calls it had already made and re-issued them.
+
+    The scripted backend CANNOT catch this - ScriptedBackend.next_move
+    ignores `transcript` by design - so the assertion has to live in a
+    fake-vendor test that inspects what was actually sent.
+    """
+    from loop_agent import run_case
+    FAKE.seen = []
+    FAKE.case, FAKE.turn = "CLM-8842", 0
+    run_case("CLM-8842", problem="A")
+
+    later = [m for m in FAKE.seen if len(m) > 1]
+    check("24 the model is sent more than just a system prompt", bool(later))
+    if not later:
+        return
+    msgs = later[-1]
+
+    assistants = [m for m in msgs if m["role"] == "assistant"]
+    check("24a the assistant turn REPLAYS the model's own calls",
+          bool(assistants) and all("calls" in a["content"] for a in assistants),
+          (assistants[0]["content"][:70] if assistants else "none"))
+
+    bad = []
+    for m in msgs[1:]:                      # skip the system prompt
+        try:
+            json.loads(m["content"])
+        except (ValueError, TypeError):
+            bad.append("%s: %s" % (m["role"], m["content"][:40]))
+    check("24b every transcript entry is valid JSON, not repr()",
+          not bad, "; ".join(bad[:2]))
+
+    for a in assistants:
+        payload = json.loads(a["content"])
+        check("24c the replayed move keeps thought AND calls",
+              "thought" in payload and isinstance(payload.get("calls"), list))
+        break
+
+
+def scenario_observation_truncation():
+    """A cap that fires silently is a correctness bug wearing a cost
+    bug's clothes. It has to reach guards.fired."""
+    from loop_agent import run_case
+    original = config.MAX_OBSERVATION_CHARS
+    config.MAX_OBSERVATION_CHARS = 40       # forced far below any real result
+    try:
+        FAKE.seen = []
+        FAKE.case, FAKE.turn = "CLM-8842", 0
+        rec = run_case("CLM-8842", problem="A")
+    finally:
+        config.MAX_OBSERVATION_CHARS = original
+
+    fired = [g["guardrail"] for g in rec.get("guardrails_fired", [])]
+    check("25 an oversized observation is truncated AND recorded",
+          "observation_truncated" in fired, str(fired))
+
+    truncated_seen = any("truncated" in m["content"]
+                         for msgs in FAKE.seen for m in msgs
+                         if m["role"] == "user")
+    check("25a the truncation is visible in the transcript, not hidden",
+          truncated_seen)
+
+    check("25b the real cap sits ABOVE every observation we emit, so it "
+          "never fires on our data", config.MAX_OBSERVATION_CHARS >= 2000,
+          str(config.MAX_OBSERVATION_CHARS))
+
+
+def scenario_output_truncated():
+    """finish_reason='length' is a severed reply, not a wrong answer, and
+    must not be filed under 'did not return parseable JSON'."""
+    from loop_agent import run_case
+    FAKE.meta = dict(FAKE.meta, finish_reason="length")
+    FAKE.script = '{"thought": "cut off mid-ob'      # severed JSON
+    try:
+        rec = run_case("CLM-8842", problem="A")
+    finally:
+        FAKE.script = None
+        FAKE.meta.pop("finish_reason", None)
+
+    check("26 a truncated completion is named, not mistaken for prose",
+          rec.get("stopped_by") == "output_truncated", str(rec.get("stopped_by")))
+    check("26a and it says so in the reason",
+          "truncated" in (rec.get("reason") or "").lower(),
+          (rec.get("reason") or "")[:60])
+
+
 def main():
     import tempfile
     print()
@@ -470,6 +563,9 @@ def main():
     scenario_drift_detected()
     with tempfile.TemporaryDirectory() as tmp:
         scenario_checkpoint(tmp)
+    scenario_transcript_fidelity()
+    scenario_observation_truncation()
+    scenario_output_truncated()
     scenario_secret_never_written()
     scenario_key_hygiene()
 

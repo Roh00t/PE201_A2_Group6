@@ -250,6 +250,21 @@ class LiveBackend:
         for entry in transcript:
             messages.append({"role": entry["role"], "content": entry["content"]})
         raw, usage, meta = LIVE_CALL(messages)
+        # A CUT COMPLETION IS NOT A BAD ANSWER, and must not be graded as
+        # one. Raise MAX_TOKENS_PER_CALL or shorten the contract; either
+        # way the record has to name the real cause.
+        if (meta or {}).get("finish_reason") == "length":
+            self.last_tokens_in = int(usage.get("prompt_tokens") or 0)
+            self.last_tokens_out = int(usage.get("completion_tokens") or 0)
+            self.usage_seen = bool(usage)
+            self.last_usage, self.last_meta = usage, meta
+            self.turn_usage.append({"usage": usage, "meta": meta})
+            return {"final": {"decision": "escalate",
+                              "reason": "output truncated at max_tokens (%d) "
+                                        "- the reply was cut mid-JSON"
+                                        % config.MAX_TOKENS_PER_CALL,
+                              "stopped_by": "output_truncated"},
+                    "thought": "truncated: %s" % (raw or "")[:200]}
         # OpenRouter normalises to the OpenAI shape. If a provider omits
         # the block we record zero AND remember that we did, so a silent
         # zero is never mistaken for a cheap run.
@@ -403,7 +418,15 @@ def _live_call(messages):
             payload.get("usage") or {},
             {"served_model": payload.get("model"),
              "provider": payload.get("provider"),
-             "response_id": payload.get("id")})
+             "response_id": payload.get("id"),
+             # WHY THE COMPLETION ENDED. "length" means the reply was cut
+             # at max_tokens, so its JSON is severed mid-object and will
+             # never parse. Without this the loop cannot tell a truncated
+             # answer from a model that wrote prose, and reports both as
+             # "did not return parseable JSON" - two different faults
+             # needing two different fixes, filed under one name.
+             "finish_reason": choice.get("finish_reason") or
+                              choice.get("native_finish_reason")})
 
 
 def _sleep_before_retry(attempt, retry_after):

@@ -1,0 +1,13 @@
+{
+  "judge_model": "mistralai/mistral-small-2603",
+  "graded_file": "results/live/rohit_panda/problemA__live_rohit_panda_meta-llama_llama-3.1-8b-instruct_2026-09-13.json",
+  "judge_prompt_sha256": "4eae05871a406255b9bc0be21dc51d5a7b456f9b5107d26008635f2a1c6db670",
+  "items_judged": 40,
+  "tokens_in": 59050,
+  "tokens_out": 6416,
+  "price_in_per_million": 0.1,
+  "price_out_per_million": 0.4,
+  "cost_usd": 0.008471,
+  "date": "2026-09-13",
+  "note": "live spend OUTSIDE the D5(b) battery - it does not pass through run_battery, so D6 must add this file as an input or it under-reports the OpenRouter bill"
+}
