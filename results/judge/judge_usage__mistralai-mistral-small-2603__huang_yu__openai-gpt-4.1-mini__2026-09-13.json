@@ -1,0 +1,14 @@
+{
+  "judge_model": "mistralai/mistral-small-2603",
+  "graded_file": "results/live/huang_yu/problemA__live_huang_yu_openai_gpt-4.1-mini_2026-09-13.json",
+  "judge_prompt_sha256": "4eae05871a406255b9bc0be21dc51d5a7b456f9b5107d26008635f2a1c6db670",
+  "items_judged": 40,
+  "tokens_in": 77953,
+  "tokens_out": 7485,
+  "graded_member": "huang_yu",
+  "graded_model": "openai/gpt-4.1-mini",
+  "cost_usd": 0.016871,
+  "cost_source": "measured - OpenRouter usage.cost, summed per call",
+  "date": "2026-09-13",
+  "note": "live spend OUTSIDE the D5(b) battery - it does not pass through run_battery, so D6 must add this file as an input or it under-reports the OpenRouter bill"
+}
