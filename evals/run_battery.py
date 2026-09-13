@@ -42,6 +42,7 @@ import json
 import os
 import statistics
 import sys
+import time
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -223,6 +224,93 @@ class Budget(object):
 
 class BatteryHalt(Exception):
     pass
+
+
+# =====================================================================
+# PROGRESS — because a silent hour looks exactly like a hung process
+# =====================================================================
+class Progress:
+    """One line per graded trial, printed as it lands.
+
+    THIS IS NOT DECORATION. The first live battery on this repository was
+    interrupted by hand because sixty trials produced no output between
+    the confirmation prompt and the summary, and a run that prints
+    nothing for several minutes is indistinguishable from one that has
+    hung on a socket. The operator killed a paid run to find out.
+
+    What each line has to answer, in the order you ask it at 2am:
+      am I moving · which case · did it pass · what did it cost ·
+      how much have I spent · how much longer.
+
+    Nothing here can leak a key: it reads only the graded record.
+    """
+
+    def __init__(self, total, already_done, cap, dry_run):
+        self.total = total
+        self.done = already_done
+        self.cap = cap
+        self.dry_run = dry_run
+        self.started = time.time()
+        self.passed = 0
+        self.spent = 0.0
+        if already_done:
+            print("  resuming at trial %d of %d - already-done trials are not "
+                  "re-paid for\n" % (already_done, total))
+        print("  %-5s %-12s %-4s %-5s %-6s %-9s %-10s %s"
+              % ("#", "case", "trial", "check", "turns", "tokens", "US$",
+                 "decision"))
+        print("  " + "-" * 76)
+
+    def on_result(self, r):
+        self.done += 1
+        rec = r.get("record") or {}
+        self.passed += 1 if r.get("passed") else 0
+        self.spent += float(rec.get("cost_usd") or 0.0)
+
+        stopped = rec.get("stopped_by")
+        decision = rec.get("decision") or "?"
+        if stopped:
+            decision = "%s [%s]" % (decision, stopped)
+
+        print("  %-5s %-12s %-4s %-5s %-6s %-9s %-10s %s"
+              % ("%d/%d" % (self.done, self.total),
+                 r.get("case_id", "?"),
+                 "t%s" % r.get("trial", "?"),
+                 "PASS" if r.get("passed") else "FAIL",
+                 rec.get("turns", "?"),
+                 "%.1fk/%.0f" % ((rec.get("tokens_in") or 0) / 1000.0,
+                                 rec.get("tokens_out") or 0),
+                 "%.5f" % (rec.get("cost_usd") or 0.0),
+                 decision[:34]))
+
+        # A FAILED TRIAL SAYS WHY, ONCE. Reading sixty of these after the
+        # fact tells you far less than seeing the first one arrive.
+        if not r.get("passed"):
+            for f in (r.get("fails") or [])[:1]:
+                print("        why: %s" % str(f)[:70])
+
+        # The running total, often enough to be useful and rarely enough
+        # to stay readable.
+        if self.done % 10 == 0 or self.done == self.total:
+            elapsed = time.time() - self.started
+            rate = elapsed / max(1, self.done - 0)
+            left = max(0, self.total - self.done)
+            print("        %d/%d done · %d passed (%.0f%%) · US$%.4f of "
+                  "US$%.2f%s · ~%s left"
+                  % (self.done, self.total, self.passed,
+                     100.0 * self.passed / max(1, self.done),
+                     self.spent, self.cap,
+                     "  [DRY RUN - no money moved]" if self.dry_run else "",
+                     _hms(rate * left)))
+
+
+def _hms(seconds):
+    seconds = int(max(0, seconds))
+    if seconds < 60:
+        return "%ds" % seconds
+    if seconds < 3600:
+        return "%dm %02ds" % (seconds // 60, seconds % 60)
+    return "%dh %02dm" % (seconds // 3600, (seconds % 3600) // 60)
 
 
 def make_run_one(budget, entry, canary_out_per_turn, on_halt):
@@ -612,11 +700,20 @@ def main(argv=None):
             plan_cases = plan_cases[:args.limit]
 
         results = list(checkpoint.results())
+        progress = Progress(fp["plan_shape"]["trials"], len(results),
+                            budget.cap, args.dry_run)
+
+        def on_result(r):
+            # Checkpoint FIRST, then print. If the process dies between
+            # the two, the trial is still paid for and still recorded;
+            # printing first and crashing would lose it.
+            checkpoint.append(dict(r, kind="trial"))
+            progress.on_result(r)
+
         try:
             fresh, queue = harness.run_set(
                 plan_cases, problem=roster.get("problem"),
-                run_one=run_one, skip=skip,
-                on_result=lambda r: checkpoint.append(dict(r, kind="trial")))
+                run_one=run_one, skip=skip, on_result=on_result)
             results += fresh
         except BatteryHalt:
             results = list(checkpoint.results())
