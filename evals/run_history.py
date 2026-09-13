@@ -11,13 +11,6 @@ finding in its own right: rohit_panda's model went 0/60 -> 1/60 -> a
 five-case gate before any change to the model, and every step was a
 defect in our harness, not in the model under test.
 
-DERIVED, NEVER APPENDED. Karthik's version appends one row per session
-while the run is in progress. This one rebuilds the whole history from the
-battery files on every call, so it cannot drift from the files it
-summarises, cannot double-count a resumed run, and gives byte-identical
-output when run twice on the same files. The adaptation is credited in
-CONTRIBUTIONS.md section 4.
-
 WHAT "BEST RUN PER MODEL" MEANS. Highest pass rate; ties go to the lower
 ghost-loop rate, then the lower cost per passed trial. Archived runs are
 listed in the history but EXCLUDED from "best": they were measured on a
