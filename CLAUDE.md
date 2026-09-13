@@ -47,7 +47,7 @@ from the fixtures, and `run_battery` refuses to start if a typed number disagree
 ```bash
 python3 run_eval.py                                   # 60 of 60 trials
 python3 evals/run_guardrails.py --twice               # 13/13, 1/1, 1 known limit
-python3 evals/test_battery_fake.py                    # 35 passed
+python3 evals/test_battery_fake.py                    # 60 passed
 python3 evals/test_cost_model.py                      # 4 passed
 python3 experiments/d2c_parallel_vs_sequential.py     # 41% turns, 53% input tokens
 python3 experiments/demo_loop_failure.py              # D7 failure 1 · loop control
@@ -63,14 +63,14 @@ share a family**, and **the v2 set spans ≥2 tiers**.
 
 | Member | Roster key | Model | Tier | Family | Prompt | Est. |
 |---|---|---|---|---|---|---:|
-| Rohit Panda | `rohit_panda` | `meta-llama/llama-3.1-8b-instruct` | cheap | meta-llama | v2 | $0.0624 |
-| Huang Yu | `huang_yu` | `openai/gpt-4o-mini` | mid | openai | v2 | $0.2222 |
-| Xia Yanran | `xia_yanran` | `qwen/qwen-2.5-72b-instruct` | mid | qwen | v2 | $0.4319 |
-| Li Yunke | `li_yunke` | `google/gemma-3-12b-it` | cheap | google | v2 | $0.0692 |
-| Shen Bowen | `shen_bowen` | `anthropic/claude-3-haiku` | mid | anthropic | v2 | $0.3948 |
-| Zhao Yujia | `zhao_yujia` | `meta-llama/llama-3.1-8b-instruct` | cheap | **meta-llama — same model as Rohit** | **v1** | $0.0624 |
+| Rohit Panda | `rohit_panda` | `anthropic/claude-haiku-4.5` | mid | anthropic | v2 | $1.5792 |
+| Huang Yu | `huang_yu` | `openai/gpt-4.1-mini` | mid | openai | v2 | $0.5927 |
+| Xia Yanran | `xia_yanran` | `google/gemini-2.5-flash` | mid | google | v2 | $0.5713 |
+| Li Yunke | `li_yunke` | `qwen/qwen3-235b-a22b-2507` | cheap | qwen | v2 | $0.1296 |
+| Shen Bowen | `shen_bowen` | `deepseek/deepseek-v3.2` | cheap | deepseek | v2 | $0.3326 |
+| Zhao Yujia | `zhao_yujia` | `qwen/qwen3-235b-a22b-2507` | cheap | **qwen — same model as Li Yunke** | **v1** | $0.1296 |
 
-**Team total ≈ US$1.24.** 2 cheap + 3 mid across 5 families. Yujia's row is the
+**Team total ≈ US$3.34.** 3 mid + 2 cheap across 5 families. Rewritten 2026-09-13: Rohit moved to Haiku 4.5, which forced Shen Bowen off Anthropic and Zhao Yujia off Llama. Yujia's row is the
 D2(b) v1 pass and **must** hold the model fixed against a v2 member's. It is
 unblocked: `sha(v1)=36992f7881ec` ≠ `sha(v2)=4accfcfacda4`.
 
@@ -92,7 +92,7 @@ Re-verify on the day with `python3 evals/check_roster_prices.py` — free, no ke
 
 | Blocker | Owner | Why it blocks |
 |---|---|---|
-| ~~Roster is placeholders~~ | — | **DONE 9 Sep** — filled, live-verified, N−1, ≈US$1.24 |
+| ~~Roster is placeholders~~ | — | **DONE** — rewritten 13 Sep for Haiku 4.5, live-verified, N−1, ≈US$3.34 |
 | **`v2-freeze` not cut** | Rohit | Six runners with no frozen commit is guaranteed drift |
 | **Authorship table unsigned** | all six | `CONTRIBUTIONS.md` §3 carries the attestation; the case IDs and initials are blank, and a marker checks that section against `git log` |
 | **No commits from Xia Yanran, Shen Bowen** | those two | The history has to corroborate `CONTRIBUTIONS.md` |

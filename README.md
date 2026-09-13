@@ -77,7 +77,7 @@ evals/
   battery_provenance.py          fingerprint, roster rules, derived trial count
   battery_checkpoint.py          fsync'd JSONL, resume, lock
   aggregate_battery.py           the report §3 table + the v1/v2 delta
-  test_battery_fake.py           35 checks against a fake vendor, free
+  test_battery_fake.py           60 checks against a fake vendor, free
   guardrail_cases.json           D3(b) checklist            <- Huang Yu
 data/
   make_fixtures_A.py             the generator — EXTRA_* block is where cases are added
@@ -288,7 +288,7 @@ deleting the canonical file empties the D5(b) table.
 ### The runner underneath
 
 ```bash
-python3 evals/test_battery_fake.py             # 35 checks, no key, no cost
+python3 evals/test_battery_fake.py             # 60 checks, no key, no cost
 python3 run_battery.py --member <name> --dry-run
 python3 run_battery.py --member <name> --verify-drift   # paste this in the group chat
 python3 run_battery.py --member <name>         # the live run. Spends YOUR key.

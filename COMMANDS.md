@@ -47,7 +47,7 @@ after any descriptor change — it is the D2(b) artefact.
 ## 2 · Code and guardrail checks — free, no key
 
 ```bash
-python3 evals/test_battery_fake.py         # 35 checks · battery failure modes
+python3 evals/test_battery_fake.py         # 60 checks · battery failure modes
 python3 evals/graders/test_judge_fake.py   # 51 checks · judge failure modes
 python3 evals/test_cost_model.py           #  4 checks · D6 arithmetic
 python3 evals/run_guardrails.py --twice    # D3(b) · 15 guardrail cases
@@ -210,21 +210,21 @@ fixed.
 
 | Member | Model | Family | Tier | Prompt | Battery |
 |---|---|---|---|---|---:|
-| Rohit Panda | `meta-llama/llama-3.1-8b-instruct` | meta-llama | cheap | v2 | $0.0624 |
-| Huang Yu | `openai/gpt-4o-mini` | openai | mid | v2 | $0.2222 |
-| Xia Yanran | `qwen/qwen-2.5-72b-instruct` | qwen | mid | v2 | $0.4319 |
-| Li Yunke | `google/gemma-3-12b-it` | google | cheap | v2 | $0.0692 |
-| Shen Bowen | `anthropic/claude-3-haiku` | anthropic | mid | v2 | $0.3948 |
-| Zhao Yujia | `meta-llama/llama-3.1-8b-instruct` | meta-llama | cheap | **v1** | $0.0624 |
-| | | | | **total** | **$1.2429** |
+| Rohit Panda | `anthropic/claude-haiku-4.5` | anthropic | mid | v2 | $1.5792 |
+| Huang Yu | `openai/gpt-4.1-mini` | openai | mid | v2 | $0.5927 |
+| Xia Yanran | `google/gemini-2.5-flash` | google | mid | v2 | $0.5713 |
+| Li Yunke | `qwen/qwen3-235b-a22b-2507` | qwen | cheap | v2 | $0.1296 |
+| Shen Bowen | `deepseek/deepseek-v3.2` | deepseek | cheap | v2 | $0.3326 |
+| Zhao Yujia | `qwen/qwen3-235b-a22b-2507` | qwen | cheap | **v1** | $0.1296 |
+| | | | | **total** | **$3.3351** |
 
-**2 cheap · 3 mid · 5 distinct families.** Both of the brief's conditions hold and
+**3 mid · 2 cheap · 5 distinct families.** Both of the brief's conditions hold and
 both are checked in `validate_roster()`, not left to memory: the v2 set spans two
 price tiers, and no two v2 members share a family. Zhao Yujia's family duplicating
-Rohit Panda's is correct — the family rule applies to the five **v2** models.
+Li Yunke's is correct — the family rule applies to the five **v2** models.
 
-Worst individual row is **$0.4319**, 14% of the US$3 ceiling. The whole battery is
-about **2%** of the team's six US$10 keys.
+Worst individual row is **$1.5792** (Haiku 4.5), 53% of the US$3 ceiling. The whole
+battery is about **6%** of the team's six US$10 keys. Updated 2026-09-13.
 
 **Priced on 60 trials, not 56.** The brief's example set is 40 cases / 8 negative /
 56 trials; ours is 40 / 10 / 60, because nine of the fifteen *shipped* cases are
