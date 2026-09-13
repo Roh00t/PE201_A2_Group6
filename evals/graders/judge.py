@@ -403,6 +403,9 @@ def judge_by_person(queue, who):
 def judge_by_model(queue, doc, judge_model, key_map, spend_cap):
     tokens_in = tokens_out = 0
     spent = 0.0
+    # [measured US$ so far, every call measured?] - a list so the loop can
+    # update it; returned alongside the token counts.
+    measured_cost = [0.0, True]
     for n, item in enumerate(queue, 1):
         expected = key_map.get(item["case_id"], {})
         out = evaluate_outcome(expected, item, judge_model, doc)
@@ -419,7 +422,18 @@ def judge_by_model(queue, doc, judge_model, key_map, spend_cap):
         to = int(u.get("completion_tokens") or 0)
         tokens_in += ti
         tokens_out += to
-        spent = (tokens_in / 1e6) * config.PRICE_IN + (tokens_out / 1e6) * config.PRICE_OUT
+        # MEASURED COST, from OpenRouter's own usage block. This used to be
+        # tokens x config.PRICE_IN/PRICE_OUT - but config holds the BATTERY
+        # model's prices, not the judge's. Chained after a Haiku 4.5 battery
+        # it priced mistral-small at $1.00/$5.00 and recorded US$0.1234 for a
+        # judging pass that cost ~US$0.0173: 7.1x too high. Run standalone it
+        # used config.py's defaults and was too LOW. Neither was ever the
+        # judge's price. usage.cost is what the key was actually charged.
+        if u.get("cost") is not None:
+            measured_cost[0] += float(u["cost"])
+        else:
+            measured_cost[1] = False          # at least one call unmeasured
+        spent = measured_cost[0]
 
         print("  %3d/%d  %-12s %-5s  %s"
               % (n, len(queue), item["case_id"], item["verdict"].upper(),
@@ -432,19 +446,33 @@ def judge_by_model(queue, doc, judge_model, key_map, spend_cap):
                   % (n, len(queue)))
             print("  judged file below records that honestly.\n")
             break
-    return tokens_in, tokens_out
+    return tokens_in, tokens_out, measured_cost[0], measured_cost[1]
 
 
 # =====================================================================
 # USAGE ACCOUNTING  (a D6 input, written not printed)
 # =====================================================================
-def write_usage(judge_model, graded_file, judged, tokens_in, tokens_out):
+def _slug(text):
+    return str(text or "unknown").replace("/", "-").replace(":", "-")
+
+
+def write_usage(judge_model, graded_file, judged, tokens_in, tokens_out,
+                measured_usd, all_measured, graded_member=None,
+                graded_model=None):
+    """One D6 input per judging pass - named so two members cannot collide.
+
+    THE NAME USED TO BE judge model + date. On 2026-09-13 the Haiku 4.5
+    judging pass overwrote the Llama judging pass's file from earlier the
+    same day, losing a D6 input - and two teammates judging on one day
+    would have overwritten each other and conflicted in git. The graded
+    member and graded model are now part of the name.
+    """
     os.makedirs(JUDGE_USAGE_DIR, exist_ok=True)
     stamp = datetime.date.today().isoformat()
-    slug = judge_model.replace("/", "-").replace(":", "-")
-    path = os.path.join(JUDGE_USAGE_DIR,
-                        "judge_usage__%s__%s.json" % (slug, stamp))
-    cost = (tokens_in / 1e6) * config.PRICE_IN + (tokens_out / 1e6) * config.PRICE_OUT
+    path = os.path.join(JUDGE_USAGE_DIR, "judge_usage__%s__%s__%s__%s.json"
+                        % (_slug(judge_model), _slug(graded_member),
+                           _slug(graded_model), stamp))
+    cost = measured_usd
     doc = {
         "judge_model": judge_model,
         "graded_file": os.path.relpath(graded_file, ROOT),
@@ -452,9 +480,13 @@ def write_usage(judge_model, graded_file, judged, tokens_in, tokens_out):
         "items_judged": judged,
         "tokens_in": tokens_in,
         "tokens_out": tokens_out,
-        "price_in_per_million": config.PRICE_IN,
-        "price_out_per_million": config.PRICE_OUT,
+        "graded_member": graded_member,
+        "graded_model": graded_model,
         "cost_usd": round(cost, 6),
+        "cost_source": ("measured - OpenRouter usage.cost, summed per call"
+                        if all_measured else
+                        "PARTIAL - at least one call returned no usage.cost; "
+                        "do not quote as a D6 figure"),
         "date": stamp,
         "note": ("live spend OUTSIDE the D5(b) battery - it does not pass "
                  "through run_battery, so D6 must add this file as an input "
@@ -516,6 +548,7 @@ def main(argv=None):
     print("  judge prompt    sha %s" % prompt_sha256()[:12])
 
     tokens_in = tokens_out = 0
+    measured_usd, all_measured = 0.0, False
     if args.by == "model":
         refuse_self_grading(doc, args.model)
         if not resolve_key(args.allow_dotenv):
@@ -530,8 +563,8 @@ def main(argv=None):
         print("=" * 68)
         print()
         try:
-            tokens_in, tokens_out = judge_by_model(queue, doc, args.model,
-                                                   key_map, args.spend_cap)
+            tokens_in, tokens_out, measured_usd, all_measured = judge_by_model(
+            queue, doc, args.model, key_map, args.spend_cap)
         except LiveFatalError as err:
             # Retrying will not fix any of these, so say which one it is
             # and what to do about it. A stack trace through urllib tells
@@ -594,7 +627,9 @@ def main(argv=None):
 
     if args.by == "model" and (tokens_in or tokens_out):
         path, cost = write_usage(args.model, args.results, s["items_judged"],
-                                 tokens_in, tokens_out)
+                                 tokens_in, tokens_out, measured_usd,
+                                 all_measured, doc.get("member"),
+                                 doc.get("model"))
         print("  Judge spend  %d in / %d out tokens · US$%.5f"
               % (tokens_in, tokens_out, cost))
         print("  Wrote %s" % os.path.relpath(path, ROOT))

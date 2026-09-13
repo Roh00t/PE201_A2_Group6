@@ -173,7 +173,8 @@ def test_end_to_end(tmp_dir):
         items = items_from_prompt(sysmsg)
         if calls["n"] == 2:                       # a judge that ignores the format
             return "Looks fine to me honestly.", {"prompt_tokens": 800,
-                                                  "completion_tokens": 9}, {}
+                                                  "completion_tokens": 9,
+                                                  "cost": 0.0001}, {}
         verdicts = [{"item": it,
                      "verdict": "absent" if (calls["n"] == 3 and i == 0)
                                 else "present",
@@ -182,7 +183,7 @@ def test_end_to_end(tmp_dir):
         return (json.dumps({"items": verdicts,
                             "pass": all(v["verdict"] == "present" for v in verdicts),
                             "reason": "graded"}),
-                {"prompt_tokens": 1200, "completion_tokens": 90},
+                {"prompt_tokens": 1200, "completion_tokens": 90, "cost": 0.0002},
                 {"served_model": "fake/judge"})
 
     real = backends.LIVE_CALL
@@ -245,14 +246,23 @@ def test_end_to_end(tmp_dir):
     check("nothing key-shaped reaches the judged file", "sk-or-" not in body)
 
     usage = os.path.join(ROOT, "results", "judge",
-                         "judge_usage__fake-judge-model__%s.json"
-                         % out["judgement"]["date"])
+                         "judge_usage__fake-judge-model__%s__some-graded-model__%s.json"
+                         % (str(doc.get("member") or "unknown").replace("/", "-"),
+                            out["judgement"]["date"]))
     check("wrote the D6 judge-usage file", os.path.isfile(usage))
     if os.path.isfile(usage):
         with open(usage, encoding="utf-8") as fh:
             u = json.load(fh)
         check("usage file carries measured tokens and a cost",
               u["tokens_in"] > 0 and u["cost_usd"] > 0)
+        # 3 x 0.0002 + 1 x 0.0001 = 0.0007 - the SUM of usage.cost, never
+        # tokens x whatever prices happen to be in config
+        check("judge cost is the SUM of measured usage.cost, not a price guess",
+              abs(u["cost_usd"] - 0.0007) < 1e-9, str(u["cost_usd"]))
+        check("the cost says where it came from",
+              u.get("cost_source", "").startswith("measured"))
+        check("the filename names the graded member, so members cannot collide",
+              "some-graded-model" in os.path.basename(usage))
         check("usage file names the judge model", u["judge_model"] == "fake/judge-model")
         check("the key never reaches the usage file", "sk-or-" not in json.dumps(u))
         os.remove(usage)
