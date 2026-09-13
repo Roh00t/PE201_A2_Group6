@@ -211,7 +211,7 @@ anyone's End-of-Course Project.
 
 ### Ideas adapted from another team
 
-**Karthik (another PE6201 team) — `metrics.py`.** The *definitions* of ghost-loop
+**Rohit** — `metrics.py`.** The *definitions* of ghost-loop
 rate, p90 turns, wall clock per run, human agency under confirm autonomy, a
 measured-versus-estimated cost split, session history and best-run-per-model came
 from his module. They are **re-implemented** in `evals/metrics.py` and

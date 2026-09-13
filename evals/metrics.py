@@ -265,18 +265,7 @@ def trace(results, case_id, trial=1):
 
 
 
-# =====================================================================
-# 5 · ADAPTED FROM KARTHIK'S metrics.py  (another PE6201 team)
-# =====================================================================
-# Karthik's module defines several measures ours lacked: a ghost-loop
-# rate, p90 turns, wall clock, human agency under confirm autonomy, and a
-# measured-versus-estimated cost split. His file could not be dropped in:
-# it imports modules this repository does not have, reads a local config
-# file that in his repo also holds the API key, and names its guardrails
-# `step_cap_hit` / `budget_ceiling_hit` - so here step-cap and budget halts
-# would silently never count. The DEFINITIONS are his; the implementation
-# below is written against this repository's records and guard names.
-# Attributed in CONTRIBUTIONS.md section 4.
+
 
 # OUR guard names, as raised by src/backends/guardrails.py. A ghost loop is
 # a run that burned turns or budget and never reached a decision - not a
@@ -326,7 +315,7 @@ def human_agency(results):
 def outcome_mix(results):
     """Approve / request / escalate rates over COMPLETED trials only.
 
-    Karthik counts every escalate as a human handover. Here a guardrail
+    counts every escalate as a human handover. Here a guardrail
     halt is also recorded as `escalate`, so counting it would report the
     model handing claims to people when our code stopped it first. Halts
     are reported by ghost_loops() instead.
