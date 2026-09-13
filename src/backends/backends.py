@@ -306,6 +306,7 @@ def _parse_move(text):
     one discarded the evidence needed to diagnose exactly this.
     """
     raw = (text or "").strip()
+    moves = []
     for candidate in _json_candidates(raw):
         try:
             move = json.loads(candidate)
@@ -313,7 +314,25 @@ def _parse_move(text):
             continue
         if isinstance(move, dict) and ("final" in move or "calls" in move
                                        or "tool" in move):
-            return move
+            if candidate is raw:
+                return move           # the whole reply is one clean move
+            moves.append(move)
+
+    # WHEN A REPLY HOLDS SEVERAL MOVES, THE LAST ONE IS THE ANSWER.
+    #
+    # A model that can see its own JSON history tends to echo it before
+    # replying, so the earlier objects are what it already did and the
+    # last is what it means to do now. Taking the FIRST would re-execute
+    # an echoed call - and the de-duplication guard would halt the run,
+    # recreating the exact failure the transcript fix removed.
+    #
+    # This is a judgement, made before the raw text of a real failure was
+    # available: until 2026-09-13 unparsed replies never reached the
+    # results file. They do now (record["unparsed_raw"]), so the next live
+    # run shows which pattern actually occurs. If the last object is ever
+    # an echo, check_duplicate still catches it loudly.
+    if moves:
+        return moves[-1]
     return {"final": {"decision": "escalate",
                       "reason": "model did not return parseable JSON"},
             "thought": "unparseable: %s" % raw[:200],
@@ -330,9 +349,34 @@ def _json_candidates(raw):
     yield raw                                     # 1 · already clean JSON
     for m in _FENCE_RE.finditer(raw):             # 2 · ```json ... ```
         yield m.group(1)
-    start, end = raw.find("{"), raw.rfind("}")    # 3 · prose around an object
-    if start != -1 and end > start:
-        yield raw[start:end + 1]
+
+    # 3 · EVERY COMPLETE OBJECT, in the order it appears.
+    #
+    # This used to be `raw[raw.find("{") : raw.rfind("}") + 1]` - the span
+    # from the first brace to the last. It is right for ONE object wrapped
+    # in prose and wrong the moment a reply holds two: the span swallows
+    # the gap between them and nothing parses.
+    #
+    # That is exactly what the 2026-09-13 gate run hit. With the transcript
+    # fixed, llama-3.1-8b could see its own previous move as JSON, and it
+    # began echoing that move before writing its next one. 7 of 7 trials
+    # were then filed as unparseable - including replies that contained a
+    # perfectly valid move.
+    #
+    # raw_decode reads ONE complete object from a position and reports
+    # where it ended, so a second object, trailing prose or an echoed move
+    # cannot contaminate the first. _parse_move takes the first candidate
+    # that is actually a move.
+    decoder = json.JSONDecoder()
+    pos = raw.find("{")
+    while pos != -1:
+        try:
+            _obj, end = decoder.raw_decode(raw, pos)
+        except ValueError:
+            pos = raw.find("{", pos + 1)
+            continue
+        yield raw[pos:end]
+        pos = raw.find("{", end)
 
 
 _RETRYABLE_STATUS = {408, 409, 429, 500, 502, 503, 504}

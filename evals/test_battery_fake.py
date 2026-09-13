@@ -538,6 +538,42 @@ def scenario_output_truncated():
           (rec.get("reason") or "")[:60])
 
 
+def scenario_multi_object_replies():
+    """A reply holding several JSON objects must yield the INTENDED move.
+
+    The 2026-09-13 gate run, on the fixed transcript, came back 7 of 7
+    unparseable. The parser spanned first-brace to last-brace, which
+    swallows a second object into invalid JSON. And taking the FIRST
+    object instead would re-execute an echoed call and halt the run on
+    duplicate_action - the failure the transcript fix had just removed.
+    """
+    from backends.backends import _parse_move
+    echoed = ('{"thought": "already did this", "calls": [["get_claim", '
+              '{"claim_id": "CLM-8842"}]]}\n'
+              '{"thought": "now the policy", "calls": [["lookup_policy", '
+              '{"member_id": "M-2214"}]]}')
+    move = _parse_move(echoed)
+    check("27 two concatenated objects parse, not a failure",
+          "calls" in move, str(move)[:70])
+    check("27a the LAST move wins, so an echoed call is not re-run",
+          (move.get("calls") or [[None]])[0][0] == "lookup_policy",
+          str(move.get("calls"))[:60])
+
+
+def scenario_unparsed_raw_persisted():
+    """The one field that diagnoses an unparseable reply must reach the
+    results file. It used to stop on the move object."""
+    from loop_agent import run_case
+    FAKE.script = "I am not going to answer in JSON today."
+    try:
+        rec = run_case("CLM-8842", problem="A")
+    finally:
+        FAKE.script = None
+    check("28 an unparseable reply's raw text reaches the record",
+          "not going to answer" in (rec.get("unparsed_raw") or ""),
+          str(rec.get("unparsed_raw"))[:60])
+
+
 def main():
     import tempfile
     print()
@@ -566,6 +602,8 @@ def main():
     scenario_transcript_fidelity()
     scenario_observation_truncation()
     scenario_output_truncated()
+    scenario_multi_object_replies()
+    scenario_unparsed_raw_persisted()
     scenario_secret_never_written()
     scenario_key_hygiene()
 

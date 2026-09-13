@@ -141,6 +141,14 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
                 # made, and the record must not read as though it were.
                 if record.get("stopped_by"):
                     stopped_by = record.pop("stopped_by")
+                # KEEP WHAT THE MODEL ACTUALLY SAID when it could not be
+                # read. The parser has always stored it on the move; this
+                # line is what gets it into the results file. Without it the
+                # 2026-09-13 gate run reported 7 unparseable trials and left
+                # no way to see why - the diagnosis had to be inferred.
+                if move.get("unparsed_raw"):
+                    record["unparsed_raw"] = str(move["unparsed_raw"])[
+                        :getattr(config, "MAX_OBSERVATION_CHARS", 2000)]
                 break
 
             # ---- act: one turn may carry SEVERAL calls ---------------
