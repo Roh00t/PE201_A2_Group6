@@ -29,6 +29,12 @@ import json
 import os
 import sys
 
+sys.path.insert(0, os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from evals import metrics                       # noqa: E402
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LIVE_DIR = os.path.join(ROOT, "results", "live")
 
@@ -75,10 +81,21 @@ def check_comparable(runs):
 
 def rows(runs):
     out = []
+    key = metrics._key_map()
     for _path, r in runs:
         s = r["summary"]
         n = s["negative"]
+        # THE SPLIT, PER MODEL. A pass rate alone cannot distinguish "the
+        # model decided wrongly" from "our code stopped it before it
+        # decided", and those are different findings with different fixes.
+        oq = metrics.outcome_quality(r.get("results") or [], key)
+        rsh = metrics.run_shape(r.get("results") or [])
         out.append({
+            "completed": oq["populations"]["completed"],
+            "halted": oq["populations"]["halted"],
+            "unparseable": oq["populations"]["unparseable"],
+            "macro_f1": oq["macro_f1"],
+            "cost_per_passed": rsh["cost_per_passed_trial"],
             "member": r["member"],
             "model": r["model"],
             "tier": r.get("tier"),
@@ -104,7 +121,8 @@ def rows(runs):
 
 
 HEAD = ("member", "model", "tier", "prompt", "trials", "pass", "ordinary",
-        "neg trial", "neg 3of3", "med turns", "tok in", "tok out", "US$")
+        "neg trial", "neg 3of3", "done/halt/unp", "macro F1", "med turns",
+        "tok in", "tok out", "US$", "US$/pass")
 
 
 def to_markdown(rs):
@@ -119,17 +137,22 @@ def to_markdown(rs):
             "%.1f%%" % (100 * r["ordinary"]),
             "%.1f%%" % (100 * r["neg_trials"]),
             "%s (%.0f%%)" % (r["neg_cases"], 100 * r["neg_3of3"]),
+            "%d/%d/%d" % (r["completed"], r["halted"], r["unparseable"]),
+            "%.2f" % r["macro_f1"] if r["macro_f1"] is not None else "n/a",
             str(r["median_turns"]),
             "{:,}".format(r["tokens_in"]), "{:,}".format(r["tokens_out"]),
-            "%.4f" % r["cost"]]) + " |")
+            "%.4f" % r["cost"],
+            "%.4f" % r["cost_per_passed"]
+            if r["cost_per_passed"] is not None else "n/a"]) + " |")
     return "\n".join(lines)
 
 
 def to_csv(rs):
     keys = ["member", "model", "family", "tier", "prompt", "trials",
             "pass_rate", "ordinary", "neg_trials", "neg_3of3", "neg_cases",
+            "completed", "halted", "unparseable", "macro_f1",
             "median_turns", "transport", "tokens_in", "tokens_out", "cost",
-            "cost_per_trial", "clean", "dry_run"]
+            "cost_per_trial", "cost_per_passed", "clean", "dry_run"]
     out = [",".join(keys)]
     for r in rs:
         out.append(",".join('"%s"' % r[k] if isinstance(r[k], str) else str(r[k])

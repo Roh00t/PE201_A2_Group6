@@ -36,7 +36,7 @@
         "tokens_in": 28800,
         "tokens_out": 720,
         "cost_usd": 0.003168,
-        "seconds": 0.001,
+        "seconds": 0.002,
         "turn_tokens": [
           [
             1800,
