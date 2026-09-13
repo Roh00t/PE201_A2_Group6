@@ -1,0 +1,2045 @@
+{
+  "schema": 1,
+  "dry_run": false,
+  "clean": true,
+  "member": "rohit_panda",
+  "full_name": "Rohit Panda",
+  "model": "anthropic/claude-haiku-4.5",
+  "family": "anthropic",
+  "tier": "mid",
+  "prompt_version": "v2",
+  "problem": "A",
+  "backend": "live",
+  "run_id": "837857b1f026",
+  "commit": "208ce1d7a15d68b161aa1cd1dc99d3f798314a0c",
+  "date": "2026-09-13",
+  "started": "2026-09-13T13:14:30",
+  "ended": "2026-09-13T13:16:55",
+  "python": "3.14.5",
+  "fingerprint": {
+    "problem": "A",
+    "commit": "208ce1d7a15d68b161aa1cd1dc99d3f798314a0c",
+    "dirty": [],
+    "answer_key_sha256": "1cd26cc1bf91c7da0ee7ca4ed2707c42ef87a0676820ed19ff237c38e07db756",
+    "fixtures_sha256": "6b455394dece498d550864e5c7382a890368fc3975cc6244ee46e223f733270e",
+    "plan_sha256": "5952ce9e57633e436f2d61abcbbb8066db7887e6dfd43e468908be149287f3ea",
+    "plan_shape": {
+      "cases": 40,
+      "negative": 10,
+      "ordinary": 30,
+      "trials": 60
+    },
+    "prompt_sha256": {
+      "v1": "36992f7881ece6174bf6be3990054a7d7a410f62e4a5ea64a367a436d180a0ad",
+      "v2": "7dc65dcc5d0cdc022f8d27d14d71a41da4e4781b1fbf1fef339f9b25053fe169"
+    },
+    "sources_sha256": {
+      "src/config.py": "ed7317fc26f7929e32256367ea3a4d65bbd50932b2a11b708a548a7a61d71bc7",
+      "src/prompt.py": "3a03de4e67568043d7f37d464c0b668406c735235414e543c92c7dd34094c1ba",
+      "src/tools/tools.py": "42235eb65f57e01b4b9818cb068f99186f9a9cd7a415b0e4c03282ff111f329d",
+      "src/backends/backends.py": "0fd39a8ef90642c62b8e414c56d653cfa22c85e3142e0482e2ea54791ad4ab81",
+      "src/backends/planner.py": "ddf4edba0e6be07e7816a8b6f2cf9b1e521ceb4b12fa371fc8493f3f84c9782d",
+      "src/backends/guardrails.py": "e67d829443574b493716f55edd6a60a30fa346fd29009467e77e5bc7e77ca474",
+      "src/loop_agent.py": "d1507eccdce236d2d235ae0b9854b997c095f062c175202b8781dfb98a79b86e",
+      "src/narrative_guard.py": "6eae70c7fca0aa64b3525fbac80e135271b0489404208188ad63c1c21d4f05b5",
+      "evals/harness.py": "6ce395063fe5e101d711b02b6020f072d728eaaabdd547737cce4e38c6547668"
+    },
+    "invariants": {
+      "PROBLEM": "A",
+      "GROUPING": "parallel",
+      "MAX_TURNS": 8,
+      "MAX_TOKENS_PER_RUN": 60000,
+      "MAX_TOKENS_PER_CALL": 1536,
+      "AUTONOMY": "confirm",
+      "TEMPERATURE": 0,
+      "BASE_URL": "https://openrouter.ai/api/v1"
+    },
+    "python": "3.14.5"
+  },
+  "prices": {
+    "in_per_million": 1.0,
+    "out_per_million": 5.0,
+    "live": {
+      "raw": {
+        "prompt": "0.000001",
+        "completion": "0.000005",
+        "web_search": "0.01",
+        "input_cache_read": "0.0000001",
+        "input_cache_write": "0.00000125",
+        "input_cache_write_1h": "0.000002"
+      },
+      "in_per_million": 1.0,
+      "out_per_million": 5.0,
+      "fetched_at": "2026-09-13T13:14:30"
+    },
+    "roster_checked_on": "2026-09-13",
+    "source": "https://openrouter.ai/api/v1/models"
+  },
+  "overrides": [],
+  "summary": {
+    "trials_planned": 7,
+    "trials_graded": 7,
+    "trials_transport_failed": 0,
+    "passed": 4,
+    "pass_rate": 0.5714285714285714,
+    "ordinary": {
+      "trials": 4,
+      "rate": 1.0
+    },
+    "negative": {
+      "trials": 3,
+      "rate": 0.0,
+      "cases": 1,
+      "cases_3of3": 0,
+      "consistency": 0.0
+    },
+    "median_turns": 5,
+    "max_turns": 5,
+    "stopped_by": {},
+    "tokens_in": 165794,
+    "tokens_out": 7083,
+    "cost_usd": 0.201209,
+    "usage_complete": true,
+    "served_models": [
+      "anthropic/claude-haiku-4.5"
+    ]
+  },
+  "results": [
+    {
+      "case_id": "CLM-8842",
+      "trial": 1,
+      "passed": true,
+      "fails": [],
+      "record": {
+        "decision": "approve_in_principle",
+        "line_dispositions": [
+          {
+            "code": "47120",
+            "amount": 1400,
+            "status": "covered",
+            "description": "Laparoscopic appendicectomy"
+          },
+          {
+            "code": "62480",
+            "amount": 780,
+            "status": "covered_with_preauth",
+            "description": "Lumbar spinal fusion",
+            "preauth_id": "PA-5521",
+            "preauth_validity": "2026-08-01 to 2026-10-31"
+          },
+          {
+            "code": "31255",
+            "amount": 300,
+            "status": "excluded",
+            "description": "Cosmetic dermabrasion",
+            "rule": "EX-14 cosmetic dermatology"
+          }
+        ],
+        "approved_total": 2180,
+        "refused_total": 300,
+        "hospital_panel": true,
+        "policy_status": "POL-3310 active 2026-04-01 to 2027-03-31, 9200 remaining",
+        "duplicate_check": "no match on member, hospital, date and lines",
+        "reason": "Claim CLM-8842 for member M-2214 at Riverside General on 2026-09-02. Line 47120 (1400) laparoscopic appendicectomy is covered. Line 62480 (780) lumbar spinal fusion requires and has valid preauthorisation PA-5521 (valid 2026-08-01 to 2026-10-31) and required discharge_summary is attached; covered. Line 31255 (300) cosmetic dermabrasion is excluded under EX-14 cosmetic dermatology. Approved total 2180, refused total 300. Policy POL-3310 active 2026-04-01 to 2027-03-31 with 9200 remaining after this claim. Hospital H-114 Riverside General is on panel. Not a duplicate: no prior decided claim matches member M-2214, hospital H-114, date 2026-09-02 and these lines.",
+        "case_id": "CLM-8842",
+        "evidence": [
+          "get_claim",
+          "lookup_policy",
+          "lookup_hospital",
+          "check_duplicate_claim",
+          "check_coverage",
+          "check_coverage",
+          "check_coverage",
+          "get_preauthorisation",
+          "issue_decision_letter"
+        ],
+        "turns": 5,
+        "tokens_in": 25424,
+        "tokens_out": 1219,
+        "cost_usd": 0.031519,
+        "seconds": 17.205,
+        "turn_tokens": [
+          [
+            3342,
+            64
+          ],
+          [
+            3563,
+            164
+          ],
+          [
+            4099,
+            152
+          ],
+          [
+            4536,
+            144
+          ],
+          [
+            4796,
+            172
+          ],
+          [
+            5088,
+            523
+          ]
+        ],
+        "guardrails_fired": [
+          {
+            "guardrail": "gate_passed",
+            "detail": "issue_decision_letter (autonomy=confirm)"
+          }
+        ],
+        "stopped_by": null,
+        "backend": "live",
+        "model": "anthropic/claude-haiku-4.5",
+        "prompt_version": "v2",
+        "served_model": "anthropic/claude-haiku-4.5",
+        "provider": "Amazon Bedrock",
+        "usage_complete": true,
+        "turn_usage": [
+          {
+            "usage": {
+              "prompt_tokens": 3342,
+              "completion_tokens": 64,
+              "total_tokens": 3406,
+              "cost": 0.003662,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.003662,
+                "upstream_inference_prompt_cost": 0.003342,
+                "upstream_inference_completions_cost": 0.00032
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276512-xVOW54C8RcuNKygzNBJL",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 3563,
+              "completion_tokens": 164,
+              "total_tokens": 3727,
+              "cost": 0.004383,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004383,
+                "upstream_inference_prompt_cost": 0.003563,
+                "upstream_inference_completions_cost": 0.00082
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276514-dkvUquK1u5Vvpv7S3nNT",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4099,
+              "completion_tokens": 152,
+              "total_tokens": 4251,
+              "cost": 0.004859,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004859,
+                "upstream_inference_prompt_cost": 0.004099,
+                "upstream_inference_completions_cost": 0.00076
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276516-sZEfEDdU5R2UE0N67P7O",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4536,
+              "completion_tokens": 144,
+              "total_tokens": 4680,
+              "cost": 0.005256,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.005256,
+                "upstream_inference_prompt_cost": 0.004536,
+                "upstream_inference_completions_cost": 0.00072
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276518-0mARMCloT5bL64M69vBA",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4796,
+              "completion_tokens": 172,
+              "total_tokens": 4968,
+              "cost": 0.005656,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.005656,
+                "upstream_inference_prompt_cost": 0.004796,
+                "upstream_inference_completions_cost": 0.00086
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276521-Tl42wszSImB6WY0l2Hx7",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 5088,
+              "completion_tokens": 523,
+              "total_tokens": 5611,
+              "cost": 0.007703,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.007703,
+                "upstream_inference_prompt_cost": 0.005088,
+                "upstream_inference_completions_cost": 0.002615
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276524-UcBrzY0wNf5dwX33Nzv6",
+              "finish_reason": "stop"
+            }
+          }
+        ]
+      },
+      "family": "partly_payable"
+    },
+    {
+      "case_id": "CLM-8850",
+      "trial": 1,
+      "passed": true,
+      "fails": [],
+      "record": {
+        "decision": "approve_in_principle",
+        "line_dispositions": [
+          {
+            "code": "99213",
+            "amount": 180,
+            "status": "covered"
+          }
+        ],
+        "approved_total": 180,
+        "refused_total": 0,
+        "hospital_panel": true,
+        "policy_status": "POL-6001 active 2026-06-01 to 2027-05-31, 15000 remaining",
+        "duplicate_check": "no match on member, hospital, date and lines",
+        "reason": "Code 99213 (outpatient consultation, 180) is covered under POL-6001 with no pre-authorisation requirement and no exclusion. Policy is active from 2026-06-01 to 2027-05-31 with 15000 remaining; the service date 2026-09-04 falls within this window. Mount Elizabeth East (H-207) is on the insurer's panel. No duplicate claim exists matching this member, hospital, date and lines. Approved total: 180.",
+        "case_id": "CLM-8850",
+        "evidence": [
+          "get_claim",
+          "lookup_policy",
+          "lookup_hospital",
+          "check_duplicate_claim",
+          "check_coverage",
+          "issue_decision_letter"
+        ],
+        "turns": 4,
+        "tokens_in": 19402,
+        "tokens_out": 708,
+        "cost_usd": 0.022942,
+        "seconds": 11.162,
+        "turn_tokens": [
+          [
+            3342,
+            64
+          ],
+          [
+            3514,
+            145
+          ],
+          [
+            3959,
+            107
+          ],
+          [
+            4168,
+            133
+          ],
+          [
+            4419,
+            259
+          ]
+        ],
+        "guardrails_fired": [
+          {
+            "guardrail": "gate_passed",
+            "detail": "issue_decision_letter (autonomy=confirm)"
+          }
+        ],
+        "stopped_by": null,
+        "backend": "live",
+        "model": "anthropic/claude-haiku-4.5",
+        "prompt_version": "v2",
+        "served_model": "anthropic/claude-haiku-4.5",
+        "provider": "Amazon Bedrock",
+        "usage_complete": true,
+        "turn_usage": [
+          {
+            "usage": {
+              "prompt_tokens": 3342,
+              "completion_tokens": 64,
+              "total_tokens": 3406,
+              "cost": 0.003662,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.003662,
+                "upstream_inference_prompt_cost": 0.003342,
+                "upstream_inference_completions_cost": 0.00032
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276529-HhHLivQuTcnrehbrALxn",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 3514,
+              "completion_tokens": 145,
+              "total_tokens": 3659,
+              "cost": 0.004239,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004239,
+                "upstream_inference_prompt_cost": 0.003514,
+                "upstream_inference_completions_cost": 0.000725
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276531-p8de8EbrskcyUlBAGRZI",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 3959,
+              "completion_tokens": 107,
+              "total_tokens": 4066,
+              "cost": 0.004494,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004494,
+                "upstream_inference_prompt_cost": 0.003959,
+                "upstream_inference_completions_cost": 0.000535
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276533-7cbSnrPL7FzFWC1qtwPk",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4168,
+              "completion_tokens": 133,
+              "total_tokens": 4301,
+              "cost": 0.004833,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004833,
+                "upstream_inference_prompt_cost": 0.004168,
+                "upstream_inference_completions_cost": 0.000665
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276535-pWtsPMeRkbVawv0Ffk2x",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4419,
+              "completion_tokens": 259,
+              "total_tokens": 4678,
+              "cost": 0.005714,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.005714,
+                "upstream_inference_prompt_cost": 0.004419,
+                "upstream_inference_completions_cost": 0.001295
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276537-EUbXdXljX5AtbR51lbva",
+              "finish_reason": "stop"
+            }
+          }
+        ]
+      },
+      "family": "single_line_short_run"
+    },
+    {
+      "case_id": "CLM-8861",
+      "trial": 1,
+      "passed": true,
+      "fails": [],
+      "record": {
+        "decision": "approve_in_principle",
+        "line_dispositions": [
+          {
+            "code": "27447",
+            "amount": 8200,
+            "status": "covered_with_preauth",
+            "preauth_id": "PA-5702",
+            "preauth_validity": "2026-07-01 to 2026-12-31"
+          },
+          {
+            "code": "80053",
+            "amount": 90,
+            "status": "covered"
+          }
+        ],
+        "approved_total": 8290,
+        "refused_total": 0,
+        "hospital_panel": true,
+        "policy_status": "POL-6001 active 2026-06-01 to 2027-05-31, 15000 remaining",
+        "duplicate_check": "no match on member, hospital, date and lines",
+        "reason": "Both lines approved. 27447 (8200) total knee replacement covered with valid preauth PA-5702 (2026-07-01 to 2026-12-31); discharge summary attached as required. 80053 (90) comprehensive metabolic panel covered, no preauth required. Total approved 8290. POL-6001 active 2026-06-01 to 2027-05-31 with 15000 remaining. Mount Elizabeth East on panel. Not a duplicate.",
+        "case_id": "CLM-8861",
+        "evidence": [
+          "get_claim",
+          "lookup_policy",
+          "lookup_hospital",
+          "check_duplicate_claim",
+          "check_coverage",
+          "check_coverage",
+          "get_preauthorisation",
+          "issue_decision_letter"
+        ],
+        "turns": 5,
+        "tokens_in": 24797,
+        "tokens_out": 991,
+        "cost_usd": 0.029752,
+        "seconds": 14.486,
+        "turn_tokens": [
+          [
+            3342,
+            64
+          ],
+          [
+            3534,
+            158
+          ],
+          [
+            4006,
+            174
+          ],
+          [
+            4391,
+            120
+          ],
+          [
+            4627,
+            150
+          ],
+          [
+            4897,
+            325
+          ]
+        ],
+        "guardrails_fired": [
+          {
+            "guardrail": "gate_passed",
+            "detail": "issue_decision_letter (autonomy=confirm)"
+          }
+        ],
+        "stopped_by": null,
+        "backend": "live",
+        "model": "anthropic/claude-haiku-4.5",
+        "prompt_version": "v2",
+        "served_model": "anthropic/claude-haiku-4.5",
+        "provider": "Amazon Bedrock",
+        "usage_complete": true,
+        "turn_usage": [
+          {
+            "usage": {
+              "prompt_tokens": 3342,
+              "completion_tokens": 64,
+              "total_tokens": 3406,
+              "cost": 0.003662,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.003662,
+                "upstream_inference_prompt_cost": 0.003342,
+                "upstream_inference_completions_cost": 0.00032
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276541-GsnEQCSVHqrYbkJIpCPd",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 3534,
+              "completion_tokens": 158,
+              "total_tokens": 3692,
+              "cost": 0.004324,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004324,
+                "upstream_inference_prompt_cost": 0.003534,
+                "upstream_inference_completions_cost": 0.00079
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276542-fjZhy7McnLPY71zI2Dcw",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4006,
+              "completion_tokens": 174,
+              "total_tokens": 4180,
+              "cost": 0.004876,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004876,
+                "upstream_inference_prompt_cost": 0.004006,
+                "upstream_inference_completions_cost": 0.00087
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276544-nuFVcsbDjY9yjJkMbNwC",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4391,
+              "completion_tokens": 120,
+              "total_tokens": 4511,
+              "cost": 0.004991,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004991,
+                "upstream_inference_prompt_cost": 0.004391,
+                "upstream_inference_completions_cost": 0.0006
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276547-JY5XYH45K5HFB4OtVLWa",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4627,
+              "completion_tokens": 150,
+              "total_tokens": 4777,
+              "cost": 0.005377,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.005377,
+                "upstream_inference_prompt_cost": 0.004627,
+                "upstream_inference_completions_cost": 0.00075
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276549-lDMdU5gsljVhE3zdrfyI",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4897,
+              "completion_tokens": 325,
+              "total_tokens": 5222,
+              "cost": 0.006522,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.006522,
+                "upstream_inference_prompt_cost": 0.004897,
+                "upstream_inference_completions_cost": 0.001625
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276551-T9668lSIPv2453yYcYz7",
+              "finish_reason": "stop"
+            }
+          }
+        ]
+      },
+      "family": "preauth_present_and_valid"
+    },
+    {
+      "case_id": "CLM-8874",
+      "trial": 1,
+      "passed": true,
+      "fails": [],
+      "record": {
+        "decision": "approve_in_principle",
+        "line_dispositions": [
+          {
+            "code": "70553",
+            "amount": 620,
+            "status": "covered",
+            "description": "MRI brain with contrast"
+          }
+        ],
+        "approved_total": 620,
+        "refused_total": 0,
+        "hospital_panel": false,
+        "policy_status": "POL-3310 active 2026-04-01 to 2027-03-31, 9200 remaining",
+        "duplicate_check": "no match on member, hospital, date and lines",
+        "reason": "Line 70553 (MRI brain with contrast, 620) is covered under POL-3310 with no pre-authorisation requirement and no exclusion. Approved total 620, refused total 0. Policy POL-3310 is active from 2026-04-01 to 2027-03-31 with 9200 remaining annual limit; date of service 2026-09-06 is within policy dates. Hospital H-330 (Bayfront Specialist) is off-panel but this does not block the claim. No duplicate claim found matching member M-2214, hospital H-330, date 2026-09-06, and lines.",
+        "case_id": "CLM-8874",
+        "evidence": [
+          "get_claim",
+          "lookup_policy",
+          "lookup_hospital",
+          "check_duplicate_claim",
+          "check_coverage",
+          "issue_decision_letter"
+        ],
+        "turns": 4,
+        "tokens_in": 19584,
+        "tokens_out": 763,
+        "cost_usd": 0.023399,
+        "seconds": 12.749,
+        "turn_tokens": [
+          [
+            3342,
+            64
+          ],
+          [
+            3522,
+            135
+          ],
+          [
+            4004,
+            129
+          ],
+          [
+            4235,
+            128
+          ],
+          [
+            4481,
+            307
+          ]
+        ],
+        "guardrails_fired": [
+          {
+            "guardrail": "gate_passed",
+            "detail": "issue_decision_letter (autonomy=confirm)"
+          }
+        ],
+        "stopped_by": null,
+        "backend": "live",
+        "model": "anthropic/claude-haiku-4.5",
+        "prompt_version": "v2",
+        "served_model": "anthropic/claude-haiku-4.5",
+        "provider": "Amazon Bedrock",
+        "usage_complete": true,
+        "turn_usage": [
+          {
+            "usage": {
+              "prompt_tokens": 3342,
+              "completion_tokens": 64,
+              "total_tokens": 3406,
+              "cost": 0.003662,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.003662,
+                "upstream_inference_prompt_cost": 0.003342,
+                "upstream_inference_completions_cost": 0.00032
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276555-eENzB9BlX3HOR98Hry5C",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 3522,
+              "completion_tokens": 135,
+              "total_tokens": 3657,
+              "cost": 0.004197,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004197,
+                "upstream_inference_prompt_cost": 0.003522,
+                "upstream_inference_completions_cost": 0.000675
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276557-OMylBOnDYVkGvqBTaoSK",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4004,
+              "completion_tokens": 129,
+              "total_tokens": 4133,
+              "cost": 0.004649,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004649,
+                "upstream_inference_prompt_cost": 0.004004,
+                "upstream_inference_completions_cost": 0.000645
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276559-GdiSQG78G15Zla07oZCB",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4235,
+              "completion_tokens": 128,
+              "total_tokens": 4363,
+              "cost": 0.004875,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004875,
+                "upstream_inference_prompt_cost": 0.004235,
+                "upstream_inference_completions_cost": 0.00064
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276562-jqV8obDwN6JqFXlkpPgC",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4481,
+              "completion_tokens": 307,
+              "total_tokens": 4788,
+              "cost": 0.006016,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.006016,
+                "upstream_inference_prompt_cost": 0.004481,
+                "upstream_inference_completions_cost": 0.001535
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276564-CsttpFmArDuaOegg4x6F",
+              "finish_reason": "stop"
+            }
+          }
+        ]
+      },
+      "family": "non_panel_hospital"
+    },
+    {
+      "case_id": "CLM-8888",
+      "trial": 1,
+      "passed": false,
+      "fails": [
+        "issue_decision_letter fired on a 'request_document' outcome - nothing should have been issued"
+      ],
+      "record": {
+        "decision": "request_document",
+        "reason": "Claim CLM-8888 for member M-6118 (Lim Jun Hao) at Riverside General (H-114) on 2026-09-08 requires a preauthorisation reference for code 62480 (Lumbar spinal fusion, 1200). Code 47120 (Laparoscopic appendicectomy, 900) is covered. Code 31255 (Cosmetic dermabrasion, 300) is excluded under EX-14 cosmetic dermatology. Policy POL-7220 is active 2026-02-01 to 2027-01-31 with 6800 remaining. Hospital is on panel. No duplicate claim found. The preauthorisation for 62480 valid on 2026-09-08 is missing and must be provided to proceed.",
+        "missing": {
+          "item": "Preauthorisation reference",
+          "code": "62480",
+          "date": "2026-09-08"
+        },
+        "line_dispositions": [
+          {
+            "code": "47120",
+            "amount": 900,
+            "status": "covered"
+          },
+          {
+            "code": "62480",
+            "amount": 1200,
+            "status": "pending_preauth",
+            "requires_preauth": true
+          },
+          {
+            "code": "31255",
+            "amount": 300,
+            "status": "excluded",
+            "rule": "EX-14 cosmetic dermatology"
+          }
+        ],
+        "approved_total": 900,
+        "refused_total": 300,
+        "hospital_panel": true,
+        "policy_status": "POL-7220 active 2026-02-01 to 2027-01-31, 6800 remaining",
+        "duplicate_check": "no match",
+        "case_id": "CLM-8888",
+        "evidence": [
+          "get_claim",
+          "lookup_policy",
+          "lookup_hospital",
+          "check_duplicate_claim",
+          "check_coverage",
+          "check_coverage",
+          "check_coverage",
+          "get_preauthorisation",
+          "issue_decision_letter"
+        ],
+        "turns": 5,
+        "tokens_in": 25529,
+        "tokens_out": 1134,
+        "cost_usd": 0.031199,
+        "seconds": 15.542,
+        "turn_tokens": [
+          [
+            3342,
+            64
+          ],
+          [
+            3556,
+            169
+          ],
+          [
+            4075,
+            253
+          ],
+          [
+            4661,
+            114
+          ],
+          [
+            4834,
+            113
+          ],
+          [
+            5061,
+            421
+          ]
+        ],
+        "guardrails_fired": [
+          {
+            "guardrail": "gate_passed",
+            "detail": "issue_decision_letter (autonomy=confirm)"
+          }
+        ],
+        "stopped_by": null,
+        "backend": "live",
+        "model": "anthropic/claude-haiku-4.5",
+        "prompt_version": "v2",
+        "served_model": "anthropic/claude-haiku-4.5",
+        "provider": "Amazon Bedrock",
+        "usage_complete": true,
+        "turn_usage": [
+          {
+            "usage": {
+              "prompt_tokens": 3342,
+              "completion_tokens": 64,
+              "total_tokens": 3406,
+              "cost": 0.003662,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.003662,
+                "upstream_inference_prompt_cost": 0.003342,
+                "upstream_inference_completions_cost": 0.00032
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276568-4sfItW304EGe8LMCoPgY",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 3556,
+              "completion_tokens": 169,
+              "total_tokens": 3725,
+              "cost": 0.004401,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004401,
+                "upstream_inference_prompt_cost": 0.003556,
+                "upstream_inference_completions_cost": 0.000845
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276569-DBgUQ3JQNGHbSSNLZVYO",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4075,
+              "completion_tokens": 253,
+              "total_tokens": 4328,
+              "cost": 0.00534,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.00534,
+                "upstream_inference_prompt_cost": 0.004075,
+                "upstream_inference_completions_cost": 0.001265
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276571-1xxeFz95zZuSiye4qVgT",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4661,
+              "completion_tokens": 114,
+              "total_tokens": 4775,
+              "cost": 0.005231,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.005231,
+                "upstream_inference_prompt_cost": 0.004661,
+                "upstream_inference_completions_cost": 0.00057
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276574-4FGaMrO3K2aTmV3vTUzW",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4834,
+              "completion_tokens": 113,
+              "total_tokens": 4947,
+              "cost": 0.005399,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.005399,
+                "upstream_inference_prompt_cost": 0.004834,
+                "upstream_inference_completions_cost": 0.000565
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276577-I4COQCbyWr37ANOuva1B",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 5061,
+              "completion_tokens": 421,
+              "total_tokens": 5482,
+              "cost": 0.007166,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.007166,
+                "upstream_inference_prompt_cost": 0.005061,
+                "upstream_inference_completions_cost": 0.002105
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276579-kIp2cD9y0gtTAO8LDmHm",
+              "finish_reason": "stop"
+            }
+          }
+        ]
+      },
+      "family": "preauth_absent"
+    },
+    {
+      "case_id": "CLM-8888",
+      "trial": 2,
+      "passed": false,
+      "fails": [
+        "issue_decision_letter fired on a 'request_document' outcome - nothing should have been issued"
+      ],
+      "record": {
+        "decision": "request_document",
+        "reason": "Claim CLM-8888 for member M-6118 (Lim Jun Hao) at Riverside General (H-114) on 2026-09-08 requires a preauthorisation reference for code 62480 (Lumbar spinal fusion, 1200). Code 47120 (Laparoscopic appendicectomy, 900) is covered. Code 31255 (Cosmetic dermabrasion, 300) is excluded under EX-14 cosmetic dermatology. Policy POL-7220 is active 2026-02-01 to 2027-01-31 with 6800 remaining. Hospital is on panel. No duplicate claim found. The preauthorisation for 62480 valid on 2026-09-08 is missing and must be provided to proceed.",
+        "missing": {
+          "item": "Preauthorisation reference",
+          "code": "62480",
+          "date": "2026-09-08"
+        },
+        "line_dispositions": [
+          {
+            "code": "47120",
+            "amount": 900,
+            "status": "covered"
+          },
+          {
+            "code": "62480",
+            "amount": 1200,
+            "status": "pending_preauth",
+            "requires_preauth": true
+          },
+          {
+            "code": "31255",
+            "amount": 300,
+            "status": "excluded",
+            "rule": "EX-14 cosmetic dermatology"
+          }
+        ],
+        "approved_total": 900,
+        "refused_total": 300,
+        "hospital_panel": true,
+        "policy_status": "POL-7220 active 2026-02-01 to 2027-01-31, 6800 remaining",
+        "duplicate_check": "no match",
+        "case_id": "CLM-8888",
+        "evidence": [
+          "get_claim",
+          "lookup_policy",
+          "lookup_hospital",
+          "check_duplicate_claim",
+          "check_coverage",
+          "check_coverage",
+          "check_coverage",
+          "get_preauthorisation",
+          "issue_decision_letter"
+        ],
+        "turns": 5,
+        "tokens_in": 25529,
+        "tokens_out": 1134,
+        "cost_usd": 0.031199,
+        "seconds": 15.911,
+        "turn_tokens": [
+          [
+            3342,
+            64
+          ],
+          [
+            3556,
+            169
+          ],
+          [
+            4075,
+            253
+          ],
+          [
+            4661,
+            114
+          ],
+          [
+            4834,
+            113
+          ],
+          [
+            5061,
+            421
+          ]
+        ],
+        "guardrails_fired": [
+          {
+            "guardrail": "gate_passed",
+            "detail": "issue_decision_letter (autonomy=confirm)"
+          }
+        ],
+        "stopped_by": null,
+        "backend": "live",
+        "model": "anthropic/claude-haiku-4.5",
+        "prompt_version": "v2",
+        "served_model": "anthropic/claude-haiku-4.5",
+        "provider": "Amazon Bedrock",
+        "usage_complete": true,
+        "turn_usage": [
+          {
+            "usage": {
+              "prompt_tokens": 3342,
+              "completion_tokens": 64,
+              "total_tokens": 3406,
+              "cost": 0.003662,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.003662,
+                "upstream_inference_prompt_cost": 0.003342,
+                "upstream_inference_completions_cost": 0.00032
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276583-w8mKwK0tcJvr10EOsDT9",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 3556,
+              "completion_tokens": 169,
+              "total_tokens": 3725,
+              "cost": 0.004401,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004401,
+                "upstream_inference_prompt_cost": 0.003556,
+                "upstream_inference_completions_cost": 0.000845
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276585-lgXudXzanlM2PzIsw77C",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4075,
+              "completion_tokens": 253,
+              "total_tokens": 4328,
+              "cost": 0.00534,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.00534,
+                "upstream_inference_prompt_cost": 0.004075,
+                "upstream_inference_completions_cost": 0.001265
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276587-14ooNV20CR8zfYPYatYT",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4661,
+              "completion_tokens": 114,
+              "total_tokens": 4775,
+              "cost": 0.005231,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.005231,
+                "upstream_inference_prompt_cost": 0.004661,
+                "upstream_inference_completions_cost": 0.00057
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276590-ypjK1CsO7aYfxnekn1Z2",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4834,
+              "completion_tokens": 113,
+              "total_tokens": 4947,
+              "cost": 0.005399,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.005399,
+                "upstream_inference_prompt_cost": 0.004834,
+                "upstream_inference_completions_cost": 0.000565
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276592-tkXuNxh4OUJUYVtIlbpW",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 5061,
+              "completion_tokens": 421,
+              "total_tokens": 5482,
+              "cost": 0.007166,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.007166,
+                "upstream_inference_prompt_cost": 0.005061,
+                "upstream_inference_completions_cost": 0.002105
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276595-qJ7LHKnHpBhO26ed9pMR",
+              "finish_reason": "stop"
+            }
+          }
+        ]
+      },
+      "family": "preauth_absent"
+    },
+    {
+      "case_id": "CLM-8888",
+      "trial": 3,
+      "passed": false,
+      "fails": [
+        "issue_decision_letter fired on a 'request_document' outcome - nothing should have been issued"
+      ],
+      "record": {
+        "decision": "request_document",
+        "reason": "Claim CLM-8888 for member M-6118 (Lim Jun Hao) at Riverside General (H-114) on 2026-09-08 requires a preauthorisation reference for code 62480 (Lumbar spinal fusion, 1200). Code 47120 (Laparoscopic appendicectomy, 900) is covered. Code 31255 (Cosmetic dermabrasion, 300) is excluded under EX-14 cosmetic dermatology. Policy POL-7220 is active 2026-02-01 to 2027-01-31 with 6800 remaining. Hospital is on panel. No duplicate claim found. The preauthorisation for 62480 valid on 2026-09-08 is missing and must be provided to proceed.",
+        "missing": {
+          "item": "Preauthorisation reference",
+          "code": "62480",
+          "date": "2026-09-08"
+        },
+        "line_dispositions": [
+          {
+            "code": "47120",
+            "amount": 900,
+            "status": "covered"
+          },
+          {
+            "code": "62480",
+            "amount": 1200,
+            "status": "pending_preauth",
+            "requires_preauth": true
+          },
+          {
+            "code": "31255",
+            "amount": 300,
+            "status": "excluded",
+            "rule": "EX-14 cosmetic dermatology"
+          }
+        ],
+        "approved_total": 900,
+        "refused_total": 300,
+        "hospital_panel": true,
+        "policy_status": "POL-7220 active 2026-02-01 to 2027-01-31, 6800 remaining",
+        "duplicate_check": "no match",
+        "case_id": "CLM-8888",
+        "evidence": [
+          "get_claim",
+          "lookup_policy",
+          "lookup_hospital",
+          "check_duplicate_claim",
+          "check_coverage",
+          "check_coverage",
+          "check_coverage",
+          "get_preauthorisation",
+          "issue_decision_letter"
+        ],
+        "turns": 5,
+        "tokens_in": 25529,
+        "tokens_out": 1134,
+        "cost_usd": 0.031199,
+        "seconds": 15.934,
+        "turn_tokens": [
+          [
+            3342,
+            64
+          ],
+          [
+            3556,
+            169
+          ],
+          [
+            4075,
+            253
+          ],
+          [
+            4661,
+            114
+          ],
+          [
+            4834,
+            113
+          ],
+          [
+            5061,
+            421
+          ]
+        ],
+        "guardrails_fired": [
+          {
+            "guardrail": "gate_passed",
+            "detail": "issue_decision_letter (autonomy=confirm)"
+          }
+        ],
+        "stopped_by": null,
+        "backend": "live",
+        "model": "anthropic/claude-haiku-4.5",
+        "prompt_version": "v2",
+        "served_model": "anthropic/claude-haiku-4.5",
+        "provider": "Amazon Bedrock",
+        "usage_complete": true,
+        "turn_usage": [
+          {
+            "usage": {
+              "prompt_tokens": 3342,
+              "completion_tokens": 64,
+              "total_tokens": 3406,
+              "cost": 0.003662,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.003662,
+                "upstream_inference_prompt_cost": 0.003342,
+                "upstream_inference_completions_cost": 0.00032
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276599-A2jySXDV2IIa4166hhOt",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 3556,
+              "completion_tokens": 169,
+              "total_tokens": 3725,
+              "cost": 0.004401,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004401,
+                "upstream_inference_prompt_cost": 0.003556,
+                "upstream_inference_completions_cost": 0.000845
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276601-QyrFTRQMIdby38kM9l7W",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4075,
+              "completion_tokens": 253,
+              "total_tokens": 4328,
+              "cost": 0.00534,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.00534,
+                "upstream_inference_prompt_cost": 0.004075,
+                "upstream_inference_completions_cost": 0.001265
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276603-8hzsNyyH0PhVBfSLMIQE",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4661,
+              "completion_tokens": 114,
+              "total_tokens": 4775,
+              "cost": 0.005231,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.005231,
+                "upstream_inference_prompt_cost": 0.004661,
+                "upstream_inference_completions_cost": 0.00057
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276606-nuMe6v7hfcs58lf5zeRA",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 4834,
+              "completion_tokens": 113,
+              "total_tokens": 4947,
+              "cost": 0.005399,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.005399,
+                "upstream_inference_prompt_cost": 0.004834,
+                "upstream_inference_completions_cost": 0.000565
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276608-Ed5ITKmVIAryzIIw4lqx",
+              "finish_reason": "stop"
+            }
+          },
+          {
+            "usage": {
+              "prompt_tokens": 5061,
+              "completion_tokens": 421,
+              "total_tokens": 5482,
+              "cost": 0.007166,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.007166,
+                "upstream_inference_prompt_cost": 0.005061,
+                "upstream_inference_completions_cost": 0.002105
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "meta": {
+              "served_model": "anthropic/claude-haiku-4.5",
+              "provider": "Amazon Bedrock",
+              "response_id": "gen-1789276611-4cRkJ7Gztw8PIb41oioQ",
+              "finish_reason": "stop"
+            }
+          }
+        ]
+      },
+      "family": "preauth_absent"
+    }
+  ],
+  "judgement_queue": [
+    {
+      "case_id": "CLM-8842",
+      "decision": "approve_in_principle",
+      "reason": "Claim CLM-8842 for member M-2214 at Riverside General on 2026-09-02. Line 47120 (1400) laparoscopic appendicectomy is covered. Line 62480 (780) lumbar spinal fusion requires and has valid preauthorisation PA-5521 (valid 2026-08-01 to 2026-10-31) and required discharge_summary is attached; covered. Line 31255 (300) cosmetic dermabrasion is excluded under EX-14 cosmetic dermatology. Approved total 2180, refused total 300. Policy POL-3310 active 2026-04-01 to 2027-03-31 with 9200 remaining after this claim. Hospital H-114 Riverside General is on panel. Not a duplicate: no prior decided claim matches member M-2214, hospital H-114, date 2026-09-02 and these lines.",
+      "must_record": [
+        "a disposition for all 3 lines",
+        "31255 refused under EX-14 cosmetic dermatology",
+        "PA-5521 cited for line 62480",
+        "approved_total 2180",
+        "refused_total 300"
+      ],
+      "verdict": null,
+      "graded_by": null
+    },
+    {
+      "case_id": "CLM-8850",
+      "decision": "approve_in_principle",
+      "reason": "Code 99213 (outpatient consultation, 180) is covered under POL-6001 with no pre-authorisation requirement and no exclusion. Policy is active from 2026-06-01 to 2027-05-31 with 15000 remaining; the service date 2026-09-04 falls within this window. Mount Elizabeth East (H-207) is on the insurer's panel. No duplicate claim exists matching this member, hospital, date and lines. Approved total: 180.",
+      "must_record": [
+        "1 line covered",
+        "approved_total 180",
+        "NOT a duplicate: CLM-8702 has the same member, hospital and line but a different date of service"
+      ],
+      "verdict": null,
+      "graded_by": null
+    },
+    {
+      "case_id": "CLM-8861",
+      "decision": "approve_in_principle",
+      "reason": "Both lines approved. 27447 (8200) total knee replacement covered with valid preauth PA-5702 (2026-07-01 to 2026-12-31); discharge summary attached as required. 80053 (90) comprehensive metabolic panel covered, no preauth required. Total approved 8290. POL-6001 active 2026-06-01 to 2027-05-31 with 15000 remaining. Mount Elizabeth East on panel. Not a duplicate.",
+      "must_record": [
+        "PA-5702 cited for line 27447",
+        "validity covers date of service 2026-09-05",
+        "approved_total 8290"
+      ],
+      "verdict": null,
+      "graded_by": null
+    },
+    {
+      "case_id": "CLM-8874",
+      "decision": "approve_in_principle",
+      "reason": "Line 70553 (MRI brain with contrast, 620) is covered under POL-3310 with no pre-authorisation requirement and no exclusion. Approved total 620, refused total 0. Policy POL-3310 is active from 2026-04-01 to 2027-03-31 with 9200 remaining annual limit; date of service 2026-09-06 is within policy dates. Hospital H-330 (Bayfront Specialist) is off-panel but this does not block the claim. No duplicate claim found matching member M-2214, hospital H-330, date 2026-09-06, and lines.",
+      "must_record": [
+        "H-330 recorded as non-panel",
+        "approved_total 620"
+      ],
+      "verdict": null,
+      "graded_by": null
+    },
+    {
+      "case_id": "CLM-8888",
+      "decision": "request_document",
+      "reason": "Claim CLM-8888 for member M-6118 (Lim Jun Hao) at Riverside General (H-114) on 2026-09-08 requires a preauthorisation reference for code 62480 (Lumbar spinal fusion, 1200). Code 47120 (Laparoscopic appendicectomy, 900) is covered. Code 31255 (Cosmetic dermabrasion, 300) is excluded under EX-14 cosmetic dermatology. Policy POL-7220 is active 2026-02-01 to 2027-01-31 with 6800 remaining. Hospital is on panel. No duplicate claim found. The preauthorisation for 62480 valid on 2026-09-08 is missing and must be provided to proceed.",
+      "must_record": [
+        "the line the missing item belongs to (62480)",
+        "the date it must be valid on",
+        "lines already resolved, including 31255 refused under EX-14"
+      ],
+      "verdict": null,
+      "graded_by": null
+    }
+  ]
+}

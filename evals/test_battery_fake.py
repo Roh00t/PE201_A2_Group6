@@ -679,6 +679,24 @@ def scenario_adapted_metrics():
           cp["all_measured"] is True)
 
 
+def scenario_gated_action_scoped_to_approvals():
+    """The v2 prompt must not tell the model to send every outcome.
+
+    The first draft of v2's process section ended "call
+    issue_decision_letter, then finish" with no condition. Haiku 4.5
+    obeyed it on a request_document case and failed 3 of 3 trials. The
+    grader is right: only an approval is sent.
+    """
+    import prompt
+    v2 = prompt.build_system_prompt(config.PROBLEM, "v2")
+    check("33 v2's process section sends ONLY approvals",
+          "ONLY an approve_in_principle is sent" in v2)
+    check("33a the gated tool's RENDERED descriptor says the same",
+          "Send an APPROVE_IN_PRINCIPLE, and nothing else" in v2)
+    check("33b no unconditional 'call issue_decision_letter, then finish'",
+          "call issue_decision_letter, then finish" not in v2)
+
+
 def main():
     import tempfile
     print()
@@ -705,6 +723,7 @@ def main():
     with tempfile.TemporaryDirectory() as tmp:
         scenario_checkpoint(tmp)
     scenario_case_id_is_sent()
+    scenario_gated_action_scoped_to_approvals()
     scenario_adapted_metrics()
     scenario_dry_run_cannot_poison_live()
     scenario_prompt_sent_is_prompt_hashed()

@@ -993,9 +993,9 @@ DESCRIPTORS = {
     "issue_decision_letter": {
         "name": "issue_decision_letter",
         "signature": "issue_decision_letter(claim_id: str, decision: Literal['approve_in_principle','request_document','escalate'], lines_resolved: int, approved_total: int|float, refused_total: int|float = 0) -> DecisionWriteResult",
-        "what": "Append exactly one simulated first-response decision record after the loop's autonomy gate.",
+        "what": "Send an APPROVE_IN_PRINCIPLE, and nothing else: append exactly one simulated first-response decision record after the loop's autonomy gate. A request_document or an escalate is never sent - finish with final instead. The signature lists all three outcomes so a fourth cannot be invented; that does not make all three sendable.",
         "purpose": "Send the decision to the member. THE IRREVERSIBLE STEP.",
-        "when": "Last, once every line has a disposition.",
+        "when": "ONLY to send an approve_in_principle, as the last call. A request_document or an escalate is never sent - finish with final instead. The signature lists all three outcomes so that a fourth cannot be invented; it does not mean all three are sent.",
         "args": {"claim_id": "str, the case id; unknown ids are refused",
                  "decision": "Literal['approve_in_principle','request_document','escalate']; any other value is refused",
                  "lines_resolved": "int >= 0, how many lines you actually decided",
