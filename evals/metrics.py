@@ -7,33 +7,6 @@ PE6201 · A2 — WHAT THE BATTERY ACTUALLY MEASURED  (D4, D5b, D6, D7)
 Free. Pure functions over a results file already on disk. No network, no
 key, no tokens. Read by evals/aggregate_battery.py and by the demo.
 
---------------------------------------------------------------------
-THE RULE THIS WHOLE MODULE RESTS ON
-
-Split the trials into THREE POPULATIONS before computing anything:
-
-    completed     the model produced a decision        stopped_by is None
-    halted        our code stopped it first            stopped_by is set
-    unparseable   the reply was not usable             a parse failure
-
-and compute the confusion matrix over the COMPLETED ones only.
-
-WHY THIS IS NOT PEDANTRY. On rohit_panda's 2026-09-13 run, 48 of 60
-trials were killed on turn 2 by our own de-duplication guard, and the
-loop recorded each halt as `decision: escalate`. Count those naively and
-the matrix reports the model escalating 56 of 60 times. It actually
-CHOSE to escalate 8 times. Every precision and recall figure built on
-the raw `decision` field inherits that error, looks entirely reasonable,
-and is wrong by a factor of seven.
-
-A metric that cannot tell "the model decided X" from "our code stopped it
-before it decided" is not measuring the model.
-
---------------------------------------------------------------------
-AND THE SECOND RULE: every rate carries its denominator. No percentage
-is returned or printed without the fraction it came from, because a
-pass rate without a trial count is not a measurement. [brief D4]
-====================================================================
 """
 import collections
 import json
