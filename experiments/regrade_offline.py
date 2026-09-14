@@ -46,14 +46,27 @@ TWO FIXES, BOTH DECLARED IN THE REPORT, BOTH APPLIED TO EVERY RUN ALIKE.
 
       Runs with no ledger (the archived ones) fall back to `gate_passed`
       and are labelled APPROXIMATE wherever they are printed.
+
+WHICH GRADER. Every run is re-scored with THE HARNESS IT WAS GRADED WITH,
+identified by the evals/harness.py hash in its own fingerprint - not with
+whatever evals/harness.py says today. Once the post-freeze patch moves
+both fixes into harness.py, "today's harness" already contains them, and a
+re-grade against it would quietly apply each fix twice and call the
+result a baseline. The run's grader is loaded from a byte-identical copy
+under experiments/frozen_graders/ (hash-checked before use, so it works
+from a copy of the repository with no .git), else from git history at the
+run's commit, else today's harness - and the row says which.
 ====================================================================
 """
 import argparse
 import glob
 import hashlib
+import importlib.util
 import json
 import os
+import subprocess
 import sys
+import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "src"))
@@ -67,11 +80,12 @@ ARCHIVE = os.path.join(ROOT, "results", "archive", "live", "battery__*.json")
 LEDGER_DIR = os.path.join(ROOT, "logs", "battery")
 OUT_DIR = os.path.join(ROOT, "results", "regrade")
 KEY_PATH = os.path.join(ROOT, "data", "expected_outcomes_A.json")
+FROZEN_GRADERS = os.path.join(ROOT, "experiments", "frozen_graders")
 GATED = "issue_decision_letter"
 
 VARIANTS = (
     ("recorded", "as recorded"),
-    ("rescored", "re-scored, frozen harness"),
+    ("rescored", "re-scored, own harness"),
     ("underscore", "+ underscore fix"),
     ("letter_rule", "+ letter rule"),
     ("both", "both fixes"),
@@ -84,6 +98,48 @@ def sha256_file(path):
 
 
 # =====================================================================
+# THE RUN'S OWN GRADER
+# =====================================================================
+_GRADERS = {}
+
+
+def _load_module(path, sha):
+    spec = importlib.util.spec_from_file_location("harness_%s" % sha[:12], path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_grader(sha, commit=None):
+    """(module, how) - evals/harness.py exactly as a run was graded by it."""
+    if (sha, commit) in _GRADERS:
+        return _GRADERS[(sha, commit)]
+    found = None
+    vendored = os.path.join(FROZEN_GRADERS, "harness_%s.py" % (sha or "")[:12])
+    if sha and os.path.exists(vendored) and sha256_file(vendored) == sha:
+        found = (_load_module(vendored, sha), "harness %s (vendored copy)" % sha[:12])
+    elif sha and commit:
+        shown = subprocess.run(["git", "-C", ROOT, "show", "%s:evals/harness.py" % commit],
+                               capture_output=True)
+        if (shown.returncode == 0
+                and hashlib.sha256(shown.stdout).hexdigest() == sha):
+            tmp = os.path.join(tempfile.mkdtemp(), "harness.py")
+            with open(tmp, "wb") as fh:
+                fh.write(shown.stdout)
+            found = (_load_module(tmp, sha), "harness %s (git %s)" % (sha[:12], commit[:12]))
+    if found is None:
+        found = (harness, "TODAY'S harness - the run's own was not found")
+    _GRADERS[(sha, commit)] = found
+    return found
+
+
+def grader_for(doc):
+    fp = doc.get("fingerprint") or {}
+    return load_grader((fp.get("sources_sha256") or {}).get("evals/harness.py"),
+                       doc.get("commit") or fp.get("commit"))
+
+
+# =====================================================================
 # FIX 1 · UNDERSCORES
 # =====================================================================
 def normalise(value):
@@ -91,8 +147,8 @@ def normalise(value):
     return None if value is None else str(value).replace("_", " ")
 
 
-def code_check(record, expected, underscore=False):
-    """The frozen harness.code_check, optionally on a normalised copy.
+def code_check(record, expected, underscore=False, grader=None):
+    """A harness's code_check, optionally on a normalised copy.
 
     Only the `missing` field is normalised, on both sides. The decision,
     the trigger and the gated-action count are compared exactly as the
@@ -104,7 +160,7 @@ def code_check(record, expected, underscore=False):
             record["missing"] = normalise(record["missing"])
         if expected.get("missing"):
             expected["missing"] = normalise(expected["missing"])
-    return harness.code_check(record, expected)
+    return (grader or harness).code_check(record, expected)
 
 
 # =====================================================================
@@ -185,6 +241,7 @@ def letter_sent(record, case_id, ledger):
 # =====================================================================
 def regrade_run(doc, key):
     ledger = Ledger.for_run(doc)
+    grader, graded_with = grader_for(doc)
     by_variant = {name: [] for name, _ in VARIANTS}
     changes, unkeyed = [], []
 
@@ -195,8 +252,8 @@ def regrade_run(doc, key):
             unkeyed.append(case_id)
             continue
 
-        base_ok, base_fails = code_check(rec, expected)
-        us_ok, us_fails = code_check(rec, expected, underscore=True)
+        base_ok, base_fails = code_check(rec, expected, grader=grader)
+        us_ok, us_fails = code_check(rec, expected, underscore=True, grader=grader)
         letter_fail = None
         if rec.get("decision") == "approve_in_principle":
             sent, how = letter_sent(rec, case_id, ledger)
@@ -240,6 +297,7 @@ def regrade_run(doc, key):
         "date": doc.get("date"),
         "started": doc.get("started"),
         "answer_key_sha256": (doc.get("fingerprint") or {}).get("answer_key_sha256"),
+        "graded_with": graded_with,
         "ledger": (os.path.relpath(ledger_path(doc), ROOT) if ledger is not None else None),
         "letter_rule_exact": ledger is not None,
         "rescored_matches_recorded": not any(c["fix"] == "rescored" for c in changes),
@@ -270,7 +328,6 @@ def regrade_all(paths=None):
     runs.sort(key=lambda x: (x["archived"], x["started"] or "", x["run_id"] or ""))
     return {
         "answer_key_sha256": sha256_file(KEY_PATH),
-        "harness_sha256": sha256_file(os.path.join(ROOT, "evals", "harness.py")),
         "fixes": {
             "underscore": "missing-item comparison treats '_' as ' ' on both sides",
             "letter_rule": "an approve_in_principle fails unless a ledger row shows "
@@ -300,9 +357,8 @@ def render(result, show_trials=False):
     out = []
     w = out.append
     w("=" * 104)
-    w("  OFFLINE RE-GRADE - %d battery file(s), answer key %s, frozen harness %s"
-      % (len(result["runs"]), result["answer_key_sha256"][:12],
-         result["harness_sha256"][:12]))
+    w("  OFFLINE RE-GRADE - %d battery file(s), answer key %s"
+      % (len(result["runs"]), result["answer_key_sha256"][:12]))
     w("=" * 104)
     w("  %-44s %-26s %-14s %-15s %-15s %s"
       % ("run", "grader", "all trials", "ordinary", "negative", "neg 3/3"))
@@ -318,17 +374,18 @@ def render(result, show_trials=False):
                 title += " (approx)"
             first = label[:44] if i == 0 else (tag if i == 1 else "")
             w("  %-44s %-26s %-14s %-15s %-15s %s" % ((first, title) + _cells(s)))
+        w("  %-44s graded with %s" % ("", run["graded_with"]))
         if not run["rescored_matches_recorded"]:
-            w("  %-44s ! the frozen harness disagrees with %d recorded grade(s)"
+            w("  %-44s ! that harness disagrees with %d recorded grade(s)"
               % ("", sum(1 for c in run["changes"] if c["fix"] == "rescored")))
         if run["unkeyed_cases"]:
             w("  %-44s ! not in today's answer key, skipped: %s"
               % ("", ", ".join(run["unkeyed_cases"])))
     w("")
-    w("  'as recorded' is the battery file's own grade. Every other row is the")
-    w("  frozen evals/harness.py; the two fixes are applied on top of it, alone")
-    w("  and together. Archived runs were measured on harness versions since")
-    w("  fixed and have no ledger - their letter-rule row is approximate.")
+    w("  'as recorded' is the battery file's own grade. Every other row uses the")
+    w("  harness that graded that run, identified by hash; the two fixes are")
+    w("  applied on top of it, alone and together. Archived runs have no ledger,")
+    w("  so their letter-rule row is approximate.")
     w("")
     if show_trials:
         w("  TRIALS WHOSE GRADE MOVED")
@@ -354,8 +411,8 @@ def render_markdown(result):
         "deterministic. The battery files are unchanged; this is a second grading of",
         "the same records.",
         "",
-        "- Answer key `%s` · frozen `evals/harness.py` `%s`"
-        % (result["answer_key_sha256"][:12], result["harness_sha256"][:12]),
+        "- Answer key `%s` · each run re-scored with the `evals/harness.py` "
+        "that graded it, identified by hash" % result["answer_key_sha256"][:12],
         "- **Underscore fix:** %s." % result["fixes"]["underscore"],
         "- **Letter rule:** %s." % result["fixes"]["letter_rule"],
         "",

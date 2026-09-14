@@ -24,6 +24,12 @@ from experiments import regrade_offline as rg              # noqa: E402
 
 PASSED, FAILED = [], []
 
+# The evals/harness.py every committed battery was graded with. Pinned here
+# so these checks keep testing the FIXES, not whatever harness.py says after
+# the post-freeze patch has already moved the fixes into it.
+FROZEN_HARNESS_SHA = "6ce395063fe5e101d711b02b6020f072d728eaaabdd547737cce4e38c6547668"
+FROZEN, _ = rg.load_grader(FROZEN_HARNESS_SHA)
+
 
 def check(name, condition, detail=""):
     (PASSED if condition else FAILED).append(name)
@@ -59,15 +65,15 @@ def scenario_underscore_rescues_the_tool_identifier():
     print("\n  1 · underscore fix rescues the document spelled as the tool spells it")
     rec = {"decision": "request_document",
            "missing": "itemised_bill for code 45378 on 2026-09-10"}
-    before, _ = rg.code_check(rec, DOC_KEY)
-    after, fails = rg.code_check(rec, DOC_KEY, underscore=True)
+    before, _ = rg.code_check(rec, DOC_KEY, grader=FROZEN)
+    after, fails = rg.code_check(rec, DOC_KEY, underscore=True, grader=FROZEN)
     check("frozen harness fails 'itemised_bill'", before is False)
     check("underscore fix passes it", after is True, fails)
 
     as_dict = {"decision": "request_document",
                "missing": {"item": "itemised_bill", "line_code": "45378"}}
     check("a dict-shaped missing item is rescued too",
-          rg.code_check(as_dict, DOC_KEY, underscore=True)[0] is True)
+          rg.code_check(as_dict, DOC_KEY, underscore=True, grader=FROZEN)[0] is True)
 
 
 def scenario_underscore_rescues_nothing_else():
@@ -75,21 +81,21 @@ def scenario_underscore_rescues_nothing_else():
     wrong_doc = {"decision": "request_document",
                  "missing": "discharge_summary for code 45378"}
     check("the wrong document still fails",
-          rg.code_check(wrong_doc, DOC_KEY, underscore=True)[0] is False)
+          rg.code_check(wrong_doc, DOC_KEY, underscore=True, grader=FROZEN)[0] is False)
     wrong_line = {"decision": "request_document",
                   "missing": "itemised_bill for code 99213"}
     check("the right document on the wrong line still fails",
-          rg.code_check(wrong_line, DOC_KEY, underscore=True)[0] is False)
+          rg.code_check(wrong_line, DOC_KEY, underscore=True, grader=FROZEN)[0] is False)
     preauth_asked_as_doc = {"decision": "request_document",
                             "missing": "itemised_bill for code 29881 on 2026-09-09"}
     check("a document named where a pre-authorisation was wanted still fails",
-          rg.code_check(preauth_asked_as_doc, PREAUTH_KEY, underscore=True)[0] is False)
+          rg.code_check(preauth_asked_as_doc, PREAUTH_KEY, underscore=True, grader=FROZEN)[0] is False)
     right_preauth = {"decision": "request_document",
                      "missing": {"item": "pre-authorisation", "line_code": "29881",
                                  "date": "2026-09-09"}}
     check("a correct pre-authorisation request passes with and without the fix",
-          rg.code_check(right_preauth, PREAUTH_KEY)[0] is True
-          and rg.code_check(right_preauth, PREAUTH_KEY, underscore=True)[0] is True)
+          rg.code_check(right_preauth, PREAUTH_KEY, grader=FROZEN)[0] is True
+          and rg.code_check(right_preauth, PREAUTH_KEY, underscore=True, grader=FROZEN)[0] is True)
     # The declared fix is underscores -> spaces, and nothing wider. The
     # harness looks for "pre-authorisation" with a hyphen, so a model that
     # writes "pre_authorisation" is NOT rescued. No committed record does;
@@ -98,13 +104,13 @@ def scenario_underscore_rescues_nothing_else():
                            "missing": {"item": "pre_authorisation", "code": "29881",
                                        "date": "2026-09-09"}}
     check("LIMIT: 'pre_authorisation' is not rescued - the fix is underscores only",
-          rg.code_check(underscored_preauth, PREAUTH_KEY, underscore=True)[0] is False)
+          rg.code_check(underscored_preauth, PREAUTH_KEY, underscore=True, grader=FROZEN)[0] is False)
     nothing = {"decision": "request_document", "missing": None}
     check("naming nothing still fails",
-          rg.code_check(nothing, DOC_KEY, underscore=True)[0] is False)
+          rg.code_check(nothing, DOC_KEY, underscore=True, grader=FROZEN)[0] is False)
     wrong_decision = {"decision": "escalate", "missing": "itemised_bill for 45378"}
     check("the decision is still compared exactly",
-          rg.code_check(wrong_decision, DOC_KEY, underscore=True)[0] is False)
+          rg.code_check(wrong_decision, DOC_KEY, underscore=True, grader=FROZEN)[0] is False)
 
 
 # =====================================================================
@@ -228,6 +234,40 @@ def scenario_committed_runs():
           rp["summaries"]["letter_rule"]["passed"] == rp["summaries"]["rescored"]["passed"])
 
 
+def scenario_graded_with_the_runs_own_harness():
+    print("\n  7b · a run is re-scored by the harness that graded it, not today's")
+    check("the vendored copy of the frozen harness is hash-verified and loads",
+          FROZEN is not rg.harness and hasattr(FROZEN, "code_check"))
+    paths = [p for p in rg.discover()
+             if os.path.basename(p[0]).endswith("8f968b0d3782.json")]
+    if not paths:
+        print("  (skipped - gpt-4.1-mini's battery is absent)")
+        return
+
+    saved, saved_cache = rg.harness, dict(rg._GRADERS)
+
+    class AlreadyFixed(object):
+        """Stands in for evals/harness.py AFTER the post-freeze merge: a
+        code_check that grades differently, everything else unchanged."""
+        def __getattr__(self, name):
+            return getattr(saved, name)
+
+        @staticmethod
+        def code_check(record, expected):
+            return True, []
+
+    rg.harness, rg._GRADERS = AlreadyFixed(), {}
+    try:
+        run = rg.regrade_all(paths)["runs"][0]
+    finally:
+        rg.harness, rg._GRADERS = saved, saved_cache
+    check("today's harness changing does not move the re-scored baseline",
+          run["rescored_matches_recorded"] and run["summaries"]["rescored"]["passed"] == 48,
+          run["summaries"]["rescored"]["passed"])
+    check("and the row says which harness graded it",
+          "vendored" in run["graded_with"], run["graded_with"])
+
+
 def scenario_reads_only():
     print("\n  8 · the re-grade changes no battery file and no ledger")
     watched = (glob.glob(os.path.join(ROOT, "results", "live", "battery__*.json"))
@@ -269,6 +309,7 @@ def main():
                      scenario_no_ledger_is_approximate,
                      scenario_letter_rule_scope,
                      scenario_committed_runs,
+                     scenario_graded_with_the_runs_own_harness,
                      scenario_reads_only,
                      scenario_deterministic_output):
         scenario()
