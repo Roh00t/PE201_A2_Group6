@@ -295,6 +295,678 @@
     },
     {
       "answer_key_sha256": "1cd26cc1bf91c7da0ee7ca4ed2707c42ef87a0676820ed19ff237c38e07db756",
+      "archived": false,
+      "changes": [
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 1,
+          "why": "missing 'itemised_bill for procedure 45378 on 2026-09-10', expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        }
+      ],
+      "date": "2026-09-14",
+      "file": "results/live/battery__li_yunke__qwen-qwen3-235b-a22b-2507__v2__2026-09-14__e7dd3797c778.json",
+      "graded_with": "harness 6ce395063fe5 (vendored copy)",
+      "ledger": "logs/battery/decisions__li_yunke__e7dd3797c778.jsonl",
+      "letter_rule_exact": true,
+      "member": "li_yunke",
+      "model": "qwen/qwen3-235b-a22b-2507",
+      "prompt_version": "v2",
+      "rescored_matches_recorded": true,
+      "run_id": "e7dd3797c778",
+      "started": "2026-09-14T16:31:02",
+      "summaries": {
+        "both": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 4,
+            "consistency": 0.4,
+            "rate": 0.6333333333333333,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.7666666666666667,
+            "trials": 30
+          },
+          "pass_rate": 0.7,
+          "passed": 42,
+          "trials_graded": 60
+        },
+        "letter_rule": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 4,
+            "consistency": 0.4,
+            "rate": 0.6,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.7666666666666667,
+            "trials": 30
+          },
+          "pass_rate": 0.6833333333333333,
+          "passed": 41,
+          "trials_graded": 60
+        },
+        "recorded": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 4,
+            "consistency": 0.4,
+            "rate": 0.6,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.7666666666666667,
+            "trials": 30
+          },
+          "pass_rate": 0.6833333333333333,
+          "passed": 41,
+          "trials_graded": 60
+        },
+        "rescored": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 4,
+            "consistency": 0.4,
+            "rate": 0.6,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.7666666666666667,
+            "trials": 30
+          },
+          "pass_rate": 0.6833333333333333,
+          "passed": 41,
+          "trials_graded": 60
+        },
+        "underscore": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 4,
+            "consistency": 0.4,
+            "rate": 0.6333333333333333,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.7666666666666667,
+            "trials": 30
+          },
+          "pass_rate": 0.7,
+          "passed": 42,
+          "trials_graded": 60
+        }
+      },
+      "unkeyed_cases": []
+    },
+    {
+      "answer_key_sha256": "0e98a54b815874a7cbf4eb7e66258a2b7c569d4c502dc80c2e3644dbd55bbb35",
+      "archived": false,
+      "changes": [
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 1,
+          "why": "missing {'item': 'itemised_bill', 'line_code': '45378', 'date_of_service': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        },
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 2,
+          "why": "missing {'item': 'itemised_bill', 'line_code': '45378', 'date_of_service': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        },
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 3,
+          "why": "missing {'document': 'itemised_bill', 'line_code': '45378', 'date_of_service': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        }
+      ],
+      "date": "2026-09-14",
+      "file": "results/live/battery__shen_bowen__deepseek-deepseek-v3.2__v2__2026-09-14__014683ddcc79.json",
+      "graded_with": "TODAY'S harness - the run's own was not found",
+      "ledger": "logs/battery/decisions__shen_bowen__014683ddcc79.jsonl",
+      "letter_rule_exact": true,
+      "member": "shen_bowen",
+      "model": "deepseek/deepseek-v3.2",
+      "prompt_version": "v2",
+      "rescored_matches_recorded": true,
+      "run_id": "014683ddcc79",
+      "started": "2026-09-14T19:15:56",
+      "summaries": {
+        "both": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 7,
+            "consistency": 0.7,
+            "rate": 0.7666666666666667,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.9333333333333333,
+            "trials": 30
+          },
+          "pass_rate": 0.85,
+          "passed": 51,
+          "trials_graded": 60
+        },
+        "letter_rule": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 6,
+            "consistency": 0.6,
+            "rate": 0.6666666666666666,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.9333333333333333,
+            "trials": 30
+          },
+          "pass_rate": 0.8,
+          "passed": 48,
+          "trials_graded": 60
+        },
+        "recorded": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 6,
+            "consistency": 0.6,
+            "rate": 0.6666666666666666,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.9333333333333333,
+            "trials": 30
+          },
+          "pass_rate": 0.8,
+          "passed": 48,
+          "trials_graded": 60
+        },
+        "rescored": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 6,
+            "consistency": 0.6,
+            "rate": 0.6666666666666666,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.9333333333333333,
+            "trials": 30
+          },
+          "pass_rate": 0.8,
+          "passed": 48,
+          "trials_graded": 60
+        },
+        "underscore": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 7,
+            "consistency": 0.7,
+            "rate": 0.7666666666666667,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.9333333333333333,
+            "trials": 30
+          },
+          "pass_rate": 0.85,
+          "passed": 51,
+          "trials_graded": 60
+        }
+      },
+      "unkeyed_cases": []
+    },
+    {
+      "answer_key_sha256": "0e98a54b815874a7cbf4eb7e66258a2b7c569d4c502dc80c2e3644dbd55bbb35",
+      "archived": false,
+      "changes": [
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 1,
+          "why": "missing {'document': 'itemised_bill', 'code': '45378', 'date': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        },
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 2,
+          "why": "missing {'document': 'itemised_bill', 'code': '45378', 'date': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        },
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 3,
+          "why": "missing {'document': 'itemised_bill', 'code': '45378', 'date': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        }
+      ],
+      "date": "2026-09-14",
+      "file": "results/live/battery__xia_yanran__google-gemini-2.5-flash__v2__2026-09-14__30c46384999a.json",
+      "graded_with": "TODAY'S harness - the run's own was not found",
+      "ledger": "logs/battery/decisions__xia_yanran__30c46384999a.jsonl",
+      "letter_rule_exact": true,
+      "member": "xia_yanran",
+      "model": "google/gemini-2.5-flash",
+      "prompt_version": "v2",
+      "rescored_matches_recorded": true,
+      "run_id": "30c46384999a",
+      "started": "2026-09-14T20:33:20",
+      "summaries": {
+        "both": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 8,
+            "consistency": 0.8,
+            "rate": 0.8,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.7666666666666667,
+            "trials": 30
+          },
+          "pass_rate": 0.7833333333333333,
+          "passed": 47,
+          "trials_graded": 60
+        },
+        "letter_rule": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 7,
+            "consistency": 0.7,
+            "rate": 0.7,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.7666666666666667,
+            "trials": 30
+          },
+          "pass_rate": 0.7333333333333333,
+          "passed": 44,
+          "trials_graded": 60
+        },
+        "recorded": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 7,
+            "consistency": 0.7,
+            "rate": 0.7,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.7666666666666667,
+            "trials": 30
+          },
+          "pass_rate": 0.7333333333333333,
+          "passed": 44,
+          "trials_graded": 60
+        },
+        "rescored": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 7,
+            "consistency": 0.7,
+            "rate": 0.7,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.7666666666666667,
+            "trials": 30
+          },
+          "pass_rate": 0.7333333333333333,
+          "passed": 44,
+          "trials_graded": 60
+        },
+        "underscore": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 8,
+            "consistency": 0.8,
+            "rate": 0.8,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.7666666666666667,
+            "trials": 30
+          },
+          "pass_rate": 0.7833333333333333,
+          "passed": 47,
+          "trials_graded": 60
+        }
+      },
+      "unkeyed_cases": []
+    },
+    {
+      "answer_key_sha256": "1cd26cc1bf91c7da0ee7ca4ed2707c42ef87a0676820ed19ff237c38e07db756",
+      "archived": false,
+      "changes": [
+        {
+          "case_id": "CLM-8842",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-8850",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-8861",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-8874",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-8960",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-8971",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9001",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9002",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9004",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9005",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9006",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9007",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9008",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9009",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9010",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9011",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9013",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9014",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9015",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9016",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9017",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9018",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9021",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9022",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9023",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9024",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9025",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        }
+      ],
+      "date": "2026-09-14",
+      "file": "results/live/battery__zhao_yujia__qwen-qwen3-235b-a22b-2507__v1__2026-09-14__22d45c794f78.json",
+      "graded_with": "harness 6ce395063fe5 (vendored copy)",
+      "ledger": "logs/battery/decisions__zhao_yujia__22d45c794f78.jsonl",
+      "letter_rule_exact": true,
+      "member": "zhao_yujia",
+      "model": "qwen/qwen3-235b-a22b-2507",
+      "prompt_version": "v1",
+      "rescored_matches_recorded": true,
+      "run_id": "22d45c794f78",
+      "started": "2026-09-14T23:34:52",
+      "summaries": {
+        "both": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 1,
+            "consistency": 0.1,
+            "rate": 0.13333333333333333,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.0,
+            "trials": 30
+          },
+          "pass_rate": 0.06666666666666667,
+          "passed": 4,
+          "trials_graded": 60
+        },
+        "letter_rule": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 1,
+            "consistency": 0.1,
+            "rate": 0.13333333333333333,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.0,
+            "trials": 30
+          },
+          "pass_rate": 0.06666666666666667,
+          "passed": 4,
+          "trials_graded": 60
+        },
+        "recorded": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 1,
+            "consistency": 0.1,
+            "rate": 0.13333333333333333,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.9,
+            "trials": 30
+          },
+          "pass_rate": 0.5166666666666667,
+          "passed": 31,
+          "trials_graded": 60
+        },
+        "rescored": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 1,
+            "consistency": 0.1,
+            "rate": 0.13333333333333333,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.9,
+            "trials": 30
+          },
+          "pass_rate": 0.5166666666666667,
+          "passed": 31,
+          "trials_graded": 60
+        },
+        "underscore": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 1,
+            "consistency": 0.1,
+            "rate": 0.13333333333333333,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.9,
+            "trials": 30
+          },
+          "pass_rate": 0.5166666666666667,
+          "passed": 31,
+          "trials_graded": 60
+        }
+      },
+      "unkeyed_cases": []
+    },
+    {
+      "answer_key_sha256": "1cd26cc1bf91c7da0ee7ca4ed2707c42ef87a0676820ed19ff237c38e07db756",
       "archived": true,
       "changes": [],
       "date": "2026-09-12",
@@ -694,6 +1366,246 @@
           "pass_rate": 0.5714285714285714,
           "passed": 4,
           "trials_graded": 7
+        }
+      },
+      "unkeyed_cases": []
+    },
+    {
+      "answer_key_sha256": "1cd26cc1bf91c7da0ee7ca4ed2707c42ef87a0676820ed19ff237c38e07db756",
+      "archived": true,
+      "changes": [
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 2,
+          "why": "missing 'itemised_bill for procedure 45378 on 2026-09-10', expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        },
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 3,
+          "why": "missing 'itemised_bill for procedure 45378 (Diagnostic colonoscopy) on service date 2026-09-10', expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        }
+      ],
+      "date": "2026-09-14",
+      "file": "results/archive/live/battery__li_yunke__qwen-qwen3-235b-a22b-2507__v2__2026-09-14__6dfb98e18210.json",
+      "graded_with": "harness 6ce395063fe5 (vendored copy)",
+      "ledger": "logs/battery/decisions__li_yunke__6dfb98e18210.jsonl",
+      "letter_rule_exact": true,
+      "member": "li_yunke",
+      "model": "qwen/qwen3-235b-a22b-2507",
+      "prompt_version": "v2",
+      "rescored_matches_recorded": true,
+      "run_id": "6dfb98e18210",
+      "started": "2026-09-14T19:05:51",
+      "summaries": {
+        "both": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 5,
+            "consistency": 0.5,
+            "rate": 0.7,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.6,
+            "trials": 30
+          },
+          "pass_rate": 0.65,
+          "passed": 39,
+          "trials_graded": 60
+        },
+        "letter_rule": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 5,
+            "consistency": 0.5,
+            "rate": 0.6333333333333333,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.6,
+            "trials": 30
+          },
+          "pass_rate": 0.6166666666666667,
+          "passed": 37,
+          "trials_graded": 60
+        },
+        "recorded": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 5,
+            "consistency": 0.5,
+            "rate": 0.6333333333333333,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.6,
+            "trials": 30
+          },
+          "pass_rate": 0.6166666666666667,
+          "passed": 37,
+          "trials_graded": 60
+        },
+        "rescored": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 5,
+            "consistency": 0.5,
+            "rate": 0.6333333333333333,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.6,
+            "trials": 30
+          },
+          "pass_rate": 0.6166666666666667,
+          "passed": 37,
+          "trials_graded": 60
+        },
+        "underscore": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 5,
+            "consistency": 0.5,
+            "rate": 0.7,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.6,
+            "trials": 30
+          },
+          "pass_rate": 0.65,
+          "passed": 39,
+          "trials_graded": 60
+        }
+      },
+      "unkeyed_cases": []
+    },
+    {
+      "answer_key_sha256": "1cd26cc1bf91c7da0ee7ca4ed2707c42ef87a0676820ed19ff237c38e07db756",
+      "archived": true,
+      "changes": [
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 1,
+          "why": "missing 'itemised_bill for procedure 45378 on 2026-09-10', expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        },
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 2,
+          "why": "missing 'itemised_bill for procedure 45378 on 2026-09-10', expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        },
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 3,
+          "why": "missing 'itemised_bill for procedure 45378 (Diagnostic colonoscopy) on service date 2026-09-10', expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        }
+      ],
+      "date": "2026-09-14",
+      "file": "results/archive/live/battery__li_yunke__qwen-qwen3-235b-a22b-2507__v2__2026-09-14__ecb1ca22c1c3.json",
+      "graded_with": "harness 6ce395063fe5 (vendored copy)",
+      "ledger": "logs/battery/decisions__li_yunke__ecb1ca22c1c3.jsonl",
+      "letter_rule_exact": true,
+      "member": "li_yunke",
+      "model": "qwen/qwen3-235b-a22b-2507",
+      "prompt_version": "v2",
+      "rescored_matches_recorded": true,
+      "run_id": "ecb1ca22c1c3",
+      "started": "2026-09-14T19:53:10",
+      "summaries": {
+        "both": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 8,
+            "consistency": 0.8,
+            "rate": 0.8666666666666667,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.8666666666666667,
+            "trials": 30
+          },
+          "pass_rate": 0.8666666666666667,
+          "passed": 52,
+          "trials_graded": 60
+        },
+        "letter_rule": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 7,
+            "consistency": 0.7,
+            "rate": 0.7666666666666667,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.8666666666666667,
+            "trials": 30
+          },
+          "pass_rate": 0.8166666666666667,
+          "passed": 49,
+          "trials_graded": 60
+        },
+        "recorded": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 7,
+            "consistency": 0.7,
+            "rate": 0.7666666666666667,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.8666666666666667,
+            "trials": 30
+          },
+          "pass_rate": 0.8166666666666667,
+          "passed": 49,
+          "trials_graded": 60
+        },
+        "rescored": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 7,
+            "consistency": 0.7,
+            "rate": 0.7666666666666667,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.8666666666666667,
+            "trials": 30
+          },
+          "pass_rate": 0.8166666666666667,
+          "passed": 49,
+          "trials_graded": 60
+        },
+        "underscore": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 8,
+            "consistency": 0.8,
+            "rate": 0.8666666666666667,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.8666666666666667,
+            "trials": 30
+          },
+          "pass_rate": 0.8666666666666667,
+          "passed": 52,
+          "trials_graded": 60
         }
       },
       "unkeyed_cases": []

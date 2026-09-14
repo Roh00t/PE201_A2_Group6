@@ -20,6 +20,26 @@ the same records.
 |  | + underscore fix | 51/60  85.0% | 30/30 100.0% | 21/30  70.0% | 7/10 |
 |  | + letter rule | 43/60  71.7% | 25/30  83.3% | 18/30  60.0% | 6/10 |
 |  | both fixes | 46/60  76.7% | 25/30  83.3% | 21/30  70.0% | 7/10 |
+| li_yunke · `qwen/qwen3-235b-a22b-2507` · v2 · `e7dd3797c778` | as recorded | 41/60  68.3% | 23/30  76.7% | 18/30  60.0% | 4/10 |
+|  | re-scored, own harness | 41/60  68.3% | 23/30  76.7% | 18/30  60.0% | 4/10 |
+|  | + underscore fix | 42/60  70.0% | 23/30  76.7% | 19/30  63.3% | 4/10 |
+|  | + letter rule | 41/60  68.3% | 23/30  76.7% | 18/30  60.0% | 4/10 |
+|  | both fixes | 42/60  70.0% | 23/30  76.7% | 19/30  63.3% | 4/10 |
+| shen_bowen · `deepseek/deepseek-v3.2` · v2 · `014683ddcc79` | as recorded | 48/60  80.0% | 28/30  93.3% | 20/30  66.7% | 6/10 |
+|  | re-scored, own harness | 48/60  80.0% | 28/30  93.3% | 20/30  66.7% | 6/10 |
+|  | + underscore fix | 51/60  85.0% | 28/30  93.3% | 23/30  76.7% | 7/10 |
+|  | + letter rule | 48/60  80.0% | 28/30  93.3% | 20/30  66.7% | 6/10 |
+|  | both fixes | 51/60  85.0% | 28/30  93.3% | 23/30  76.7% | 7/10 |
+| xia_yanran · `google/gemini-2.5-flash` · v2 · `30c46384999a` | as recorded | 44/60  73.3% | 23/30  76.7% | 21/30  70.0% | 7/10 |
+|  | re-scored, own harness | 44/60  73.3% | 23/30  76.7% | 21/30  70.0% | 7/10 |
+|  | + underscore fix | 47/60  78.3% | 23/30  76.7% | 24/30  80.0% | 8/10 |
+|  | + letter rule | 44/60  73.3% | 23/30  76.7% | 21/30  70.0% | 7/10 |
+|  | both fixes | 47/60  78.3% | 23/30  76.7% | 24/30  80.0% | 8/10 |
+| zhao_yujia · `qwen/qwen3-235b-a22b-2507` · v1 · `22d45c794f78` | as recorded | 31/60  51.7% | 27/30  90.0% | 4/30  13.3% | 1/10 |
+|  | re-scored, own harness | 31/60  51.7% | 27/30  90.0% | 4/30  13.3% | 1/10 |
+|  | + underscore fix | 31/60  51.7% | 27/30  90.0% | 4/30  13.3% | 1/10 |
+|  | + letter rule | 4/60   6.7% | 0/30   0.0% | 4/30  13.3% | 1/10 |
+|  | both fixes | 4/60   6.7% | 0/30   0.0% | 4/30  13.3% | 1/10 |
 | rohit_panda · `meta-llama/llama-3.1-8b-instruct` · v2 · `83bdbe168d2a` · archived | as recorded | 0/60   0.0% | 0/30   0.0% | 0/30   0.0% | 0/10 |
 |  | re-scored, own harness | 0/60   0.0% | 0/30   0.0% | 0/30   0.0% | 0/10 |
 |  | + underscore fix | 0/60   0.0% | 0/30   0.0% | 0/30   0.0% | 0/10 |
@@ -40,6 +60,16 @@ the same records.
 |  | + underscore fix | 4/7  57.1% | 4/4 100.0% | 0/3   0.0% | 0/1 |
 |  | + letter rule (approximate) | 4/7  57.1% | 4/4 100.0% | 0/3   0.0% | 0/1 |
 |  | both fixes | 4/7  57.1% | 4/4 100.0% | 0/3   0.0% | 0/1 |
+| li_yunke · `qwen/qwen3-235b-a22b-2507` · v2 · `6dfb98e18210` · archived | as recorded | 37/60  61.7% | 18/30  60.0% | 19/30  63.3% | 5/10 |
+|  | re-scored, own harness | 37/60  61.7% | 18/30  60.0% | 19/30  63.3% | 5/10 |
+|  | + underscore fix | 39/60  65.0% | 18/30  60.0% | 21/30  70.0% | 5/10 |
+|  | + letter rule | 37/60  61.7% | 18/30  60.0% | 19/30  63.3% | 5/10 |
+|  | both fixes | 39/60  65.0% | 18/30  60.0% | 21/30  70.0% | 5/10 |
+| li_yunke · `qwen/qwen3-235b-a22b-2507` · v2 · `ecb1ca22c1c3` · archived | as recorded | 49/60  81.7% | 26/30  86.7% | 23/30  76.7% | 7/10 |
+|  | re-scored, own harness | 49/60  81.7% | 26/30  86.7% | 23/30  76.7% | 7/10 |
+|  | + underscore fix | 52/60  86.7% | 26/30  86.7% | 26/30  86.7% | 8/10 |
+|  | + letter rule | 49/60  81.7% | 26/30  86.7% | 23/30  76.7% | 7/10 |
+|  | both fixes | 52/60  86.7% | 26/30  86.7% | 26/30  86.7% | 8/10 |
 
 ## Trials whose grade moved
 
@@ -60,6 +90,63 @@ the same records.
 - CLM-9016 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
 - CLM-9023 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
 
+**li_yunke · `qwen/qwen3-235b-a22b-2507` · `e7dd3797c778`**
+
+- CLM-8901 trial 1 — underscore: fail → pass. missing 'itemised_bill for procedure 45378 on 2026-09-10', expected 'itemised bill for line 45378' (does not name the document 'itemised bill')
+
+**shen_bowen · `deepseek/deepseek-v3.2` · `014683ddcc79`**
+
+- CLM-8901 trial 1 — underscore: fail → pass. missing {'item': 'itemised_bill', 'line_code': '45378', 'date_of_service': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')
+- CLM-8901 trial 2 — underscore: fail → pass. missing {'item': 'itemised_bill', 'line_code': '45378', 'date_of_service': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')
+- CLM-8901 trial 3 — underscore: fail → pass. missing {'document': 'itemised_bill', 'line_code': '45378', 'date_of_service': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')
+
+**xia_yanran · `google/gemini-2.5-flash` · `30c46384999a`**
+
+- CLM-8901 trial 1 — underscore: fail → pass. missing {'document': 'itemised_bill', 'code': '45378', 'date': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')
+- CLM-8901 trial 2 — underscore: fail → pass. missing {'document': 'itemised_bill', 'code': '45378', 'date': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')
+- CLM-8901 trial 3 — underscore: fail → pass. missing {'document': 'itemised_bill', 'code': '45378', 'date': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')
+
+**zhao_yujia · `qwen/qwen3-235b-a22b-2507` · `22d45c794f78`**
+
+- CLM-8842 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-8850 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-8861 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-8874 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-8960 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-8971 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9001 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9002 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9004 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9005 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9006 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9007 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9008 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9009 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9010 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9011 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9013 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9014 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9015 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9016 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9017 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9018 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9021 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9022 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9023 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9024 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+- CLM-9025 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+
 **rohit_panda · `meta-llama/llama-3.1-8b-instruct` · `b4944646db6d`**
 
 - CLM-8842 trial 1 — letter_rule: pass → fail. approve_in_principle without a sent letter (issue_decision_letter was never called)
+
+**li_yunke · `qwen/qwen3-235b-a22b-2507` · `6dfb98e18210`**
+
+- CLM-8901 trial 2 — underscore: fail → pass. missing 'itemised_bill for procedure 45378 on 2026-09-10', expected 'itemised bill for line 45378' (does not name the document 'itemised bill')
+- CLM-8901 trial 3 — underscore: fail → pass. missing 'itemised_bill for procedure 45378 (Diagnostic colonoscopy) on service date 2026-09-10', expected 'itemised bill for line 45378' (does not name the document 'itemised bill')
+
+**li_yunke · `qwen/qwen3-235b-a22b-2507` · `ecb1ca22c1c3`**
+
+- CLM-8901 trial 1 — underscore: fail → pass. missing 'itemised_bill for procedure 45378 on 2026-09-10', expected 'itemised bill for line 45378' (does not name the document 'itemised bill')
+- CLM-8901 trial 2 — underscore: fail → pass. missing 'itemised_bill for procedure 45378 on 2026-09-10', expected 'itemised bill for line 45378' (does not name the document 'itemised bill')
+- CLM-8901 trial 3 — underscore: fail → pass. missing 'itemised_bill for procedure 45378 (Diagnostic colonoscopy) on service date 2026-09-10', expected 'itemised bill for line 45378' (does not name the document 'itemised bill')
