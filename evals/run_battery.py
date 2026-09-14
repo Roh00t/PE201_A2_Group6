@@ -717,19 +717,30 @@ def main(argv=None):
             print("  Progress is checkpointed. Re-run with --member %s to "
                   "resume.\n" % entry["member"])
 
-        baseline = None
-        if not args.dry_run and not args.no_canary:
-            baseline = run_canary(entry, budget, on_halt)
-            if baseline is None:
-                return 1
-
-        run_one = make_run_one(budget, entry, baseline, on_halt)
         plan_cases = []
         for cid, _t in prov.build_plan(roster.get("problem")):
             if cid not in plan_cases:
                 plan_cases.append(cid)
         if args.limit:
             plan_cases = plan_cases[:args.limit]
+
+        # A completed checkpoint can be re-opened to regenerate its result
+        # file (for example, after a copy was interrupted).  Do not charge a
+        # fresh canary when every selected trial is already checkpointed.
+        selected_plan = [(cid, trial) for cid, trial in
+                         prov.build_plan(roster.get("problem"))
+                         if cid in plan_cases]
+        has_pending_trials = any(item not in skip for item in selected_plan)
+
+        baseline = None
+        if not args.dry_run and not args.no_canary and has_pending_trials:
+            baseline = run_canary(entry, budget, on_halt)
+            if baseline is None:
+                return 1
+        elif not args.dry_run and not has_pending_trials:
+            print("  Checkpoint is complete; regenerating results without a canary.")
+
+        run_one = make_run_one(budget, entry, baseline, on_halt)
 
         results = list(checkpoint.results())
         progress = Progress(fp["plan_shape"]["trials"], len(results),
