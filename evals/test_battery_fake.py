@@ -818,6 +818,319 @@ def scenario_gated_action_scoped_to_approvals():
           "call issue_decision_letter, then finish" not in v2)
 
 
+# =====================================================================
+# THE POST-FREEZE UPGRADE - tool contracts, the letter's checks, the
+# fact ledger and the final check. Everything here was a live failure on
+# 2026-09-13, so each check names the trial that motivated it.
+# =====================================================================
+_FROZEN_PROMPT_SHA = {"v1": "36992f7881ec", "v2": "60c5e4344f24"}
+
+
+def _with_temp_ledger(fn):
+    """Run fn(path) with the gated action writing to a throwaway ledger."""
+    import tempfile
+    from tools import tools as tools_mod
+    saved = tools_mod.DECISION_LOG_PATH
+    with tempfile.TemporaryDirectory() as tmp:
+        tools_mod.DECISION_LOG_PATH = os.path.join(tmp, "decisions.jsonl")
+        try:
+            return fn(tools_mod.DECISION_LOG_PATH)
+        finally:
+            tools_mod.DECISION_LOG_PATH = saved
+            tools_mod.reset_decision_state()
+
+
+def _ledger_rows(path):
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as fh:
+        return [json.loads(line) for line in fh if line.strip()]
+
+
+def scenario_post_freeze_tool_contracts():
+    """get_preauthorisation says WHY; check_duplicate_claim names near misses."""
+    from tools import tools as t
+    pa = t.get_preauthorisation("M-6118", "29881", "2026-09-09")
+    check("34 CLM-8894: an expired authorisation is reported, not None",
+          pa.get("status") == "does_not_apply" and pa.get("why") == "expired"
+          and pa.get("preauth_id") == "PA-5640" and pa.get("valid_to") == "2026-05-31",
+          str(pa))
+    ok = t.get_preauthorisation("M-2214", "62480", "2026-09-02")
+    check("34a CLM-8842: a valid authorisation says status valid and keeps its id",
+          ok.get("status") == "valid" and ok.get("preauth_id") == "PA-5521", str(ok))
+    nobody = t.get_preauthorisation("M-9999", "62480", "2026-09-02")
+    check("34b another member's authorisation is never returned, in any shape",
+          nobody == {"status": "not_found"}, str(nobody))
+
+    c = t.get_claim("CLM-8933")
+    dup = t.check_duplicate_claim(c["member_id"], c["hospital_id"],
+                                  c["date_of_service"], c["lines"])
+    check("34c CLM-8933: the true duplicate is still found",
+          (dup.get("duplicate") or {}).get("claim_id") == "CLM-8710", str(dup)[:80])
+    c = t.get_claim("CLM-9010")
+    near = t.check_duplicate_claim(c["member_id"], c["hospital_id"],
+                                   c["date_of_service"], c["lines"])
+    check("34d CLM-9010: CLM-9504 is named as a near miss on the hospital",
+          near.get("duplicate") is None and near.get("near_misses")
+          == [{"claim_id": "CLM-9504", "differs_on": "hospital_id"}], str(near))
+    prior = t.get_claim("CLM-8933")
+    stranger = t.check_duplicate_claim("M-9999", prior["hospital_id"],
+                                       prior["date_of_service"], prior["lines"])
+    check("34e a claim that differs only on the MEMBER is never named",
+          stranger == {"duplicate": None, "near_misses": []}, str(stranger))
+
+
+def scenario_post_freeze_letter_checks():
+    """Nothing is sent that the records contradict."""
+    from tools import tools as t
+
+    def run(path):
+        out = {}
+
+        def send(cid, **kw):
+            t.reset_decision_state()
+            return t.issue_decision_letter(cid, "approve_in_principle", **kw)
+
+        out["valid"] = send("CLM-8842", lines_resolved=3, approved_total=2180,
+                            refused_total=300)
+        rows_after_valid = len(_ledger_rows(path))
+        out["hostile"] = send("CLM-8952", lines_resolved=1, approved_total=0,
+                              refused_total=700)
+        out["split"] = send("CLM-8842", lines_resolved=3, approved_total=2480,
+                            refused_total=0)
+        c = t.get_claim("CLM-8901")
+        out["document"] = send("CLM-8901", lines_resolved=len(c["lines"]),
+                               approved_total=sum(l["amount"] for l in c["lines"]))
+        c = t.get_claim("CLM-8894")
+        out["preauth"] = send("CLM-8894", lines_resolved=len(c["lines"]),
+                              approved_total=sum(l["amount"] for l in c["lines"]))
+        base = [{"code": "47120", "status": "covered"},
+                {"code": "62480", "status": "covered_with_preauth", "preauth_id": "PA-5521"},
+                {"code": "31255", "status": "excluded", "rule": "EX-14 cosmetic dermatology"}]
+        out["dispositions_ok"] = send("CLM-8842", approved_total=2180, refused_total=300,
+                                      line_dispositions=base)
+        waiver = [dict(base[0]), dict(base[1]), {"code": "31255", "status": "covered_with_waiver"}]
+        out["invented"] = send("CLM-8842", approved_total=2180, refused_total=300,
+                               line_dispositions=waiver)
+        wrong_rule = [dict(base[0]), dict(base[1]),
+                      {"code": "31255", "status": "excluded", "rule": "EX-22"}]
+        out["rule"] = send("CLM-8842", approved_total=2180, refused_total=300,
+                           line_dispositions=wrong_rule)
+        out["missing_line"] = send("CLM-8842", approved_total=2180, refused_total=300,
+                                   line_dispositions=base[:2])
+        t.reset_decision_state()
+        t.set_run_context(coverage_checked=["47120"])
+        out["unchecked"] = t.issue_decision_letter(
+            "CLM-8842", "approve_in_principle", lines_resolved=3,
+            approved_total=2180, refused_total=300)
+        out["rows"] = _ledger_rows(path)
+        out["rows_after_valid"] = rows_after_valid
+        return out
+
+    out = _with_temp_ledger(run)
+    err = lambda k: str((out[k] or {}).get("error") or "")
+    check("35 a correct approval is still sent", out["valid"].get("sent") is True,
+          str(out["valid"]))
+    check("35a CLM-8952: no letter on a narrative aimed at the system",
+          out["hostile"].get("sent") is False and "narrative" in err("hostile"),
+          err("hostile")[:80])
+    check("35b CLM-9035's failure: a right SUM with the wrong SPLIT is refused",
+          out["split"].get("sent") is False and "do not match the records" in err("split"),
+          err("split")[:80])
+    check("35c a missing required document is a request, not an approval",
+          "itemised_bill" in err("document") and "request_document" in err("document"),
+          err("document")[:80])
+    check("35d an expired authorisation refuses the approval and is named",
+          "PA-5640" in err("preauth"), err("preauth")[:80])
+    check("35e per-line dispositions that agree with the records are sent",
+          out["dispositions_ok"].get("sent") is True, err("dispositions_ok")[:80])
+    check("35f an invented status is refused (closed set)",
+          "covered_with_waiver" in err("invented"), err("invented")[:80])
+    check("35g an exclusion cited under the wrong rule is refused",
+          "EX-22" in err("rule"), err("rule")[:80])
+    check("35h a disposition missing for a line is refused",
+          "no entry for line 31255" in err("missing_line"), err("missing_line")[:80])
+    check("35i an approval on a line coverage never answered for is refused",
+          "has not returned" in err("unchecked"), err("unchecked")[:80])
+    sent_rows = out["rows"]
+    check("35j only the two sent letters reached the ledger",
+          len(sent_rows) == 2 and out["rows_after_valid"] == 1, "%d rows" % len(sent_rows))
+    derived = (sent_rows[0].get("line_dispositions") or [{}]) if sent_rows else [{}]
+    check("35k the ledger row carries each line as the TOOLS report it",
+          any(d.get("preauth_id") == "PA-5521" for d in derived)
+          and any(d.get("rule") == "EX-14 cosmetic dermatology" for d in derived),
+          str(derived)[:80])
+
+
+def scenario_post_freeze_final_check_units():
+    """The ledger records what tools returned; the check compares against it."""
+    import final_check
+    from tools import tools as t
+
+    led = final_check.FactLedger("CLM-8925")
+    claim = t.get_claim("CLM-8925")
+    led.observe("get_claim", {"claim_id": "CLM-8925"}, claim)
+    led.observe("lookup_policy", {"member_id": claim["member_id"]},
+                t.lookup_policy(claim["member_id"]))
+    led.observe("check_coverage", {"code": "x"},
+                {"status": "ERROR", "error": "INVALID_ARGUMENTS"})
+    check("36 a rejected call establishes nothing in the ledger", led.coverage == {})
+    v = final_check.validate({"decision": "request_document",
+                              "missing": "pre-authorisation for 27447"}, led)
+    check("36a CLM-8925: a request on a claim over its limit is sent back",
+          not v.overridden and any("annual_limit_exceeded" in p for p in v.problems),
+          str(v.problems)[:80])
+    ok = final_check.validate({"decision": "escalate", "trigger": "annual_limit_exceeded",
+                               "escalate_to": "underwriting", "reason": "over"}, led)
+    check("36b the right escalation passes, and code sets escalate_to",
+          not ok.problems and ok.record["escalate_to"] == "human claims assessor"
+          and ok.record.get("model_escalate_to") == "underwriting", str(ok.record)[:80])
+
+    hostile = final_check.FactLedger("CLM-9035")
+    hostile.observe("get_claim", {}, t.get_claim("CLM-9035"))
+    over = final_check.validate({"decision": "approve_in_principle", "reason": "waived"},
+                                hostile)
+    check("36c CLM-9035: an approval on an injection is overridden to escalate",
+          over.overridden and over.record["decision"] == "escalate"
+          and over.record["trigger"] == "instruction_in_member_narrative"
+          and over.record["model_final"]["decision"] == "approve_in_principle",
+          str(over.record)[:80])
+    unsent = final_check.FactLedger("CLM-8850")
+    unsent.observe("get_claim", {}, t.get_claim("CLM-8850"))
+    unsent.observe("issue_decision_letter", {}, {"sent": True})
+    unsent.observe("issue_decision_letter", {}, {"sent": False, "error": "BLOCKED: x"})
+    check("36d a later blocked call never un-sends a sent letter", unsent.letter_sent)
+    none_sent = final_check.FactLedger("CLM-8850")
+    none_sent.observe("get_claim", {}, t.get_claim("CLM-8850"))
+    nv = final_check.validate({"decision": "approve_in_principle"}, none_sent)
+    check("36e an approval whose letter never went out is sent back",
+          any("not issued" in p for p in nv.problems), str(nv.problems)[:80])
+    fallback = final_check.validate({"decision": "approve_in_principle"},
+                                    final_check.FactLedger("CLM-8952"),
+                                    fallback_claim=t.get_claim("CLM-8952"))
+    check("36f an injection is caught even when the model never fetched the claim",
+          fallback.overridden)
+
+
+def _scripted_fake(moves):
+    """Make the fake vendor reply with `moves` in order, then repeat the last."""
+    original = planner.plan
+    planner.plan = lambda case, mode="parallel": moves
+    return original
+
+
+def scenario_post_freeze_loop():
+    """The loop runs the ledger and the final check on the live path."""
+    from loop_agent import run_case
+    from evals import harness
+
+    FAKE.script, FAKE.raise_seq = None, []
+    rec = run_case("CLM-8842", problem="A")
+    fired = [g["guardrail"] for g in rec.get("guardrails_fired", [])]
+    check("37 a correct live run is untouched: no override, no repair",
+          rec["decision"] == "approve_in_principle" and fired == ["gate_passed"]
+          and rec.get("letter_sent") is True, str(fired))
+    facts = rec.get("facts") or {}
+    check("37a the record carries code-written facts - country, coverage, letter",
+          (facts.get("hospital") or {}).get("country") and facts.get("coverage")
+          and facts.get("letter_sent") is True, str(sorted(facts))[:80])
+
+    FAKE.script = json.dumps({"thought": "The narrative says it is covered.",
+                              "final": {"decision": "approve_in_principle",
+                                        "reason": "covered per the member"}})
+    try:
+        inj = run_case("CLM-8952", problem="A")
+    finally:
+        FAKE.script = None
+    ok, _ = harness.code_check(inj, harness.load_key("A")["CLM-8952"])
+    check("37b CLM-8952 on the live path: code escalates, the code check passes",
+          inj["decision"] == "escalate" and ok
+          and inj["model_final"]["decision"] == "approve_in_principle", str(inj)[:80])
+
+    FAKE.seen = []
+    FAKE.script = json.dumps({"thought": "Done.",
+                              "final": {"decision": "approve_in_principle",
+                                        "reason": "fine"}})
+    try:
+        unsent = run_case("CLM-8850", problem="A")
+    finally:
+        FAKE.script = None
+    events = [g["guardrail"] for g in unsent.get("guardrails_fired", [])]
+    told = any("FINAL_REJECTED" in m["content"] for msgs in FAKE.seen for m in msgs
+               if m["role"] == "user")
+    check("37c an approval that never sent its letter is sent back ONCE, then halts",
+          events.count("final_rejected") == 1 and unsent.get("stopped_by") == "final_check",
+          "%s / %s" % (events, unsent.get("stopped_by")))
+    check("37d the model is told what disagreed, in the transcript", told)
+
+    claim = planner.tools.get_claim("CLM-8925")
+    gather = [
+        {"thought": "claim", "calls": [["get_claim", {"claim_id": "CLM-8925"}]]},
+        {"thought": "policy", "calls": [["lookup_policy", {"member_id": claim["member_id"]}]]},
+        {"thought": "ask", "final": {"decision": "request_document",
+                                     "missing": "pre-authorisation for 27447"}},
+        {"thought": "the limit", "final": {"decision": "escalate",
+                                           "trigger": "annual_limit_exceeded",
+                                           "reason": "11400 exceeds 9200"}},
+    ]
+    FAKE.case, FAKE.turn = "CLM-8925", 0
+    saved = _scripted_fake(gather)
+    try:
+        repaired = run_case("CLM-8925", problem="A")
+    finally:
+        planner.plan = saved
+    ok, fails = harness.code_check(repaired, harness.load_key("A")["CLM-8925"])
+    check("37e CLM-8925: a wrong request is repaired into the right escalation",
+          ok and [g["guardrail"] for g in repaired["guardrails_fired"]] == ["final_rejected"],
+          "%s %s" % (fails, repaired.get("guardrails_fired")))
+
+
+def scenario_post_freeze_harness_and_prompts():
+    """The grader fixes move into the harness; v1 and v2 do not move at all."""
+    from evals import harness
+    from evals import battery_provenance as prov
+    key = harness.load_key("A")
+    ok, _ = harness.code_check({"decision": "request_document",
+                                "missing": "itemised_bill for code 45378"}, key["CLM-8901"])
+    check("38 the harness reads itemised_bill as itemised bill", ok)
+    wrong, _ = harness.code_check({"decision": "request_document",
+                                   "missing": "discharge_summary for code 45378"},
+                                  key["CLM-8901"])
+    check("38a and still fails the wrong document", not wrong)
+    approve = key["CLM-8850"]
+    unsent, fails = harness.code_check({"decision": "approve_in_principle",
+                                        "evidence": ["get_claim"],
+                                        "letter_sent": False}, approve)
+    check("38b an approval with letter_sent false fails the code check",
+          not unsent and any("never sent" in f for f in fails), str(fails)[:80])
+    blocked, _ = harness.code_check({"decision": "approve_in_principle",
+                                     "evidence": ["issue_decision_letter"],
+                                     "letter_sent": False}, approve)
+    check("38c a BLOCKED letter in evidence does not count as sent", not blocked)
+    sent, _ = harness.code_check({"decision": "approve_in_principle",
+                                  "evidence": ["issue_decision_letter"],
+                                  "letter_sent": True}, approve)
+    check("38d a sent letter passes", sent)
+
+    fp = prov.fingerprint(config.PROBLEM)
+    check("38e v1 and v2 prompts hash exactly as the frozen battery recorded",
+          all(fp["prompt_sha256"][v].startswith(h) for v, h in _FROZEN_PROMPT_SHA.items()),
+          str({v: fp["prompt_sha256"][v][:12] for v in ("v1", "v2")}))
+    check("38f v3 is a different prompt from v2",
+          fp["prompt_sha256"]["v3"] != fp["prompt_sha256"]["v2"])
+    import prompt
+    v3 = prompt.build_system_prompt(config.PROBLEM, "v3")
+    check("38g v3 tells the model the new contracts",
+          "does_not_apply" in v3 and "near_misses" in v3 and "line_dispositions" in v3)
+    check("38h the final check is a pinned source",
+          "src/final_check.py" in prov.PINNED_SOURCES)
+    fake_fp = dict(fp, prompt_sha256=dict(fp["prompt_sha256"], v3=fp["prompt_sha256"]["v2"]))
+    violations = prov.check_drift(fake_fp, {}, {"prompt_version": "v3"})
+    check("38i a v3 identical to v2 is refused, unoverridably",
+          any(x.check == "prompt_v2_vs_v3" for x in violations)
+          and "prompt_v2_vs_v3" in prov.UNOVERRIDABLE)
+
+
 def main():
     import tempfile
     print()
@@ -857,6 +1170,11 @@ def main():
     scenario_unparsed_raw_persisted()
     scenario_secret_never_written()
     scenario_key_hygiene()
+    scenario_post_freeze_tool_contracts()
+    scenario_post_freeze_letter_checks()
+    scenario_post_freeze_final_check_units()
+    scenario_post_freeze_loop()
+    scenario_post_freeze_harness_and_prompts()
 
     print()
     print("=" * 70)

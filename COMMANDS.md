@@ -128,23 +128,10 @@ python3 run_live_battery.py --name "Zhao Yujia"
 Your name in any form — `"Zhao Yujia"`, `zhao_yujia`, `yujia`, or 赵宇佳. Run it
 with no `--name` and it lists the roster and asks.
 
-### Before you spend: ignore DeepInfra on your OpenRouter account
-
-At [openrouter.ai/settings/privacy](https://openrouter.ai/settings/privacy), add
-**DeepInfra** to Ignored Providers and save. OpenRouter applies it to every API
-request on that account, so no code changes. On 2026-09-14, DeepInfra answered
-28 of 42 calls to qwen3-235b with text that is not an action, while the other
-nine providers answered 412 without one. The same model and prompt scored 41/60
-and 37/60 on routing luck alone (`results/archive/live/README.md`).
-
-After the run, before you commit, check it from your own records:
-
-```bash
-python3 experiments/provider_audit.py results/live/battery__<you>__*.json
-```
-
-`OK: no call reached DeepInfra` means commit. `FAIL` means do not commit: send
-the output to Rohit.
+**Use your OpenRouter account's default routing: do not set Ignored Providers.**
+Every run records which provider answered each call, and every battery was
+compared on that same routing policy. The rule that asked members to ignore
+DeepInfra was tried on 2026-09-14 and withdrawn (`results/archive/live/README.md`).
 
 ### Rehearse first. It costs nothing and exercises the whole path
 
@@ -194,7 +181,6 @@ would make the number you consented to wrong. You type `judge` to proceed.
 | `401` / `402` / `404` | Aborts immediately with a plain message. **No retry loop against a dead key or a typo'd model id** |
 | "worktree is DIRTY" | Commit or stash. Six people running from six different working trees is drift, and drift silently voids the whole battery |
 | A run looks wrong | `python3 run_battery.py --member <you> --verify-drift` and paste it in the group chat. All six blocks must be identical |
-| `provider_audit.py` says `FAIL` | Do not commit and do not re-run: the same commit resumes the same run. Send the output to Rohit |
 
 ### Before anyone spends — in this order, no exceptions
 
@@ -212,6 +198,7 @@ everyone reads that file before the other five follow.
 
 ```bash
 python3 evals/aggregate_battery.py          # the D5(b) table + the v1→v2 delta
+python3 experiments/provider_audit.py       # which provider answered each call, per run
 ```
 
 Refuses to present a comparison across drifted runs, and **names the component

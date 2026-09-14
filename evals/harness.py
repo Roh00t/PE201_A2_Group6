@@ -125,6 +125,30 @@ def code_check(record, expected):
             fails.append("%s fired on a %r outcome - nothing should have been "
                          "issued" % (gated, record.get("decision")))
 
+        # ...AND AN APPROVAL ACTUALLY SENT ITS LETTER. D4's code check is
+        # "whether the gated action fired exactly once"; the FAQ's is
+        # "exactly once or not at all"; our D0(c) says "exactly once, or not
+        # at all when the run escalates". An approval is the ACT outcome, so
+        # "not at all" is not available to it. Until this line the check
+        # was only "at most once", and on 2026-09-13 five gpt-4.1-mini
+        # approvals that never sent a letter passed.
+        #
+        # `letter_sent` comes from the loop's fact ledger, which reads the
+        # tool's own {"sent": true}. The call list cannot answer this: a
+        # BLOCKED call is recorded in `evidence` too. A record written before
+        # the ledger existed falls back to the call list, which can only
+        # over-credit - experiments/regrade_offline.py re-grades those runs
+        # exactly, from their decision ledgers.
+        if (record.get("decision") == "approve_in_principle"
+                and gated == "issue_decision_letter"):
+            sent = record.get("letter_sent")
+            if sent is None:
+                sent = bool(fired)
+            if not sent:
+                fails.append("approve_in_principle but %s was never sent - the "
+                             "gated action must fire exactly once for the act "
+                             "outcome" % gated)
+
     return (not fails), fails
 
 
@@ -166,7 +190,15 @@ def _missing_matches(got, want):
     """
     if not got:
         return False, "nothing was named"
-    got_s, want_s = str(got).lower(), str(want).lower()
+    # UNDERSCORES ARE SPACES, on both sides. check_coverage returns the
+    # document as "itemised_bill"; a model that repeats the tool's own
+    # identifier named the right document, and all three trials of CLM-8901
+    # failed on two models for spelling it that way. This normalises
+    # formatting only: the code, the date and the document-versus-pre-auth
+    # split below are still compared exactly, and a wrong document still
+    # fails. The hyphen in "pre-authorisation" is deliberately left alone.
+    got_s = str(got).lower().replace("_", " ")
+    want_s = str(want).lower().replace("_", " ")
 
     want_codes = set(_CODE_RE.findall(want_s))
     if want_codes and not (want_codes & set(_CODE_RE.findall(got_s))):

@@ -247,10 +247,16 @@ def descriptor_set(version=None):
 
     evals/run_battery.py refuses to start a v1 run while
     sha(v1) == sha(v2), so the gap is loud rather than expensive.
+
+    v3 is the post-freeze tool contracts: v2 with three descriptors
+    replaced (tools.DESCRIPTORS_V3). v1 and v2 stay byte-identical, so the
+    frozen battery's prompt hashes still describe the prompts it ran.
     """
     version = version or config.PROMPT_VERSION
     if version == "v1":
         return tools.DESCRIPTORS_V1
+    if version == "v3":
+        return tools.DESCRIPTORS_V3
     return tools.DESCRIPTORS
 
 
@@ -292,7 +298,9 @@ def build_system_prompt(problem=None, version=None):
                      % ", ".join(undescribed))
 
     parts.append(_HOW_TO_ANSWER)
-    if version == "v2":
+    # v3 keeps v2's process section word for word: the only difference
+    # between the two prompts is the three tool contracts.
+    if version in ("v2", "v3"):
         parts.append(V2_PROCESS_SECTION)
     return "\n".join(parts)
 

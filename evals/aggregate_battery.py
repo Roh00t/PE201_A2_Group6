@@ -33,6 +33,7 @@ sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from evals import line_endings                  # noqa: E402
 from evals import metrics                       # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -52,17 +53,34 @@ def load(include_dry=False):
     return out
 
 
+def windows_checkouts(runs, forms=None):
+    """Members whose answer key or fixtures hash is today's content with CRLF
+    line endings: a Windows checkout of the same data, not different data."""
+    forms = forms or line_endings.variants()
+    return sorted({r["member"] for _path, r in runs
+                   for k in ("answer_key_sha256", "fixtures_sha256")
+                   if line_endings.form_of(k, (r.get("fingerprint") or {}).get(k), forms) == "crlf"})
+
+
 def check_comparable(runs):
     """Every run must share the parts of the fingerprint that are not
     supposed to vary. The model, the prompt version and the prices are
-    the variables; everything else is the experiment."""
+    the variables; everything else is the experiment.
+
+    A hash that is today's content with CRLF line endings counts as today's
+    LF hash, so a Windows checkout of the same data is not reported as a
+    different experiment (evals/line_endings.py)."""
     problems = []
     shared = ("answer_key_sha256", "fixtures_sha256", "plan_sha256")
+    forms = line_endings.variants()
     seen = {}
     for path, r in runs:
         fp = r.get("fingerprint") or {}
         for k in shared:
-            seen.setdefault(k, {}).setdefault(fp.get(k), []).append(r["member"])
+            value = fp.get(k)
+            if k in line_endings.BYTE_HASHED and line_endings.form_of(k, value, forms) == "crlf":
+                value = forms["lf"][k]
+            seen.setdefault(k, {}).setdefault(value, []).append(r["member"])
         if r.get("overrides"):
             problems.append(
                 "%s ran with %d override(s): %s"
@@ -210,6 +228,11 @@ def main(argv=None):
         for p in problems:
             print("    ! %s" % p)
         print()
+    crlf = windows_checkouts(runs)
+    if crlf:
+        print("\n  note: %s ran on a Windows checkout. Their answer key and fixtures"
+              "\n  hash as today's content with CRLF line endings, so they are the"
+              "\n  same experiment (evals/line_endings.py).\n" % ", ".join(crlf))
 
     rs = rows(runs)
     print(to_markdown(rs))

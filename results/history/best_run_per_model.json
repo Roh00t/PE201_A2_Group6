@@ -92,5 +92,381 @@
       "p90_seconds": 14.355,
       "total_seconds": 650.379
     }
+  },
+  "deepseek/deepseek-v3.2": {
+    "archived": false,
+    "commit": "605603181279",
+    "cost_per_passed_trial": 0.005943291666666666,
+    "cost_provenance": {
+      "all_measured": true,
+      "estimated_usd": 0.0,
+      "measured_trials": {
+        "d": 60,
+        "n": 60,
+        "rate": 1.0,
+        "text": "60/60 (100.0%)"
+      },
+      "measured_usd": 0.285278
+    },
+    "cost_usd": 0.285278,
+    "date": "2026-09-14",
+    "file": "results/live/battery__shen_bowen__deepseek-deepseek-v3.2__v2__2026-09-14__014683ddcc79.json",
+    "ghost_loops": {
+      "by_trigger": {},
+      "count": 0,
+      "rate": {
+        "d": 60,
+        "n": 0,
+        "rate": 0.0,
+        "text": "0/60 (0.0%)"
+      }
+    },
+    "human_agency": {
+      "held": {
+        "d": 31,
+        "n": 0,
+        "rate": 0.0,
+        "text": "0/31 (0.0%)"
+      },
+      "passed": {
+        "d": 31,
+        "n": 31,
+        "rate": 1.0,
+        "text": "31/31 (100.0%)"
+      },
+      "reached_gate": {
+        "d": 60,
+        "n": 31,
+        "rate": 0.5166666666666667,
+        "text": "31/60 (51.7%)"
+      }
+    },
+    "macro_f1": 0.8798762442830239,
+    "median_turns": 4.0,
+    "member": "shen_bowen",
+    "model": "deepseek/deepseek-v3.2",
+    "outcome_mix": {
+      "approve_in_principle": {
+        "d": 58,
+        "n": 31,
+        "rate": 0.5344827586206896,
+        "text": "31/58 (53.4%)"
+      },
+      "escalate": {
+        "d": 58,
+        "n": 15,
+        "rate": 0.25862068965517243,
+        "text": "15/58 (25.9%)"
+      },
+      "request_document": {
+        "d": 58,
+        "n": 12,
+        "rate": 0.20689655172413793,
+        "text": "12/58 (20.7%)"
+      }
+    },
+    "p90_turns": 4,
+    "passed": {
+      "d": 60,
+      "n": 48,
+      "rate": 0.8,
+      "text": "48/60 (80.0%)"
+    },
+    "populations": {
+      "completed": 58,
+      "halted": 0,
+      "unparseable": 2
+    },
+    "prompt_version": "v2",
+    "run_id": "014683ddcc79",
+    "started": "2026-09-14T19:15:56",
+    "trials": 60,
+    "wall_clock": {
+      "mean_seconds": 25.98495,
+      "p90_seconds": 39.298,
+      "total_seconds": 1559.097
+    }
+  },
+  "google/gemini-2.5-flash": {
+    "archived": false,
+    "commit": "1f76e0385892",
+    "cost_per_passed_trial": 0.007899318181818181,
+    "cost_provenance": {
+      "all_measured": true,
+      "estimated_usd": 0.0,
+      "measured_trials": {
+        "d": 60,
+        "n": 60,
+        "rate": 1.0,
+        "text": "60/60 (100.0%)"
+      },
+      "measured_usd": 0.34757
+    },
+    "cost_usd": 0.34757,
+    "date": "2026-09-14",
+    "file": "results/live/battery__xia_yanran__google-gemini-2.5-flash__v2__2026-09-14__30c46384999a.json",
+    "ghost_loops": {
+      "by_trigger": {},
+      "count": 0,
+      "rate": {
+        "d": 60,
+        "n": 0,
+        "rate": 0.0,
+        "text": "0/60 (0.0%)"
+      }
+    },
+    "human_agency": {
+      "held": {
+        "d": 23,
+        "n": 0,
+        "rate": 0.0,
+        "text": "0/23 (0.0%)"
+      },
+      "passed": {
+        "d": 23,
+        "n": 23,
+        "rate": 1.0,
+        "text": "23/23 (100.0%)"
+      },
+      "reached_gate": {
+        "d": 60,
+        "n": 23,
+        "rate": 0.38333333333333336,
+        "text": "23/60 (38.3%)"
+      }
+    },
+    "macro_f1": 0.9051587301587302,
+    "median_turns": 2.5,
+    "member": "xia_yanran",
+    "model": "google/gemini-2.5-flash",
+    "outcome_mix": {
+      "approve_in_principle": {
+        "d": 51,
+        "n": 23,
+        "rate": 0.45098039215686275,
+        "text": "23/51 (45.1%)"
+      },
+      "escalate": {
+        "d": 51,
+        "n": 22,
+        "rate": 0.43137254901960786,
+        "text": "22/51 (43.1%)"
+      },
+      "request_document": {
+        "d": 51,
+        "n": 6,
+        "rate": 0.11764705882352941,
+        "text": "6/51 (11.8%)"
+      }
+    },
+    "p90_turns": 4,
+    "passed": {
+      "d": 60,
+      "n": 44,
+      "rate": 0.7333333333333333,
+      "text": "44/60 (73.3%)"
+    },
+    "populations": {
+      "completed": 51,
+      "halted": 0,
+      "unparseable": 9
+    },
+    "prompt_version": "v2",
+    "run_id": "30c46384999a",
+    "started": "2026-09-14T20:33:20",
+    "trials": 60,
+    "wall_clock": {
+      "mean_seconds": 5.366133333333334,
+      "p90_seconds": 8.48,
+      "total_seconds": 321.968
+    }
+  },
+  "openai/gpt-4.1-mini": {
+    "archived": false,
+    "commit": "c85dbd2fea7f",
+    "cost_per_passed_trial": 0.009653708333333334,
+    "cost_provenance": {
+      "all_measured": true,
+      "estimated_usd": 0.0,
+      "measured_trials": {
+        "d": 60,
+        "n": 60,
+        "rate": 1.0,
+        "text": "60/60 (100.0%)"
+      },
+      "measured_usd": 0.463378
+    },
+    "cost_usd": 0.463378,
+    "date": "2026-09-13",
+    "file": "results/live/battery__huang_yu__openai-gpt-4.1-mini__v2__2026-09-13__8f968b0d3782.json",
+    "ghost_loops": {
+      "by_trigger": {},
+      "count": 0,
+      "rate": {
+        "d": 60,
+        "n": 0,
+        "rate": 0.0,
+        "text": "0/60 (0.0%)"
+      }
+    },
+    "human_agency": {
+      "held": {
+        "d": 31,
+        "n": 0,
+        "rate": 0.0,
+        "text": "0/31 (0.0%)"
+      },
+      "passed": {
+        "d": 31,
+        "n": 31,
+        "rate": 1.0,
+        "text": "31/31 (100.0%)"
+      },
+      "reached_gate": {
+        "d": 60,
+        "n": 31,
+        "rate": 0.5166666666666667,
+        "text": "31/60 (51.7%)"
+      }
+    },
+    "macro_f1": 0.853030303030303,
+    "median_turns": 4.0,
+    "member": "huang_yu",
+    "model": "openai/gpt-4.1-mini",
+    "outcome_mix": {
+      "approve_in_principle": {
+        "d": 59,
+        "n": 36,
+        "rate": 0.6101694915254238,
+        "text": "36/59 (61.0%)"
+      },
+      "escalate": {
+        "d": 59,
+        "n": 12,
+        "rate": 0.2033898305084746,
+        "text": "12/59 (20.3%)"
+      },
+      "request_document": {
+        "d": 59,
+        "n": 11,
+        "rate": 0.1864406779661017,
+        "text": "11/59 (18.6%)"
+      }
+    },
+    "p90_turns": 5,
+    "passed": {
+      "d": 60,
+      "n": 48,
+      "rate": 0.8,
+      "text": "48/60 (80.0%)"
+    },
+    "populations": {
+      "completed": 59,
+      "halted": 0,
+      "unparseable": 1
+    },
+    "prompt_version": "v2",
+    "run_id": "8f968b0d3782",
+    "started": "2026-09-13T16:09:03",
+    "trials": 60,
+    "wall_clock": {
+      "mean_seconds": 11.995566666666667,
+      "p90_seconds": 16.282,
+      "total_seconds": 719.734
+    }
+  },
+  "qwen/qwen3-235b-a22b-2507": {
+    "archived": false,
+    "commit": "ecc3ab50dcdd",
+    "cost_per_passed_trial": 0.0020917317073170733,
+    "cost_provenance": {
+      "all_measured": true,
+      "estimated_usd": 0.0,
+      "measured_trials": {
+        "d": 60,
+        "n": 60,
+        "rate": 1.0,
+        "text": "60/60 (100.0%)"
+      },
+      "measured_usd": 0.085761
+    },
+    "cost_usd": 0.085761,
+    "date": "2026-09-14",
+    "file": "results/live/battery__li_yunke__qwen-qwen3-235b-a22b-2507__v2__2026-09-14__e7dd3797c778.json",
+    "ghost_loops": {
+      "by_trigger": {},
+      "count": 0,
+      "rate": {
+        "d": 60,
+        "n": 0,
+        "rate": 0.0,
+        "text": "0/60 (0.0%)"
+      }
+    },
+    "human_agency": {
+      "held": {
+        "d": 25,
+        "n": 0,
+        "rate": 0.0,
+        "text": "0/25 (0.0%)"
+      },
+      "passed": {
+        "d": 25,
+        "n": 25,
+        "rate": 1.0,
+        "text": "25/25 (100.0%)"
+      },
+      "reached_gate": {
+        "d": 60,
+        "n": 25,
+        "rate": 0.4166666666666667,
+        "text": "25/60 (41.7%)"
+      }
+    },
+    "macro_f1": 0.8424950625411455,
+    "median_turns": 4.0,
+    "member": "li_yunke",
+    "model": "qwen/qwen3-235b-a22b-2507",
+    "outcome_mix": {
+      "approve_in_principle": {
+        "d": 48,
+        "n": 25,
+        "rate": 0.5208333333333334,
+        "text": "25/48 (52.1%)"
+      },
+      "escalate": {
+        "d": 48,
+        "n": 13,
+        "rate": 0.2708333333333333,
+        "text": "13/48 (27.1%)"
+      },
+      "request_document": {
+        "d": 48,
+        "n": 10,
+        "rate": 0.20833333333333334,
+        "text": "10/48 (20.8%)"
+      }
+    },
+    "p90_turns": 4,
+    "passed": {
+      "d": 60,
+      "n": 41,
+      "rate": 0.6833333333333333,
+      "text": "41/60 (68.3%)"
+    },
+    "populations": {
+      "completed": 48,
+      "halted": 0,
+      "unparseable": 12
+    },
+    "prompt_version": "v2",
+    "run_id": "e7dd3797c778",
+    "started": "2026-09-14T16:31:02",
+    "trials": 60,
+    "wall_clock": {
+      "mean_seconds": 16.684916666666666,
+      "p90_seconds": 27.033,
+      "total_seconds": 1001.095
+    }
   }
 }
