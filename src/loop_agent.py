@@ -27,6 +27,7 @@ import json
 import time
 
 import config
+import final_check
 import prompt
 from tools import tools
 from backends.backends import LiveTransportError, make_backend
@@ -110,6 +111,15 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
     # of  input ~ B*T + D*T(T-1)/2  can be read off directly, per model.
     turn_tokens = []
     duplicate_recoveries = 0   # see config.DUPLICATE_RECOVERY_RETRIES
+    final_repairs = 0          # see config.FINAL_REPAIR_RETRIES
+
+    # WHAT THE TOOLS RETURNED, WRITTEN DOWN BY CODE. Not a scratchpad the
+    # model fills in: the model is never asked to restate its findings,
+    # because a restatement is one more thing it can get wrong and nothing
+    # would check it. The ledger reads each observation as it arrives, the
+    # final check compares the model's record against it, and it travels
+    # with the result as `facts`. See final_check.py.
+    ledger = final_check.FactLedger(case_id)
 
     # On the scripted backend the gate auto-approves so the run stays
     # deterministic. The RECORD still shows the gate was reached and
@@ -149,6 +159,50 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
                 if move.get("unparsed_raw"):
                     record["unparsed_raw"] = str(move["unparsed_raw"])[
                         :getattr(config, "MAX_OBSERVATION_CHARS", 2000)]
+
+                # THE FINAL CHECK - only on a record the model actually
+                # wrote. An unreadable reply or an output cut at max_tokens
+                # is reported as exactly that, never repaired into a
+                # decision it did not make.
+                if (problem == "A" and not stopped_by
+                        and not move.get("unparsed_raw")):
+                    verdict = final_check.validate(
+                        record, ledger, fallback_claim=tools.get_claim(case_id))
+                    if verdict.overridden:
+                        # Code owns this decision; the model's is kept in
+                        # the record as model_final for the D5 finding.
+                        guards._fire("narrative_override", "; ".join(
+                            f["matched"] for f in verdict.record["narrative_flags"]))
+                    elif verdict.problems:
+                        if final_repairs >= config.FINAL_REPAIR_RETRIES:
+                            guards._fire("final_check", "; ".join(verdict.problems))
+                            raise GuardrailStop("final_check",
+                                                "; ".join(verdict.problems))
+                        # One more reply, told exactly what disagrees. The
+                        # event is recorded, so a repaired run never reads
+                        # as a clean one.
+                        final_repairs += 1
+                        guards._fire("final_rejected", "; ".join(verdict.problems))
+                        transcript.append({
+                            "role": "assistant",
+                            "content": json.dumps(
+                                {"thought": move.get("thought", ""),
+                                 "final": record},
+                                default=str, ensure_ascii=False)})
+                        transcript.append({
+                            "role": "user",
+                            "content": json.dumps(
+                                {"error": "FINAL_REJECTED",
+                                 "problems": verdict.problems,
+                                 "detail": "Your tool results are above. Fix "
+                                           "the decision or finish the call it "
+                                           "needs, then reply again.",
+                                 "attempt": "%d of %d" % (
+                                     final_repairs,
+                                     config.FINAL_REPAIR_RETRIES)},
+                                ensure_ascii=False)})
+                        continue
+                    record = verdict.record
                 break
 
             # ---- act: one turn may carry SEVERAL calls ---------------
@@ -217,7 +271,11 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
                         cost_usd=round(
                             (tokens_in / 1e6) * config.PRICE_IN
                             + (tokens_out / 1e6) * config.PRICE_OUT, 6),
-                        backend=config.BACKEND)
+                        backend=config.BACKEND,
+                        # Which lines coverage has actually answered for.
+                        # The letter refuses an approval resting on a line
+                        # nobody checked.
+                        coverage_checked=sorted(ledger.coverage))
 
                 # A HALLUCINATED TOOL NAME MUST NOT KILL THE BATTERY.
                 # tools.call raises KeyError on an unknown name and
@@ -238,6 +296,7 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
                 except TypeError as err:
                     result = {"error": "wrong arguments for %s: %s"
                                        % (name, err)}
+                ledger.observe(name, args, result)
                 evidence.append(name)
                 observations.append({"tool": name, "args": args,
                                      "observation": result})
@@ -324,6 +383,13 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
         "stopped_by": stopped_by,
         "backend": backend.name,
     })
+    if problem == "A":
+        # Written by code from the observations, on every outcome - halts
+        # included. `letter_sent` is what the harness reads for D4's
+        # "the gated action fired exactly once": a call in `evidence` only
+        # proves an attempt, because a BLOCKED call is recorded there too.
+        record.update({"facts": ledger.as_record(),
+                       "letter_sent": ledger.letter_sent})
     if backend.name == "live":
         record.update({
             "model": config.MODEL,

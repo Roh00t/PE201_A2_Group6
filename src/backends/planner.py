@@ -97,10 +97,11 @@ Two of those orderings deserve their reason stated:
 ====================================================================
 """
 import config
+import final_check
 import narrative_guard
 from tools import tools
 
-ESCALATE_TO = "human claims assessor"
+ESCALATE_TO = final_check.ESCALATE_TO
 
 
 # =====================================================================
@@ -130,43 +131,11 @@ def _coverage(claim, policy_id):
 def _claim_level_trigger(claim, f):
     """The escalations decidable from turn 2, in precedence order.
 
-    Returns (trigger, reason, extra_record_fields) or None.
+    Returns (trigger, reason, extra_record_fields) or None. The table
+    itself lives in final_check.claim_level_trigger, so this planner and
+    the live final check route by one copy of it.
     """
-    pol = (f["policy"] or {}).get("policy", {})
-    remaining = (f["policy"] or {}).get("remaining")
-
-    if pol.get("status") == "lapsed":
-        return ("policy_lapsed",
-                "Policy %s status lapsed. The claim cannot be decided "
-                "against cover that is not live." % pol.get("policy_id"), {})
-
-    dos = claim["date_of_service"]
-    if pol and not (pol.get("start_date") <= dos <= pol.get("end_date")):
-        where = "before" if dos < pol.get("start_date") else "after"
-        return ("outside_policy_dates",
-                "Date of service %s falls %s policy %s's cover window "
-                "%s..%s. Status is %r, which does not extend the dates."
-                % (dos, where, pol.get("policy_id"), pol.get("start_date"),
-                   pol.get("end_date"), pol.get("status")), {})
-
-    if f["duplicate"]:
-        d = f["duplicate"]
-        return ("duplicate_claim",
-                "%s named as the prior decision. The facts that matched: "
-                "member %s, hospital %s, date of service %s, and the same "
-                "lines. The claim id is not one of the facts - a "
-                "resubmission arrives with a new one."
-                % (d["claim_id"], d["member_id"], d["hospital_id"],
-                   d["date_of_service"]),
-                {"prior_claim_id": d["claim_id"]})
-
-    if remaining is not None and f["total"] > remaining:
-        return ("annual_limit_exceeded",
-                "Claim total %d exceeds %d remaining on %s. Lines were not "
-                "individually priced: the claim cannot be decided at this "
-                "level regardless of coverage."
-                % (f["total"], remaining, pol.get("policy_id")), {})
-    return None
+    return final_check.claim_level_trigger(claim, f["policy"], f["duplicate"])
 
 
 def _line_disposition(claim, covs, preauths):
@@ -182,7 +151,7 @@ def _line_disposition(claim, covs, preauths):
         else:
             row["status"] = "covered"
             pa = preauths.get(line["code"])
-            if pa:
+            if pa and pa.get("status") == "valid":
                 row["preauth"] = "%s valid %s..%s" % (pa["preauth_id"],
                                                       pa["valid_from"],
                                                       pa["valid_to"])
@@ -325,19 +294,28 @@ def plan(claim_id, mode="parallel"):
                 claim["member_id"], l["code"], claim["date_of_service"])
 
         for l in needs:
-            if preauths[l["code"]] is None:
+            pa = preauths[l["code"]] or {}
+            if pa.get("status") != "valid":
+                # The tool now says WHY none applies, so the record can say
+                # what was found - Appendix A's "one exists but expired
+                # before the date of service" is a different fact from
+                # "none exists", and the key for CLM-8894 asks for it.
+                found = ("%s was found, but it was valid %s..%s (%s), so it "
+                         "does not authorise a service on %s"
+                         % (pa.get("preauth_id"), pa.get("valid_from"),
+                            pa.get("valid_to"), pa.get("why"),
+                            claim["date_of_service"])
+                         if pa.get("status") == "does_not_apply" else
+                         "No pre-authorisation exists for member %s for this "
+                         "procedure" % claim["member_id"])
                 return _emit(batches, {
                     "decision": "request_document",
                     "missing": "pre-authorisation reference for line %s, "
                                "valid on %s" % (l["code"],
                                                 claim["date_of_service"]),
-                    "reason": "Line %s requires pre-authorisation. None "
-                              "covering member %s for %s is valid on %s - "
-                              "either none was granted or one existed and had "
-                              "expired. Missing evidence is a REQUEST, not a "
-                              "refusal."
-                              % (l["code"], claim["member_id"], l["code"],
-                                 claim["date_of_service"]),
+                    "reason": "Line %s requires pre-authorisation. %s. "
+                              "Missing evidence is a REQUEST, not a refusal."
+                              % (l["code"], found),
                     "lines_resolved": _resolved_summary(claim, covs),
                 }, mode, "The approval is missing or expired. Ask for it by "
                          "code and date.")

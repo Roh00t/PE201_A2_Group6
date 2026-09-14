@@ -49,7 +49,11 @@ ROSTER_PATH = os.path.join(ROOT, "evals", "battery_roster.json")
 # removed on 2026-09-13: it was an experiment on a loop that could not see
 # its own calls and never told the model which claim to decide. Both are
 # fixed, and its useful parts now live in v2's process section.
-PROMPT_VERSIONS = ("v1", "v2")
+#
+# v3 was added after the six-member v2 battery landed: the same prompt as v2
+# with three tool contracts replaced (tools.DESCRIPTORS_V3). v1 and v2 still
+# hash to the values stamped into the frozen battery's results.
+PROMPT_VERSIONS = ("v1", "v2", "v3")
 
 PINNED_SOURCES = [
     "src/config.py",
@@ -60,6 +64,7 @@ PINNED_SOURCES = [
     "src/backends/guardrails.py",
     "src/loop_agent.py",
     "src/narrative_guard.py",
+    "src/final_check.py",
     "evals/harness.py",
 ]
 DIRTY_CHECK_PATHS = ["src", "evals", "data"]
@@ -203,6 +208,7 @@ def fingerprint(problem=None):
             "AUTONOMY": config.AUTONOMY,
             "TEMPERATURE": config.TEMPERATURE,
             "BASE_URL": config.BASE_URL,
+            "FINAL_REPAIR_RETRIES": config.FINAL_REPAIR_RETRIES,
         },
         "python": "%d.%d.%d" % sys.version_info[:3],
     }
@@ -235,7 +241,7 @@ class Violation(object):
 
 # Checks that may never be overridden. These are not "your run measures
 # something slightly different" - they are "your run measures nothing".
-UNOVERRIDABLE = {"prompt_v1_vs_v2", "v1_descriptors_missing",
+UNOVERRIDABLE = {"prompt_v1_vs_v2", "prompt_v2_vs_v3", "v1_descriptors_missing",
                  "backend_is_live", "roster_structure", "trials_derived"}
 
 
@@ -277,6 +283,11 @@ def check_drift(fp, roster, entry):
             hint="tools.DESCRIPTORS_V1 is empty or equals DESCRIPTORS. A v1 "
                  "battery against a v2 prompt is a confident wrong number, "
                  "not a missing one."))
+    if fp["prompt_sha256"].get("v3") == fp["prompt_sha256"]["v2"]:
+        v.append(Violation(
+            "prompt_v2_vs_v3", "v2 and v3 differ", "they are IDENTICAL",
+            hint="tools.DESCRIPTORS_V3 equals DESCRIPTORS, so a v3 run would "
+                 "be a v2 run on a different harness, labelled as neither."))
     if ver == "v1":
         from tools import tools as _t
         missing = [n for n in sorted(_t.REGISTRY[fp["problem"]])

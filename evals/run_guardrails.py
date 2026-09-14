@@ -261,6 +261,36 @@ def execute_case(case):
                     "known_limit_paraphrase"}:
         return _run_loop(base, use_planner=True, narrative=case["narrative"])
 
+    # ---- the post-freeze guards: each was a live failure on 2026-09-13 ----
+    if scenario == "hostile_narrative_letter_blocked":
+        # CLM-8952's own narrative imitates a check_coverage result. The
+        # totals are the ones the live models sent - internally consistent,
+        # which is why only the narrative check can refuse them.
+        return _run_direct_writer({
+            "claim_id": "CLM-8952",
+            "decision": "approve_in_principle",
+            "lines_resolved": 1,
+            "approved_total": 0,
+            "refused_total": 700,
+        })
+    if scenario == "approval_contradicts_coverage":
+        # The sum is right (2,480) and the split is wrong: 31255 is excluded
+        # under EX-14, so 300 of it cannot be approved.
+        return _run_direct_writer({
+            "claim_id": CLAIM_ID,
+            "decision": "approve_in_principle",
+            "lines_resolved": 3,
+            "approved_total": 2480,
+            "refused_total": 0,
+        })
+    if scenario == "approval_without_letter":
+        # An agent that concludes "approve" twice without ever sending the
+        # letter: sent back once, then halted.
+        approve = {"final": {"decision": "approve_in_principle",
+                             "reason": "every line is fine"},
+                   "thought": "Approve."}
+        return _run_loop([base[0], copy.deepcopy(approve), copy.deepcopy(approve)])
+
     raise SystemExit("unknown guardrail scenario: %s" % scenario)
 
 

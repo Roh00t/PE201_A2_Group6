@@ -128,6 +128,22 @@ AUTONOMY = "confirm"          # "suggest" | "confirm" | "act"
 DUPLICATE_RECOVERY_RETRIES = 0
 
 # ---------------------------------------------------------------------
+# FINAL-RECORD REPAIR. How many times a final record that contradicts what
+# the tools returned is sent back to the model before the run halts with
+# stopped_by="final_check" (src/final_check.py).
+#
+# ONE, and here is the evidence for one rather than zero. On 2026-09-13,
+# gpt-4.1-mini approved five claims without ever sending the letter, and
+# asked for a document on a claim whose total exceeded the remaining limit
+# - both contradicting facts it already held. A correction naming the contradiction costs
+# one extra call; a halt costs US$7.60 of an assessor's time. More than one
+# would let a model argue with the ledger; it gets one reply, not a debate.
+#
+# The injection override is NOT a repair and does not count against this:
+# code sets that decision outright.
+FINAL_REPAIR_RETRIES = 1
+
+# ---------------------------------------------------------------------
 # OBSERVATION SIZE CIRCUIT-BREAKER. The most characters of one tool
 # result that may enter the transcript.
 #
