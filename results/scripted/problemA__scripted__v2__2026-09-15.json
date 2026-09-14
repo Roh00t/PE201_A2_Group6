@@ -36,7 +36,7 @@
         "tokens_in": 28800,
         "tokens_out": 720,
         "cost_usd": 0.003168,
-        "seconds": 0.003,
+        "seconds": 0.004,
         "turn_tokens": [
           [
             1800,
@@ -180,7 +180,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.006,
+        "seconds": 0.001,
         "turn_tokens": [
           [
             1800,
@@ -304,7 +304,7 @@
         "tokens_in": 28800,
         "tokens_out": 720,
         "cost_usd": 0.003168,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -441,7 +441,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -2808,7 +2808,7 @@
         "tokens_in": 14400,
         "tokens_out": 480,
         "cost_usd": 0.001632,
-        "seconds": 0.0,
+        "seconds": 0.002,
         "turn_tokens": [
           [
             1800,
@@ -3228,7 +3228,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -3599,7 +3599,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.002,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -3717,7 +3717,7 @@
         "tokens_in": 28800,
         "tokens_out": 720,
         "cost_usd": 0.003168,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -3849,7 +3849,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -4616,7 +4616,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.0,
+        "seconds": 0.001,
         "turn_tokens": [
           [
             1800,
@@ -5145,7 +5145,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
@@ -5624,7 +5624,7 @@
         "tokens_in": 21000,
         "tokens_out": 600,
         "cost_usd": 0.00234,
-        "seconds": 0.001,
+        "seconds": 0.0,
         "turn_tokens": [
           [
             1800,
