@@ -47,11 +47,15 @@ after any descriptor change — it is the D2(b) artefact.
 ## 2 · Code and guardrail checks — free, no key
 
 ```bash
-python3 evals/test_battery_fake.py         # 60 checks · battery failure modes
-python3 evals/graders/test_judge_fake.py   # 51 checks · judge failure modes
-python3 evals/test_cost_model.py           #  4 checks · D6 arithmetic
-python3 evals/run_guardrails.py --twice    # D3(b) · 15 guardrail cases
+python3 evals/test_battery_fake.py         # 113 checks · battery failure modes
+python3 evals/graders/test_judge_fake.py   #  54 checks · judge failure modes
+python3 evals/test_cost_model.py           #   4 checks · D6 arithmetic
+python3 evals/run_guardrails.py --twice    # D3(b) · 18 guardrail cases
 python3 evals/graders/code_check.py        # D4 · which check grades which case
+python3 experiments/test_regrade_offline.py     # 40 checks · the offline re-grade
+python3 experiments/test_line_endings.py        # 10 checks · a Windows checkout is the same experiment
+python3 experiments/test_provider_audit.py      # 15 checks · which provider answered each call
+python3 experiments/test_complete_judgement.py  # 58 checks · finishing a resumed battery's judge
 ```
 
 `--twice` on the guardrails proves the run is **deterministic**; a checklist that

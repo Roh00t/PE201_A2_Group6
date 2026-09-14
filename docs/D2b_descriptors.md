@@ -69,15 +69,20 @@ rough size as `characters / 4`; the hashes below are over the prompt text only.
 | Version | Characters | Rough tokens | SHA-256 |
 |---|---:|---:|---|
 | v1 | 4,963 | 1,240 | `36992f7881ece6174bf6be3990054a7d7a410f62e4a5ea64a367a436d180a0ad` |
-| v2 | 12,050 | 3,012 | `7dc65dcc5d0cdc022f8d27d14d71a41da4e4781b1fbf1fef339f9b25053fe169` |
+| v2 | 12,537 | 3,134 | `60c5e4344f249363942021f2916f22394220d8dd2dc6490ed0c22b291d794c70` |
+| v3 | 13,952 | 3,488 | `0c10520cc4a64459a657f42edfbf8b1f157f692e1178bbaf1f4b74ae5fbaabda` |
 
-*v2 re-measured 2026-09-13. The first v2 was 8,601 chars / 2,150 tokens
-(`4accfcfacda4…`); see "The v2 process section" below for what was added.*
+*Re-measured 2026-09-15 on the merged tree. v1 and v2 are the exact prompts every
+battery ran: both hashes are stamped in each battery's fingerprint, and
+`test_battery_fake.py` (38e) asserts the post-freeze merge did not move them. v2
+was edited after its 2026-09-13 measurement (12,050 chars, `7dc65dcc…`) and
+before the battery froze; the first v2 was 8,601 chars / 2,150 tokens
+(`4accfcfacda4…`). See "The v2 process section" and "v3" below.*
 
 The v2 prefix is longer, so it must earn its cost by preventing wrong calls or
-turns. The measurement is intentionally a prompt comparison only; no live
-model call was made for this change. The scripted backend does not read the
-prompt, so its pass rate is not evidence that v2 is better than v1.
+turns. This table is a prompt comparison only, and the scripted backend does not
+read the prompt, so its pass rate is not evidence that v2 is better than v1.
+The live measurement is in "Measured on the live battery" below.
 
 Reproduce the prompt audit with:
 
@@ -172,3 +177,71 @@ tested the raw argument for version-gated sections. `loop_agent` passes no versi
 into every fingerprint and sent to no live model.** Fixed in `a4043b5`;
 `test_battery_fake.py` now asserts, for every version, that the prompt sent equals
 the prompt hashed.
+
+---
+
+## Measured on the live battery · v1 → v2, model held fixed
+
+*Added 2026-09-15. `qwen/qwen3-235b-a22b-2507`, 60 trials over 40 cases each, same
+answer key (`1cd26cc1bf91`) and plan (`5952ce9e5763`). v1 is zhao_yujia's run
+`22d45c794f78`; v2 is li_yunke's run `e7dd3797c778`, her row in the D5(b) table.
+Produced by `evals/aggregate_battery.py` and `experiments/regrade_offline.py`.*
+
+| Measure | v1 | v2 |
+|---|---:|---:|
+| Pass, code check as recorded | 31/60 (51.7%) | 41/60 (68.3%) |
+| Ordinary / negative trials | 27/30 · 4/30 | 23/30 · 18/30 |
+| Negative cases passing all three trials | 1/10 | 4/10 |
+| Decision correct, whatever else failed | 49/60 | 45/60 |
+| Right decision, wrong trigger string | 15 trials | 3 trials |
+| Approvals that called `issue_decision_letter` | 0 of 30 | 25 of 25 |
+| Trial-1 records carrying ≥3 checklist fields | 0/40 | 23/40 |
+| Judgement check (`must_record`) | 6/40 | 21/40 (22 as written; CLM-8941 was an unparseable reply the judge passed) |
+| Pass under the letter rule (post-freeze harness) | 4/60 | 41/60 |
+| Input tokens · cost | 367,581 · US$0.0409 | 866,374 · US$0.0858 |
+
+**By our own test above, v2 helped.** It costs about 2.1× per trial, and it raised
+both the pass rate and the negative 3-of-3 rate on the model held fixed.
+
+**It did not help where you might expect.** v1 chose the right decision at
+least as often as v2 did. It lost on what the process section and the final-record
+checklist ask for:
+- it wrote triggers in its own words (`'policy lapsed'`,
+  `"member's narrative contains instructions aimed at the system"`) instead of
+  the fixed set;
+- it never filled the checklist fields;
+- it never sent a decision letter.
+
+That points at v2's process section and checklist more than at the descriptor
+text, which is the limit recorded in "The honest limit this creates".
+
+**Read it with three caveats.**
+- **Separator-only triggers.** 5 of v1's 15 trigger failures differ only by a space
+  for an underscore (`policy lapsed`, `duplicate claim`). A separator-tolerant check
+  would give v1 36/60; the conclusion does not change.
+- **Provider routing.** OpenRouter's DeepInfra endpoint answered with unreadable
+  text: 12 of its 19 calls in the v2 run, but 2 of its 20 in the v1 run, whose
+  prompt is a third as long. v2 runs identical to this one scored 37–49/60
+  depending on how many trials reached DeepInfra. On trials never routed there,
+  v1 passed 23/46 (50%) and v2 39/42 (93%). Those subsets were chosen after the
+  fact, so they are diagnostics, not pass rates. See
+  `results/archive/live/README.md`.
+- **One run each.** The v2 spread of 37–49 is the noise floor for reading this
+  +10-trial difference.
+
+---
+
+## v3 · the post-freeze descriptors
+
+*Applied 2026-09-15 (`7c99753`). Not run live.*
+
+v3 is v2 with three descriptors changed, nothing else:
+- `get_preauthorisation` returns `status: valid | does_not_apply | not_found`
+  instead of `None`, and names why an authorisation does not apply;
+- `check_duplicate_claim` returns `near_misses`;
+- `issue_decision_letter` documents its new refusals and `line_dispositions`.
+
+It is 13,952 characters (~3,488 tokens, +354 over v2), sha `0c10520cc4a6…`.
+v1 and v2 stay byte-identical, and a v3 identical to v2 is refused (38e–38i).
+Any v3 battery is a separate v2 → v3 comparison, reported apart from the v2
+table (`experiments/post_freeze/README.md`).

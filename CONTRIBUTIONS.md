@@ -87,6 +87,10 @@ the live battery.
   evaluation-vs-guardrail distinction and the autonomy defence (report §1).
 - `.gitignore` (`3576f36`, as `yoga-aaa`).
 
+- The D2(b) v1 pass: battery run `22d45c794f78` (`qwen/qwen3-235b-a22b-2507`, prompt v1,
+  31/60), committed in `d37634d` on 15 Sep **under Rohit's name**. Record here who ran
+  it, so this file and the history agree.
+
 **Commits:** `48721ef` (7 Sep), `3576f36` (3 Sep), merged as `78cfb03`. Corroborated.
 **Note:** two git identities, one email. Worth unifying before submission so the
 history reads cleanly for a marker.
@@ -117,6 +121,12 @@ rate. Bowen's inputs are **queued behind the battery, not late** — but the str
 needs a commit under his name before submission. He also holds the roster's only
 **paid** row, which is what gives D6 two price tiers to compare.
 
+**Update 15 Sep:** two authored commits on `main`, both from `dbldft@outlook.com`:
+- `1f76e03`, his D5(b) battery, `deepseek/deepseek-v3.2`, committed as
+  `CodexSandboxOffline`;
+- `3457e52`, which stops the runner charging a fresh canary when a checkpoint is
+  already complete.
+
 ### Xia Yanran
 
 **Owns:** negative-case design, red-team cases, D7 failure reproductions.
@@ -130,6 +140,11 @@ through the consolidated push. The two D7 reproductions in `experiments/` were
 built by Rohit and are hers to extend and re-run. **This row needs an authored
 commit before submission** — §3 explains why the history reads as it does, but an
 explanation is not a substitute for a commit.
+
+**Update 15 Sep:** authored commits on `main` as `yaraxia-glitch`:
+- `aa2c7cb`, her D5(b) battery, `google/gemini-2.5-flash`;
+- `6b51961`, review comments on the judge parser, harness, loop and cost model;
+- `176fe63` and the merge `0d36437`.
 
 ---
 
@@ -190,14 +205,15 @@ the counts above should reconcile against `data/expected_outcomes_A.json`.
 
 | Requirement | Status on `main` |
 |---|---|
-| A commit under every member's name | **4 of 6.** Huang Yu, Li Yunke, Zhao Yujia and Rohit Panda have authored commits. Xia Yanran and Shen Bowen do not yet. |
-| One live model per member | **0 of 6 run.** The roster is filled, live-verified and validated (5 free + 1 paid, ≈US$0.06 total); `v2-freeze` is not yet cut. |
+| A commit under every member's name | **6 of 6** as of 15 Sep. Xia Yanran (`yaraxia-glitch`) and Shen Bowen (`dbldft@outlook.com`, also as `CodexSandboxOffline`) now have authored commits; see §2. |
+| One live model per member | **6 of 6 run** by 15 Sep, one row each in `results/live/battery_table.md`. Committed by the member: Huang Yu `6ff7d8c`, Shen Bowen `1f76e03`, Xia Yanran `aa2c7cb`, Rohit Panda `c85dbd2`. **Committed under Rohit's name:** Li Yunke's row (`765d289`, run `e7dd3797c778`) and Zhao Yujia's v1 pass (`d37634d`). Those two members should say in §2 who ran their battery. |
 | Evaluation set complete | **Yes** — 40 cases, 10 negative, 60 trials, derived not typed. |
 
-**The two outstanding items are both fixable before submission and neither is a
-matter of wording.** Xia Yanran and Shen Bowen each need at least one authored
-commit, and all six members need to run their own battery under their own key —
-which is the other row the declaration marks NOT OPTIONAL. `[brief §8]`
+**Both outstanding items from 9 Sep are now met on `main`**: every member has an
+authored commit, and every member has a battery row. What the history cannot show
+is who ran the two batteries committed under Rohit's name, so that is for Li
+Yunke and Zhao Yujia to state in their own rows. The per-member case table above
+still needs each member's own entry. `[brief §8]`
 
 ---
 

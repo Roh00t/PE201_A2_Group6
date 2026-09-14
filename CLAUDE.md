@@ -42,13 +42,15 @@ three places (`[brief D4]`, `[upd]`, `PE6201_A2_Adding_Extra_Cases.pdf`).
 **Never hardcode 40, 10, 30 or 60.** `battery_provenance.plan_shape()` derives them
 from the fixtures, and `run_battery` refuses to start if a typed number disagrees.
 
-### Green as of today — all free, all reproducible from a clean clone
+### Green as of 15 September, after the post-freeze merge — all free, all reproducible from a clean clone
 
 ```bash
 python3 run_eval.py                                   # 60 of 60 trials
-python3 evals/run_guardrails.py --twice               # 13/13, 1/1, 1 known limit
-python3 evals/test_battery_fake.py                    # 60 passed
+python3 evals/run_guardrails.py --twice               # 18 cases: 16/16, 1/1, 1 known limit
+python3 evals/test_battery_fake.py                    # 113 passed
+python3 evals/graders/test_judge_fake.py              # 54 passed
 python3 evals/test_cost_model.py                      # 4 passed
+python3 experiments/test_regrade_offline.py           # 40 passed
 python3 experiments/d2c_parallel_vs_sequential.py     # 41% turns, 53% input tokens
 python3 experiments/demo_loop_failure.py              # D7 failure 1 · loop control
 python3 experiments/demo_tool_interface_failure.py    # D7 failure 2 · tool interface

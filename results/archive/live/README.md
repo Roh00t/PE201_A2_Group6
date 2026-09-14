@@ -78,10 +78,12 @@ providers answered 661 calls and none was unparseable.
 
 **Judgement check.**
 
-- `e7dd3797c778` has 18 of 40 cases judged. It was resumed before `57121af`,
+- `e7dd3797c778` had 18 of 40 cases judged. It was resumed before `57121af`,
   when a resumed battery queued only the cases that ran after the resume.
-  `python3 experiments/complete_judgement.py --member li_yunke` judges the other
-  22 and keeps the 18.
+  On 2026-09-15 `experiments/complete_judgement.py --member li_yunke` judged the
+  other 22 and kept the 18. That makes 40/40: 22 pass as written, and **21** is
+  correct. CLM-8941's record is again an unparseable reply that the judge passed;
+  the judged file lists it under `judgement.needs_person_review`.
 - `6dfb98e18210` has all 40 judged. 18 pass as written, but **17** is correct.
   Its CLM-8941 record is an unparseable reply (1 output token). The judge marked
   both required items "present", citing "model did not return parseable JSON"
@@ -99,4 +101,5 @@ providers answered 661 calls and none was unparseable.
 - Judge spend, all D6 inputs, in `results/judge/`:
   `judge_usage__mistralai-mistral-small-2603__li_yunke__qwen-qwen3-235b-a22b-2507__2026-09-14__<run id>.json`,
   at US$0.0077 (`e7dd3797c778`), US$0.0162 (`6dfb98e18210`) and US$0.0165
-  (`ecb1ca22c1c3`). Finishing run 1 adds `…__e7dd3797c778__pass2.json`.
+  (`ecb1ca22c1c3`). Finishing run 1 added
+  `judge_usage__…__2026-09-15__e7dd3797c778__pass2.json` (US$0.0087).

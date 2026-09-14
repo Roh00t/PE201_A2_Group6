@@ -1,23 +1,26 @@
-# Post-freeze upgrade — staged, not applied
+# Post-freeze upgrade — applied 2026-09-15
 
-**Status: FROZEN.** Nothing here is in `src/` or `evals/`. The upgrade is
-[`post_freeze.patch`](post_freeze.patch), and it is merged with one command
-once every member's v2 battery is committed.
+**Status: APPLIED** in `7c99753`, after all six v2/v1 batteries were committed.
+`stage.py --status` matched all six, two of them from Windows checkouts, which
+`evals/line_endings.py` recognises as the same content. `stage.py --check` passed
+14/14 immediately before. [`post_freeze.patch`](post_freeze.patch) stays as the
+record of exactly what changed; `stage.py --status` and `--apply` now report that
+the patch is already in.
 
 ```bash
-python3 experiments/post_freeze/stage.py --status   # who has run; does the freeze hold
-python3 experiments/post_freeze/stage.py --check    # free: prove the patch in throwaway clones
-python3 experiments/post_freeze/stage.py --apply    # refuses until all six batteries are in
+python3 experiments/post_freeze/stage.py --status   # now: "already applied"
+python3 experiments/post_freeze/stage.py --check    # proved the patch in throwaway clones
+python3 experiments/post_freeze/stage.py --apply    # refused until all six batteries were in
 ```
 
-## Why it waits
+## Why it waited
 
 Every file it changes is in `PINNED_SOURCES`. Applying it while Li Yunke,
-Xia Yanran, Shen Bowen and Zhao Yujia are still to run would give their
+Xia Yanran, Shen Bowen and Zhao Yujia were still to run would have given their
 batteries a different fingerprint from Rohit's and Huang Yu's, and the brief is
-explicit that drift "silently voids the whole battery". `--apply` enforces
-this in code: it compares each roster member's committed battery with today's
-frozen fingerprint and refuses while any is missing.
+explicit that drift "silently voids the whole battery". `--apply` enforced
+this in code: it compared each roster member's committed battery with the
+frozen fingerprint and refused while any was missing.
 
 ## What it changes, and the live failure behind each change
 
@@ -50,6 +53,14 @@ frozen fingerprint and refuses while any is missing.
   `test_regrade_offline.py` 36 · `test_cost_model.py` 4. Deliberately disabling
   the final check fails 37b–37e; removing the letter's narrative check fails
   35a and 35j.
+- **After the merge (2026-09-15, re-run on a clean clone of the merged tree):**
+  - `run_eval.py` 60/60; guardrails 16/16 must-fire and 1/1 must-not-fire,
+    identical twice;
+  - `test_battery_fake.py` 113, which adds 31c: a dry run keeps its own decision
+    ledger;
+  - `test_judge_fake.py` 54 · `test_cost_model.py` 4;
+  - `test_regrade_offline.py` 40, which adds 7c: a Windows-checkout run is
+    re-scored with its own harness, not the upgraded one.
 
 **Projection** (`replay_projection.py`): the recorded trials, with the models'
 choices held fixed, through the upgraded letter, final check and harness. The
@@ -85,10 +96,10 @@ approvals without a letter.
 
 ## After `--apply`
 
-1. Run the free suite (the commands `--apply` prints) and commit on `main`.
-2. Update `docs/D2b_descriptors.md` (v3 and its hash), `docs/D3b_guardrail_checklist.md`
-   (18 cases), and the test counts in `README.md`, `CLAUDE.md` and `COMMANDS.md`.
-3. Set `prompt_version: "v3"` in `evals/battery_roster.json` for whoever re-runs.
+1. ~~Run the free suite (the commands `--apply` prints) and commit on `main`.~~ Done, `7c99753`.
+2. ~~Update `docs/D2b_descriptors.md` (v3 and its hash), `docs/D3b_guardrail_checklist.md`
+   (18 cases), and the test counts in `README.md`, `CLAUDE.md` and `COMMANDS.md`.~~ Done 2026-09-15.
+3. Only if someone re-runs: set `prompt_version: "v3"` in `evals/battery_roster.json` for whoever re-runs.
    gpt-4.1-mini is about US$0.19 billed; Haiku 4.5 about US$1.27. Report v2 → v3 as
    a separate comparison, not as rows in the v2 table.
 4. Optional: add `facts` to `RECORD_FIELDS` in `evals/graders/judge.py`, so the judge

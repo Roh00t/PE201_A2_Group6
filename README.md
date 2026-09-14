@@ -46,10 +46,10 @@ Other entry points:
 ```bash
 python3 run_eval.py CLM-8842        # one case, every turn, with the decision record
 python3 run_eval.py --prompt        # exactly what a live model is sent, and its token cost
-python3 evals/run_guardrails.py --twice               # D3(b), 15 guardrail cases
+python3 evals/run_guardrails.py --twice               # D3(b), 18 guardrail cases
 python3 experiments/demo_loop_failure.py              # D7 failure 1 · loop control
 python3 experiments/demo_tool_interface_failure.py    # D7 failure 2 · tool interface
-python3 evals/test_battery_fake.py                    # 35 battery failure modes rehearsed
+python3 evals/test_battery_fake.py                    # 113 battery failure modes rehearsed
 python3 evals/test_cost_model.py                      # D6 arithmetic
 ```
 
@@ -77,7 +77,7 @@ evals/
   battery_provenance.py          fingerprint, roster rules, derived trial count
   battery_checkpoint.py          fsync'd JSONL, resume, lock
   aggregate_battery.py           the report §3 table + the v1/v2 delta
-  test_battery_fake.py           60 checks against a fake vendor, free
+  test_battery_fake.py           113 checks against a fake vendor, free
   guardrail_cases.json           D3(b) checklist            <- Huang Yu
 data/
   make_fixtures_A.py             the generator — EXTRA_* block is where cases are added
@@ -288,7 +288,7 @@ deleting the canonical file empties the D5(b) table.
 ### The runner underneath
 
 ```bash
-python3 evals/test_battery_fake.py             # 60 checks, no key, no cost
+python3 evals/test_battery_fake.py             # 113 checks, no key, no cost
 python3 run_battery.py --member <name> --dry-run
 python3 run_battery.py --member <name> --verify-drift   # paste this in the group chat
 python3 run_battery.py --member <name>         # the live run. Spends YOUR key.
@@ -358,10 +358,10 @@ What remains is the live battery, and it runs tomorrow.**
 | **D0 · Why an agent** | `docs/D0_why_an_agent.md` — ladder placement, both Capsule 1 tests, evaluation-vs-guardrail distinction, autonomy defended against the irreversible step. `docs/D0c_what_good_looks_like.md` committed at `c66193f`, **before** the first agent-code commit |
 | **D1 · The agent** | Hand-rolled ReAct loop, multi-call turns, instrumented per run — turns, tokens in/out, cost, per-turn tokens, guardrail events |
 | **D2(a) · Tool set** | 7 tools scored against the three questions. None added: `check_coverage` was widened instead. `lookup_hospital` named as the weak tool and kept with the reason stated |
-| **D2(b) · Descriptors** | Seven six-field descriptors, runtime poka-yoke at the boundary, v1→v2 measured: 847 → 1,756 descriptor tokens, `sha(v1) ≠ sha(v2)` |
+| **D2(b) · Descriptors** | Seven six-field descriptors, runtime poka-yoke at the boundary, v1→v2 measured: 847 → 1,756 descriptor tokens, `sha(v1) ≠ sha(v2)`. Live, model held fixed (`qwen3-235b`): 31/60 → 41/60, negative 3-of-3 1/10 → 4/10, at +136% input tokens |
 | **D2(c) · Multi-tool turns** | Measured both ways: 357 → 211 turns, **−41% turns, −53% input tokens**, 60/60 either way |
 | **D3(a) · Guardrail code** | Step cap · budget ceiling · action de-duplication · autonomy gate · narrative guard. All in code, none in the prompt |
-| **D3(b) · Checklist** | 15 scripted cases — 13/13 must-fire, 1/1 must-not-fire, 1 documented `known_limit`, identical across `--twice` |
+| **D3(b) · Checklist** | 18 scripted cases — 16/16 must-fire, 1/1 must-not-fire, 1 documented `known_limit`, identical across `--twice` |
 | **D4 · Evaluation set** | **40 cases · 10 negative · 30 ordinary · 60 trials**, derived not typed. Custom labels in `data/expected_outcomes_A.json`. **Both** check kinds implemented — the deterministic code check and the semantic judgement check |
 | **D5(a) · Scripted run** | **60 of 60** from a clean clone, no key. `BACKEND = "scripted"` is the committed default |
 | **D6 · Cost model** | Three layers, ±10pp sensitivity, break-even and the three caps in `src/cost_model.py`; four levers documented with measured before/after. **It refuses null inputs** — the measured figures arrive with the battery |
