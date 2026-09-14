@@ -46,7 +46,7 @@ frozen fingerprint and refuses while any is missing.
   breaks; a guard reading the fixtures directly would have hidden it.
 - Guardrail checklist 16/16 must-fire (was 13/13), 1/1 must-not-fire, GR-15's
   paraphrase still a documented miss, identical twice.
-- `test_battery_fake.py` 105 passed (was 63) · `test_judge_fake.py` 54 ·
+- `test_battery_fake.py` 112 passed (70 on the frozen tree; the patch adds 42) · `test_judge_fake.py` 54 ·
   `test_regrade_offline.py` 36 · `test_cost_model.py` 4. Deliberately disabling
   the final check fails 37b–37e; removing the letter's narrative check fails
   35a and 35j.
