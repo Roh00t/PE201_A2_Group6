@@ -1,0 +1,697 @@
+{
+  "answer_key_sha256": "1cd26cc1bf91c7da0ee7ca4ed2707c42ef87a0676820ed19ff237c38e07db756",
+  "fixes": {
+    "letter_rule": "an approve_in_principle fails unless a ledger row shows its decision letter was sent (brief D4: gated action fired exactly once)",
+    "underscore": "missing-item comparison treats '_' as ' ' on both sides"
+  },
+  "harness_sha256": "6ce395063fe5e101d711b02b6020f072d728eaaabdd547737cce4e38c6547668",
+  "runs": [
+    {
+      "answer_key_sha256": "1cd26cc1bf91c7da0ee7ca4ed2707c42ef87a0676820ed19ff237c38e07db756",
+      "archived": false,
+      "changes": [
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 1,
+          "why": "missing {'document': 'itemised_bill', 'line_code': '45378', 'date_of_service': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        },
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 2,
+          "why": "missing {'document': 'itemised_bill', 'line_code': '45378', 'date_of_service': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        },
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 3,
+          "why": "missing {'document': 'itemised_bill', 'line_code': '45378', 'date_of_service': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        }
+      ],
+      "date": "2026-09-13",
+      "file": "results/live/battery__rohit_panda__anthropic-claude-haiku-4.5__v2__2026-09-13__d05a3189ca96.json",
+      "ledger": "logs/battery/decisions__rohit_panda__d05a3189ca96.jsonl",
+      "letter_rule_exact": true,
+      "member": "rohit_panda",
+      "model": "anthropic/claude-haiku-4.5",
+      "prompt_version": "v2",
+      "rescored_matches_recorded": true,
+      "run_id": "d05a3189ca96",
+      "started": "2026-09-13T13:27:20",
+      "summaries": {
+        "both": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 9,
+            "consistency": 0.9,
+            "rate": 0.9,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 1.0,
+            "trials": 30
+          },
+          "pass_rate": 0.95,
+          "passed": 57,
+          "trials_graded": 60
+        },
+        "letter_rule": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 8,
+            "consistency": 0.8,
+            "rate": 0.8,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 1.0,
+            "trials": 30
+          },
+          "pass_rate": 0.9,
+          "passed": 54,
+          "trials_graded": 60
+        },
+        "recorded": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 8,
+            "consistency": 0.8,
+            "rate": 0.8,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 1.0,
+            "trials": 30
+          },
+          "pass_rate": 0.9,
+          "passed": 54,
+          "trials_graded": 60
+        },
+        "rescored": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 8,
+            "consistency": 0.8,
+            "rate": 0.8,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 1.0,
+            "trials": 30
+          },
+          "pass_rate": 0.9,
+          "passed": 54,
+          "trials_graded": 60
+        },
+        "underscore": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 9,
+            "consistency": 0.9,
+            "rate": 0.9,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 1.0,
+            "trials": 30
+          },
+          "pass_rate": 0.95,
+          "passed": 57,
+          "trials_graded": 60
+        }
+      },
+      "unkeyed_cases": []
+    },
+    {
+      "answer_key_sha256": "1cd26cc1bf91c7da0ee7ca4ed2707c42ef87a0676820ed19ff237c38e07db756",
+      "archived": false,
+      "changes": [
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 1,
+          "why": "missing 'itemised_bill for code 45378 on 2026-09-10', expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        },
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 2,
+          "why": "missing {'item': 'itemised_bill', 'line_code': '45378', 'date': '2026-09-10'}, expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        },
+        {
+          "case_id": "CLM-8901",
+          "fix": "underscore",
+          "from": false,
+          "to": true,
+          "trial": 3,
+          "why": "missing 'itemised_bill for code 45378 on 2026-09-10', expected 'itemised bill for line 45378' (does not name the document 'itemised bill')"
+        },
+        {
+          "case_id": "CLM-9005",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9006",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9010",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9016",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        },
+        {
+          "case_id": "CLM-9023",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        }
+      ],
+      "date": "2026-09-13",
+      "file": "results/live/battery__huang_yu__openai-gpt-4.1-mini__v2__2026-09-13__8f968b0d3782.json",
+      "ledger": "logs/battery/decisions__huang_yu__8f968b0d3782.jsonl",
+      "letter_rule_exact": true,
+      "member": "huang_yu",
+      "model": "openai/gpt-4.1-mini",
+      "prompt_version": "v2",
+      "rescored_matches_recorded": true,
+      "run_id": "8f968b0d3782",
+      "started": "2026-09-13T16:09:03",
+      "summaries": {
+        "both": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 7,
+            "consistency": 0.7,
+            "rate": 0.7,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.8333333333333334,
+            "trials": 30
+          },
+          "pass_rate": 0.7666666666666667,
+          "passed": 46,
+          "trials_graded": 60
+        },
+        "letter_rule": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 6,
+            "consistency": 0.6,
+            "rate": 0.6,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.8333333333333334,
+            "trials": 30
+          },
+          "pass_rate": 0.7166666666666667,
+          "passed": 43,
+          "trials_graded": 60
+        },
+        "recorded": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 6,
+            "consistency": 0.6,
+            "rate": 0.6,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 1.0,
+            "trials": 30
+          },
+          "pass_rate": 0.8,
+          "passed": 48,
+          "trials_graded": 60
+        },
+        "rescored": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 6,
+            "consistency": 0.6,
+            "rate": 0.6,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 1.0,
+            "trials": 30
+          },
+          "pass_rate": 0.8,
+          "passed": 48,
+          "trials_graded": 60
+        },
+        "underscore": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 7,
+            "consistency": 0.7,
+            "rate": 0.7,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 1.0,
+            "trials": 30
+          },
+          "pass_rate": 0.85,
+          "passed": 51,
+          "trials_graded": 60
+        }
+      },
+      "unkeyed_cases": []
+    },
+    {
+      "answer_key_sha256": "1cd26cc1bf91c7da0ee7ca4ed2707c42ef87a0676820ed19ff237c38e07db756",
+      "archived": true,
+      "changes": [],
+      "date": "2026-09-12",
+      "file": "results/archive/live/battery__rohit_panda__meta-llama-llama-3.1-8b-instruct__v2__2026-09-12__83bdbe168d2a.json",
+      "ledger": null,
+      "letter_rule_exact": false,
+      "member": "rohit_panda",
+      "model": "meta-llama/llama-3.1-8b-instruct",
+      "prompt_version": "v2",
+      "rescored_matches_recorded": true,
+      "run_id": "83bdbe168d2a",
+      "started": "2026-09-12T14:39:04",
+      "summaries": {
+        "both": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.0,
+            "trials": 30
+          },
+          "pass_rate": 0.0,
+          "passed": 0,
+          "trials_graded": 60
+        },
+        "letter_rule": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.0,
+            "trials": 30
+          },
+          "pass_rate": 0.0,
+          "passed": 0,
+          "trials_graded": 60
+        },
+        "recorded": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.0,
+            "trials": 30
+          },
+          "pass_rate": 0.0,
+          "passed": 0,
+          "trials_graded": 60
+        },
+        "rescored": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.0,
+            "trials": 30
+          },
+          "pass_rate": 0.0,
+          "passed": 0,
+          "trials_graded": 60
+        },
+        "underscore": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.0,
+            "trials": 30
+          },
+          "pass_rate": 0.0,
+          "passed": 0,
+          "trials_graded": 60
+        }
+      },
+      "unkeyed_cases": []
+    },
+    {
+      "answer_key_sha256": "1cd26cc1bf91c7da0ee7ca4ed2707c42ef87a0676820ed19ff237c38e07db756",
+      "archived": true,
+      "changes": [
+        {
+          "case_id": "CLM-8842",
+          "fix": "letter_rule",
+          "from": true,
+          "to": false,
+          "trial": 1,
+          "why": "approve_in_principle without a sent letter (issue_decision_letter was never called)"
+        }
+      ],
+      "date": "2026-09-13",
+      "file": "results/archive/live/battery__rohit_panda__meta-llama-llama-3.1-8b-instruct__v2__2026-09-13__b4944646db6d.json",
+      "ledger": null,
+      "letter_rule_exact": false,
+      "member": "rohit_panda",
+      "model": "meta-llama/llama-3.1-8b-instruct",
+      "prompt_version": "v2",
+      "rescored_matches_recorded": true,
+      "run_id": "b4944646db6d",
+      "started": "2026-09-13T10:06:51",
+      "summaries": {
+        "both": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.0,
+            "trials": 30
+          },
+          "pass_rate": 0.0,
+          "passed": 0,
+          "trials_graded": 60
+        },
+        "letter_rule": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.0,
+            "trials": 30
+          },
+          "pass_rate": 0.0,
+          "passed": 0,
+          "trials_graded": 60
+        },
+        "recorded": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.03333333333333333,
+            "trials": 30
+          },
+          "pass_rate": 0.016666666666666666,
+          "passed": 1,
+          "trials_graded": 60
+        },
+        "rescored": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.03333333333333333,
+            "trials": 30
+          },
+          "pass_rate": 0.016666666666666666,
+          "passed": 1,
+          "trials_graded": 60
+        },
+        "underscore": {
+          "negative": {
+            "cases": 10,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 30
+          },
+          "ordinary": {
+            "rate": 0.03333333333333333,
+            "trials": 30
+          },
+          "pass_rate": 0.016666666666666666,
+          "passed": 1,
+          "trials_graded": 60
+        }
+      },
+      "unkeyed_cases": []
+    },
+    {
+      "answer_key_sha256": "1cd26cc1bf91c7da0ee7ca4ed2707c42ef87a0676820ed19ff237c38e07db756",
+      "archived": true,
+      "changes": [],
+      "date": "2026-09-13",
+      "file": "results/archive/live/battery__rohit_panda__meta-llama-llama-3.1-8b-instruct__v2__2026-09-13__7462a14e17e9.json",
+      "ledger": null,
+      "letter_rule_exact": false,
+      "member": "rohit_panda",
+      "model": "meta-llama/llama-3.1-8b-instruct",
+      "prompt_version": "v2",
+      "rescored_matches_recorded": true,
+      "run_id": "7462a14e17e9",
+      "started": "2026-09-13T11:05:56",
+      "summaries": {
+        "both": {
+          "negative": {
+            "cases": 1,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 3
+          },
+          "ordinary": {
+            "rate": 0.0,
+            "trials": 4
+          },
+          "pass_rate": 0.0,
+          "passed": 0,
+          "trials_graded": 7
+        },
+        "letter_rule": {
+          "negative": {
+            "cases": 1,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 3
+          },
+          "ordinary": {
+            "rate": 0.0,
+            "trials": 4
+          },
+          "pass_rate": 0.0,
+          "passed": 0,
+          "trials_graded": 7
+        },
+        "recorded": {
+          "negative": {
+            "cases": 1,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 3
+          },
+          "ordinary": {
+            "rate": 0.0,
+            "trials": 4
+          },
+          "pass_rate": 0.0,
+          "passed": 0,
+          "trials_graded": 7
+        },
+        "rescored": {
+          "negative": {
+            "cases": 1,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 3
+          },
+          "ordinary": {
+            "rate": 0.0,
+            "trials": 4
+          },
+          "pass_rate": 0.0,
+          "passed": 0,
+          "trials_graded": 7
+        },
+        "underscore": {
+          "negative": {
+            "cases": 1,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 3
+          },
+          "ordinary": {
+            "rate": 0.0,
+            "trials": 4
+          },
+          "pass_rate": 0.0,
+          "passed": 0,
+          "trials_graded": 7
+        }
+      },
+      "unkeyed_cases": []
+    },
+    {
+      "answer_key_sha256": "1cd26cc1bf91c7da0ee7ca4ed2707c42ef87a0676820ed19ff237c38e07db756",
+      "archived": true,
+      "changes": [],
+      "date": "2026-09-13",
+      "file": "results/archive/live/battery__rohit_panda__anthropic-claude-haiku-4.5__v2__2026-09-13__837857b1f026.json",
+      "ledger": null,
+      "letter_rule_exact": false,
+      "member": "rohit_panda",
+      "model": "anthropic/claude-haiku-4.5",
+      "prompt_version": "v2",
+      "rescored_matches_recorded": true,
+      "run_id": "837857b1f026",
+      "started": "2026-09-13T13:14:30",
+      "summaries": {
+        "both": {
+          "negative": {
+            "cases": 1,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 3
+          },
+          "ordinary": {
+            "rate": 1.0,
+            "trials": 4
+          },
+          "pass_rate": 0.5714285714285714,
+          "passed": 4,
+          "trials_graded": 7
+        },
+        "letter_rule": {
+          "negative": {
+            "cases": 1,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 3
+          },
+          "ordinary": {
+            "rate": 1.0,
+            "trials": 4
+          },
+          "pass_rate": 0.5714285714285714,
+          "passed": 4,
+          "trials_graded": 7
+        },
+        "recorded": {
+          "negative": {
+            "cases": 1,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 3
+          },
+          "ordinary": {
+            "rate": 1.0,
+            "trials": 4
+          },
+          "pass_rate": 0.5714285714285714,
+          "passed": 4,
+          "trials_graded": 7
+        },
+        "rescored": {
+          "negative": {
+            "cases": 1,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 3
+          },
+          "ordinary": {
+            "rate": 1.0,
+            "trials": 4
+          },
+          "pass_rate": 0.5714285714285714,
+          "passed": 4,
+          "trials_graded": 7
+        },
+        "underscore": {
+          "negative": {
+            "cases": 1,
+            "cases_3of3": 0,
+            "consistency": 0.0,
+            "rate": 0.0,
+            "trials": 3
+          },
+          "ordinary": {
+            "rate": 1.0,
+            "trials": 4
+          },
+          "pass_rate": 0.5714285714285714,
+          "passed": 4,
+          "trials_graded": 7
+        }
+      },
+      "unkeyed_cases": []
+    }
+  ]
+}
