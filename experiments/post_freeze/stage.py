@@ -30,7 +30,8 @@ this staging directory in as it is on disk, and checks:
     7  the projection over the committed batteries, printed
 
 --apply refuses unless src/ evals/ data/ are clean and every roster member
-has a committed battery whose fingerprint matches today's frozen tree. It
+has a committed battery whose fingerprint matches today's frozen tree, line
+endings aside (a Windows checkout hashes CRLF bytes; evals/line_endings.py). It
 applies the patch and stops. It does not commit; a person does, on main.
 ====================================================================
 """
@@ -78,20 +79,39 @@ def fingerprint(tree):
 # --status
 # =====================================================================
 def member_status():
+    """(member, model, prompt version, matched battery or None, note) per roster row.
+
+    A battery run on a Windows checkout records CRLF-byte hashes for the
+    answer key, the fixtures and the pinned sources, although the content is
+    today's (evals/line_endings.py). It matches when those fields are today's
+    content in either line-ending form and everything else matches exactly.
+    """
     frozen = fingerprint(ROOT)
+    for p in (ROOT, os.path.join(ROOT, "src")):
+        if p not in sys.path:
+            sys.path.insert(0, p)
+    from evals import line_endings
+    forms = line_endings.variants(frozen.get("problem") or "A")
     with open(os.path.join(ROOT, "evals", "battery_roster.json"), encoding="utf-8") as fh:
         roster = json.load(fh)
     rows = []
     for entry in roster.get("members", []):
         member = entry["member"]
-        matched = None
+        matched = note = None
         for path in sorted(glob.glob(os.path.join(
                 ROOT, "results", "live", "battery__%s__*.json" % member))):
             with open(path, encoding="utf-8") as fh:
                 fp = json.load(fh).get("fingerprint") or {}
             if all(fp.get(k) == frozen[k] for k in COMPARED):
+                matched, note = os.path.relpath(path, ROOT), None
+                continue
+            same, eols = line_endings.same_content(fp, forms)
+            if same and all(fp.get(k) == frozen[k] for k in COMPARED
+                            if k not in line_endings.BYTE_HASHED):
                 matched = os.path.relpath(path, ROOT)
-        rows.append((member, entry.get("model"), entry.get("prompt_version"), matched))
+                note = ("Windows line endings, same content"
+                        if "crlf" in eols else None)
+        rows.append((member, entry.get("model"), entry.get("prompt_version"), matched, note))
     return rows
 
 
@@ -102,9 +122,11 @@ def status():
     rows = member_status()
     print("\n  THE FREEZE - a battery counts only if its fingerprint matches today's tree")
     print("  " + "-" * 92)
-    for member, model, version, matched in rows:
+    for member, model, version, matched, note in rows:
         print("  %-12s %-34s %-3s %s" % (member, model, version,
                                          matched or "NOT RUN on the frozen fingerprint"))
+        if note:
+            print("  %-52s ^ %s" % ("", note))
     waiting = [r[0] for r in rows if not r[3]]
     print("  " + "-" * 92)
     if waiting:

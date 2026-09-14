@@ -35,47 +35,68 @@ python3 evals/metrics.py results/archive/live/<file>.json
 
 ## Provider fault — li_yunke, `qwen/qwen3-235b-a22b-2507`, v2, 2026-09-14
 
-Two complete batteries on one day, with the same answer key (`1cd26cc1bf91`),
+Three complete batteries on one day, with the same answer key (`1cd26cc1bf91`),
 plan (`5952ce9e5763`) and v2 prompt (`60c5e4344f24`). OpenRouter sent each call
-to one of ten providers. **DeepInfra answered 28 of its 42 calls with text that
+to one of ten providers. **DeepInfra answered 33 of its 50 calls with text that
 is not an action:** a blank line after every word (`"an\n\nerror"`,
 `"a\n\nnew\n\nline"`), even inside JSON, or a single token. The other nine
-providers answered 412 calls and none was unparseable.
+providers answered 661 calls and none was unparseable.
 
-| Run | Commit | Recorded | DeepInfra calls · unparseable | Trials that reached DeepInfra | Trials that never did |
-|---|---|---|---|---|---|
-| `battery__li_yunke__…__e7dd3797c778.json` | `ecc3ab5` | 41/60 (68.3%) | 19 · 12 | 2/18 passed | 39/42 passed |
-| `battery__li_yunke__…__6dfb98e18210.json` | `7bfa43d` | 37/60 (61.7%) | 23 · 16 | 3/21 passed | 34/39 passed |
+| Run | Where | Commit | Recorded | DeepInfra calls · unparseable | Trials that reached DeepInfra | Trials that never did | Battery US$ |
+|---|---|---|---|---|---|---|---|
+| `battery__li_yunke__…__e7dd3797c778.json` | `results/live/` — **her row** | `ecc3ab5` | 41/60 (68.3%) | 19 · 12 | 2/18 passed | 39/42 passed | 0.0858 |
+| `battery__li_yunke__…__6dfb98e18210.json` | here | `7bfa43d` | 37/60 (61.7%) | 23 · 16 | 3/21 passed | 34/39 passed | 0.0803 |
+| `battery__li_yunke__…__ecb1ca22c1c3.json` | here | `0e1a590` | 49/60 (81.7%) | 8 · 5 | 2/7 passed | 47/53 passed | 0.0951 |
 
-The gap between two identical runs is routing, not the model or the prompt. It
-would also drown D2(b): Zhao Yujia's v1 pass runs on this model, and a v1→v2
-difference cannot be read against a four-trial swing between two v2 runs. The
-trials that never reached DeepInfra passed 73 of 81 (90.1%); they were selected
-after the fact, so that is a diagnostic, not a pass rate.
+**What happened, in order.**
 
-**Declared before the replacement run.** From 2026-09-14, every battery still to
-run (li_yunke's third run, zhao_yujia, shen_bowen, xia_yanran) uses an
-OpenRouter account with **DeepInfra in Ignored Providers**
-(openrouter.ai/settings/privacy), and li_yunke's third run takes her row in the
-D5(b) table. The evidence is on this model only; for the other models it is a
-precaution that keeps every remaining run on the same routing rule. Each call's
-provider is in the record, so the rule is checked, not assumed:
+1. After runs 1 and 2, `0e1a590` (19:50) declared that every battery still to
+   run would use an OpenRouter account with DeepInfra in Ignored Providers, and
+   that li_yunke's third run would take her row.
+2. Run 3 (19:53–20:17) ran on an account with that setting, and DeepInfra still
+   answered 8 calls in 7 trials, spread from 19:56 to 20:13.
+   `python3 experiments/provider_audit.py` failed it. The records cannot show
+   whether the setting was missing from the account behind that key or was not
+   applied.
+3. **Decision, after run 3: stop re-running.** Her row is her first complete
+   run, `e7dd3797c778`, chosen by a rule that does not look at scores. Runs 2
+   and 3 are replications. **The DeepInfra rule is withdrawn**, so zhao_yujia's
+   v1 pass ran on default routing, as her row did: 14 of its trials reached
+   DeepInfra, and 2 of those 20 replies were unparseable.
 
-```bash
-python3 experiments/provider_audit.py
-```
+**How to read her row.**
 
-**Judgement check.** `e7dd3797c778` has 18 of 40 cases judged: it was resumed
-before `57121af`, when a resumed battery queued only the cases that ran after
-the resume. `6dfb98e18210` has all 40, and 18 pass as written but **17** is
-correct. Its CLM-8941 record is an unparseable reply (1 output token). The judge
-marked both required items "present", citing "model did not return parseable
-JSON" as the evidence, while its own reason says both were absent;
-`parse_verdict` counts the per-item verdicts. The judged file is left as the
-judge wrote it.
+- Identical v2 runs scored 37–49/60, and the score falls as DeepInfra exposure
+  rises: 18 trials reached it and the run scored 41, 21 scored 37, and 7
+  scored 49.
+- Read the v1→v2 difference (zhao_yujia 31/60) against that spread.
+- Trials never routed to DeepInfra passed 120/134 (89.6%) on v2 and 23/46 (50%)
+  on v1. Those trials were selected after the fact, so these are diagnostics,
+  not pass rates.
+- DeepInfra's junk rate was 66% on v2's 3,134-token first prompt and 10% on v1's
+  1,106-token one, so the fault costs v2 more than v1.
 
-**The rest of each run stays where its records point.** Member copies and
-judged files: `results/live/li_yunke/`. Ledgers: `logs/battery/`. Checkpoints:
-`results/live/checkpoints/`. Judge spend, both D6 inputs:
-`results/judge/judge_usage__mistralai-mistral-small-2603__li_yunke__qwen-qwen3-235b-a22b-2507__2026-09-14__e7dd3797c778.json`
-(US$0.0077) and `…__6dfb98e18210.json` (US$0.0162).
+**Judgement check.**
+
+- `e7dd3797c778` has 18 of 40 cases judged. It was resumed before `57121af`,
+  when a resumed battery queued only the cases that ran after the resume.
+  `python3 experiments/complete_judgement.py --member li_yunke` judges the other
+  22 and keeps the 18.
+- `6dfb98e18210` has all 40 judged. 18 pass as written, but **17** is correct.
+  Its CLM-8941 record is an unparseable reply (1 output token). The judge marked
+  both required items "present", citing "model did not return parseable JSON"
+  as the evidence, while its own reason says both were absent, and
+  `parse_verdict` counts the per-item verdicts. The judged file is left as the
+  judge wrote it.
+- `ecb1ca22c1c3` has all 40 judged, 26 pass, and none of those passes is on one
+  of its five unparseable records.
+
+**The rest of each run stays where its records point.**
+
+- Member copies and judged files: `results/live/li_yunke/`.
+- Ledgers: `logs/battery/`.
+- Checkpoints: `results/live/checkpoints/`.
+- Judge spend, all D6 inputs, in `results/judge/`:
+  `judge_usage__mistralai-mistral-small-2603__li_yunke__qwen-qwen3-235b-a22b-2507__2026-09-14__<run id>.json`,
+  at US$0.0077 (`e7dd3797c778`), US$0.0162 (`6dfb98e18210`) and US$0.0165
+  (`ecb1ca22c1c3`). Finishing run 1 adds `…__e7dd3797c778__pass2.json`.
