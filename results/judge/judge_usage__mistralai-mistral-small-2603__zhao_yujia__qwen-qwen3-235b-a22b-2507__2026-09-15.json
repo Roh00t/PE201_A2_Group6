@@ -1,0 +1,14 @@
+{
+  "judge_model": "mistralai/mistral-small-2603",
+  "graded_file": "results/live/zhao_yujia/problemA__live_zhao_yujia_qwen_qwen3-235b-a22b-2507_2026-09-14.json",
+  "judge_prompt_sha256": "4eae05871a406255b9bc0be21dc51d5a7b456f9b5107d26008635f2a1c6db670",
+  "items_judged": 40,
+  "tokens_in": 61861,
+  "tokens_out": 6858,
+  "graded_member": "zhao_yujia",
+  "graded_model": "qwen/qwen3-235b-a22b-2507",
+  "cost_usd": 0.013964,
+  "cost_source": "measured - OpenRouter usage.cost, summed per call",
+  "date": "2026-09-15",
+  "note": "live spend OUTSIDE the D5(b) battery - it does not pass through run_battery, so D6 must add this file as an input or it under-reports the OpenRouter bill"
+}
