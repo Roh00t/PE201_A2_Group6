@@ -114,6 +114,8 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
     # On the scripted backend the gate auto-approves so the run stays
     # deterministic. The RECORD still shows the gate was reached and
     # passed, which is what a marker looks for.
+    # This fallback depends on the callback, not the backend: a live caller
+    # that omits `approve` also auto-passes a confirm gate.
     if approve is None:
         approve = lambda action, payload: True
 
@@ -134,6 +136,8 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
                 print("  %-9s · %s" % (label, move.get("thought", "")[:88]))
 
             # ---- conclude -------------------------------------------
+            # The current loop trusts this final mapping; the stricter final
+            # validator exists only in the unapplied post-freeze upgrade.
             if "final" in move:
                 record = dict(move["final"])
                 # A backend may name the thing that ended the run - an
@@ -161,6 +165,8 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
             calls = move.get("calls") or [(move["tool"], move["args"])]
             observations = []
 
+            # Grouping saves model turns, but dispatch remains one call at a
+            # time; this block does not execute tools concurrently.
             for name, args in calls:
                 # DUPLICATE ACTION: halt, or correct and continue.
                 #

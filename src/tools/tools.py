@@ -110,6 +110,8 @@ _DECIDED_THIS_RUN = set()
 _RUN_CONTEXT = {}
 
 
+# These containers are module-global: reset isolates serial runs, while
+# overlapping run_case calls in one process would share and mutate them.
 def reset_decision_state():
     """Clear per-run gated-action state. Called at the top of every run."""
     _DECIDED_THIS_RUN.clear()
@@ -744,6 +746,8 @@ def issue_decision_letter(
                                 claim_id, expected_total)}
 
     # ---- the write ---------------------------------------------------
+    # The duplicate marker precedes the disk append, so a write failure keeps
+    # this claim blocked in memory until the next state reset.
     _DECIDED_THIS_RUN.add(claim_id)
     # THE LEDGER ROW. Not a letter, not a template, not prose - the
     # brief is explicit that no marks live in the wording. What earns

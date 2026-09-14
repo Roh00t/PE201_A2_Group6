@@ -77,6 +77,8 @@ def calculate(doc):
         raise ValueError("deployed_model must name one entry in models")
     deployed = models[deployed_name]
 
+    # Caps are validated and reproduced in the report; this calculator does
+    # not apply them to the projected monthly cost.
     cap_rows = doc.get("caps") or {}
     required_caps = ("step_cap", "budget_ceiling_tokens_per_run",
                      "monthly_limit_per_user")
@@ -117,6 +119,8 @@ def calculate(doc):
         expensive = models[expensive_name]
         c = cheap["layer1_variable_usd_per_task"]
         e = expensive["expected_usd_per_task_before_fixed"]
+        # This formula assumes a non-zero failure cost; the general numeric
+        # validation permits zero, which would raise a division error here.
         raw = 1 - (e - c) / failure_cost
         result["cheap_model_break_even"] = {
             "cheap_model": cheap_name,

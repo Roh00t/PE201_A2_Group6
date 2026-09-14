@@ -292,6 +292,8 @@ def parse_verdict(content, expected_items):
     if not isinstance(items, list):
         return False, [], "judge response has no `items` list"
 
+    # The parser checks verdict vocabulary and item count, but it does not
+    # compare the returned item labels with `expected_items`.
     clean, absent = [], []
     for entry in items:
         if not isinstance(entry, dict):
