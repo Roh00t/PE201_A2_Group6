@@ -181,9 +181,17 @@ def apply_runtime_config(entry, key, run_id, dry_run):
     # appends to it; six members sharing it means merge conflicts on an
     # append-only file and six indistinguishable ledgers. This is a module
     # global read at call time, so no source change is needed.
+    #
+    # A DRY RUN KEEPS ITS OWN LEDGER, as it keeps its own checkpoint
+    # (battery_checkpoint.path_for). A dry run and a live run at the same
+    # commit share a run_id, so both used to append to one file: five
+    # committed live ledgers from 2026-09-13/14 (huang_yu, li_yunke x2,
+    # xia_yanran, zhao_yujia) each carry a rehearsal's 30 scripted rows.
+    # experiments/regrade_offline.py reads only backend "live" rows, which is
+    # why its letter rule was unaffected.
     tools.DECISION_LOG_PATH = os.path.join(
-        ROOT, "logs", "battery", "decisions__%s__%s.jsonl"
-        % (entry["member"], run_id))
+        ROOT, "logs", "battery", "dryrun" if dry_run else "",
+        "decisions__%s__%s.jsonl" % (entry["member"], run_id))
 
 
 def assert_invariants(roster, entry, dry_run):

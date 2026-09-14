@@ -10,4 +10,8 @@ results/tmp/
 logs/*.local
 results.json
 results/live/checkpoints/*.lock
+# Rehearsals, never evidence: run_live_battery.py --dry-run writes here. Files
+# committed before these lines stay tracked; new dry runs are ignored.
+results/live/dryrun/
+logs/battery/dryrun/
 

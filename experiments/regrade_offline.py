@@ -73,6 +73,7 @@ sys.path.insert(0, os.path.join(ROOT, "src"))
 sys.path.insert(0, ROOT)
 
 from evals import harness                                  # noqa: E402
+from evals import line_endings                             # noqa: E402
 from evals.run_battery import aggregate                    # noqa: E402
 
 LIVE = os.path.join(ROOT, "results", "live", "battery__*.json")
@@ -111,26 +112,46 @@ def _load_module(path, sha):
 
 
 def load_grader(sha, commit=None):
-    """(module, how) - evals/harness.py exactly as a run was graded by it."""
+    """(module, how) - evals/harness.py exactly as a run was graded by it.
+
+    A battery run on a Windows checkout records the hash of the same
+    harness with CRLF line endings (evals/line_endings.py). Looking a copy up
+    by that hash alone found nothing, so xia_yanran's and shen_bowen's runs
+    were re-scored with TODAY'S harness - which, once the post-freeze patch
+    was applied, already contained both fixes. A copy therefore matches when
+    its bytes hash to the recorded value in either line-ending form.
+    """
     if (sha, commit) in _GRADERS:
         return _GRADERS[(sha, commit)]
     found = None
-    vendored = os.path.join(FROZEN_GRADERS, "harness_%s.py" % (sha or "")[:12])
-    if sha and os.path.exists(vendored) and sha256_file(vendored) == sha:
-        found = (_load_module(vendored, sha), "harness %s (vendored copy)" % sha[:12])
-    elif sha and commit:
+    vendored_copies = sorted(glob.glob(os.path.join(FROZEN_GRADERS, "harness_*.py"))) if sha else []
+    for vendored in vendored_copies:
+        with open(vendored, "rb") as fh:
+            data = fh.read()
+        eol = line_endings.form_of_bytes(data, sha)
+        if eol:
+            found = (_load_module(vendored, sha), "harness %s (vendored copy%s)"
+                     % (line_endings.sha256_bytes(data)[:12], _checkout_note(eol)))
+            break
+    if found is None and sha and commit:
         shown = subprocess.run(["git", "-C", ROOT, "show", "%s:evals/harness.py" % commit],
                                capture_output=True)
-        if (shown.returncode == 0
-                and hashlib.sha256(shown.stdout).hexdigest() == sha):
+        eol = line_endings.form_of_bytes(shown.stdout, sha) if shown.returncode == 0 else None
+        if eol:
             tmp = os.path.join(tempfile.mkdtemp(), "harness.py")
             with open(tmp, "wb") as fh:
                 fh.write(shown.stdout)
-            found = (_load_module(tmp, sha), "harness %s (git %s)" % (sha[:12], commit[:12]))
+            found = (_load_module(tmp, sha), "harness %s (git %s%s)"
+                     % (line_endings.sha256_bytes(shown.stdout)[:12], commit[:12],
+                        _checkout_note(eol)))
     if found is None:
         found = (harness, "TODAY'S harness - the run's own was not found")
     _GRADERS[(sha, commit)] = found
     return found
+
+
+def _checkout_note(eol):
+    return "; the run's checkout had Windows line endings" if eol == "crlf" else ""
 
 
 def grader_for(doc):

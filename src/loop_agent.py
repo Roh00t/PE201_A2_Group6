@@ -146,8 +146,11 @@ def run_case(case_id, problem=None, approve=None, verbose=False):
                 print("  %-9s · %s" % (label, move.get("thought", "")[:88]))
 
             # ---- conclude -------------------------------------------
-            # The current loop trusts this final mapping; the stricter final
-            # validator exists only in the unapplied post-freeze upgrade.
+            # The model's final mapping is not trusted as written: on
+            # Problem A, final_check.validate below compares it with what
+            # the tools returned and overrides it, sends it back once, or
+            # halts. Only an unreadable reply or an output cut at
+            # max_tokens is kept exactly as it came back.
             if "final" in move:
                 record = dict(move["final"])
                 # A backend may name the thing that ended the run - an

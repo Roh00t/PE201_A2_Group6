@@ -764,6 +764,29 @@ def scenario_dry_run_cannot_poison_live():
         refused = True
     check("31b a LIVE run refuses to resume a DRY-run checkpoint", refused)
 
+    # THE LEDGER, TOO. Same run_id, same file, until 2026-09-15: five
+    # committed live ledgers carried a dry run's 30 scripted rows.
+    from tools import tools
+    saved = (config.RUNTIME_OVERRIDE, config.BACKEND, config.MODEL,
+             config.PROMPT_VERSION, config.PRICE_IN, config.PRICE_OUT,
+             config.ALLOW_REASONING, config.DUPLICATE_RECOVERY_RETRIES,
+             config._API_KEY_RUNTIME, tools.DECISION_LOG_PATH)
+    entry = {"member": "m", "model": "a/model", "prompt_version": "v2"}
+    try:
+        rb.apply_runtime_config(entry, "sk-or-FAKE-ledger", "r", dry_run=True)
+        dry = tools.DECISION_LOG_PATH
+        rb.apply_runtime_config(entry, "sk-or-FAKE-ledger", "r", dry_run=False)
+        live = tools.DECISION_LOG_PATH
+    finally:
+        (config.RUNTIME_OVERRIDE, config.BACKEND, config.MODEL,
+         config.PROMPT_VERSION, config.PRICE_IN, config.PRICE_OUT,
+         config.ALLOW_REASONING, config.DUPLICATE_RECOVERY_RETRIES) = saved[:8]
+        config.set_api_key(saved[8])
+        tools.DECISION_LOG_PATH = saved[9]
+    check("31c a dry run's decision ledger is never the live run's, at the same run_id",
+          dry != live and os.sep + "dryrun" + os.sep in dry
+          and os.sep + "dryrun" + os.sep not in live, "%s vs %s" % (dry, live))
+
 
 def scenario_adapted_metrics():
     """The measures adapted from Karthik's metrics.py must use OUR names.

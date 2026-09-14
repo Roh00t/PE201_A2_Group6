@@ -37,12 +37,22 @@ BYTE_HASHED = ("answer_key_sha256", "fixtures_sha256", "sources_sha256")
 FORMS = ("lf", "crlf")
 
 
-def _sha(path, eol):
-    with open(path, "rb") as fh:
-        data = fh.read().replace(b"\r\n", b"\n")
+def sha256_bytes(data, eol="lf"):
+    """sha256 of `data` with every line ending rewritten to one form."""
+    data = data.replace(b"\r\n", b"\n")
     if eol == "crlf":
         data = data.replace(b"\n", b"\r\n")
     return hashlib.sha256(data).hexdigest()
+
+
+def form_of_bytes(data, sha):
+    """'lf' or 'crlf' if `data` in that form hashes to `sha`, else None."""
+    return next((eol for eol in FORMS if sha256_bytes(data, eol) == sha), None)
+
+
+def _sha(path, eol):
+    with open(path, "rb") as fh:
+        return sha256_bytes(fh.read(), eol)
 
 
 def tree_hashes(problem=None, eol="lf"):

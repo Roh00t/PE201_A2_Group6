@@ -115,7 +115,8 @@ def code_check(record, expected):
     gated = _gated_action_name()
     if gated:
         # Evidence records attempted dispatches, including a tool-level
-        # refusal, so this count does not prove that a letter was written.
+        # refusal, so this count does not prove that a letter was written;
+        # the letter_sent check below is what does.
         fired = [e for e in record.get("evidence", []) if e == gated]
         if len(fired) > 1:
             fails.append("%s fired %d times - the gated action must fire at "

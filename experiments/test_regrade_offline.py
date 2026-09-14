@@ -268,6 +268,34 @@ def scenario_graded_with_the_runs_own_harness():
           "vendored" in run["graded_with"], run["graded_with"])
 
 
+def scenario_windows_checkout_harness():
+    print("\n  7c · a run from a Windows checkout is re-scored by the same harness")
+    with open(os.path.join(rg.FROZEN_GRADERS, "harness_%s.py" % FROZEN_HARNESS_SHA[:12]), "rb") as fh:
+        crlf = hashlib.sha256(fh.read().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")).hexdigest()
+    module, how = rg.load_grader(crlf)
+    check("the CRLF hash of the frozen harness loads the vendored copy, not today's",
+          module is not rg.harness and "vendored" in how and "Windows" in how, how)
+    other = crlf[:-1] + ("0" if crlf[-1] != "0" else "1")
+    module, how = rg.load_grader(other)
+    check("a hash that matches neither form still falls back, and says so",
+          module is rg.harness and "TODAY'S" in how, how)
+
+    paths = [p for p in rg.discover()
+             if os.path.basename(p[0]).endswith(("014683ddcc79.json", "30c46384999a.json"))]
+    if len(paths) < 2:
+        print("  (skipped - shen_bowen's and xia_yanran's batteries are absent)")
+        return
+    result = rg.regrade_all(paths)
+    for run_id, member, recorded in (("014683ddcc79", "shen_bowen", 48),
+                                     ("30c46384999a", "xia_yanran", 44)):
+        run = _run(result, run_id)
+        check("%s re-scores to its recorded %d/60 with its own harness" % (member, recorded),
+              run["rescored_matches_recorded"]
+              and run["summaries"]["rescored"]["passed"] == recorded
+              and "vendored" in run["graded_with"],
+              (run["summaries"]["rescored"]["passed"], run["graded_with"]))
+
+
 def scenario_reads_only():
     print("\n  8 · the re-grade changes no battery file and no ledger")
     watched = (glob.glob(os.path.join(ROOT, "results", "live", "battery__*.json"))
@@ -310,6 +338,7 @@ def main():
                      scenario_letter_rule_scope,
                      scenario_committed_runs,
                      scenario_graded_with_the_runs_own_harness,
+                     scenario_windows_checkout_harness,
                      scenario_reads_only,
                      scenario_deterministic_output):
         scenario()
