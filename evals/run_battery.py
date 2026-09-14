@@ -58,6 +58,12 @@ from evals import harness                                  # noqa: E402
 
 LIVE_DIR = os.path.join(ROOT, "results", "live")
 
+# The results file the most recent main() wrote. run_live_battery.py copies
+# exactly this file into the member's folder, rather than guessing which
+# file on disk is newest - a guess that picks another member's battery when
+# two are run on one machine, or an old one after a git pull touches mtimes.
+LAST_RESULTS_PATH = None
+
 
 # =====================================================================
 # THE KEY
@@ -245,17 +251,25 @@ class Progress:
     Nothing here can leak a key: it reads only the graded record.
     """
 
-    def __init__(self, total, already_done, cap, dry_run):
+    def __init__(self, total, already_done, cap, dry_run, already_passed=0,
+                 already_spent=0.0):
         self.total = total
         self.done = already_done
+        self.resumed_at = already_done
         self.cap = cap
         self.dry_run = dry_run
         self.started = time.time()
-        self.passed = 0
-        self.spent = 0.0
+        # A RESUMED BATTERY COUNTS FROM WHERE IT STOPPED. These started at
+        # zero while `done` did not, so li_yunke's resumed run on 2026-09-14
+        # printed "50/60 done · 10 passed (20%)" when 35 of those 50 had
+        # passed - a figure that looks like a collapsing model and is only a
+        # counter that forgot the checkpoint.
+        self.passed = already_passed
+        self.spent = already_spent
         if already_done:
-            print("  resuming at trial %d of %d - already-done trials are not "
-                  "re-paid for\n" % (already_done, total))
+            print("  resuming at trial %d of %d - %d passed so far; already-done "
+                  "trials are not re-paid for\n"
+                  % (already_done, total, already_passed))
         print("  %-5s %-12s %-4s %-5s %-6s %-9s %-10s %s"
               % ("#", "case", "trial", "check", "turns", "tokens", "US$",
                  "decision"))
@@ -293,7 +307,9 @@ class Progress:
         # to stay readable.
         if self.done % 10 == 0 or self.done == self.total:
             elapsed = time.time() - self.started
-            rate = elapsed / max(1, self.done - 0)
+            # Seconds per trial run in THIS session - the checkpointed
+            # trials took no time here and would make the estimate too short.
+            rate = elapsed / max(1, self.done - self.resumed_at)
             left = max(0, self.total - self.done)
             print("        %d/%d done · %d passed (%.0f%%) · US$%.4f of "
                   "US$%.2f%s · ~%s left"
@@ -375,6 +391,22 @@ def detect_reasoning(record, baseline_out_per_turn):
 # =====================================================================
 # AGGREGATION
 # =====================================================================
+def judgement_queue_for(results, key):
+    """One judgement item per case, from its first trial, for the WHOLE battery.
+
+    harness.run_set queues only the trials it ran in the current process,
+    so after a resume its queue is the unfinished tail alone. li_yunke's
+    battery was interrupted at trial 40 on 2026-09-14 and resumed, and the
+    judge then graded 18 of her 40 cases. Built from every result -
+    checkpointed or fresh, in the order they ran - a resumed battery queues
+    exactly what an uninterrupted one does.
+    """
+    return [harness.prepare_judgement_check(dict(r["record"], case_id=r["case_id"]),
+                                            key[r["case_id"]])
+            for r in results
+            if r.get("trial") == 1 and r["case_id"] in key]
+
+
 def aggregate(results, key):
     """The numbers the report table needs - and TWO negative rates.
 
@@ -701,7 +733,9 @@ def main(argv=None):
 
         results = list(checkpoint.results())
         progress = Progress(fp["plan_shape"]["trials"], len(results),
-                            budget.cap, args.dry_run)
+                            budget.cap, args.dry_run,
+                            already_passed=sum(1 for r in results if r.get("passed")),
+                            already_spent=checkpoint.spend_usd())
 
         def on_result(r):
             # Checkpoint FIRST, then print. If the process dies between
@@ -710,14 +744,17 @@ def main(argv=None):
             checkpoint.append(dict(r, kind="trial"))
             progress.on_result(r)
 
+        halted = False
         try:
-            fresh, queue = harness.run_set(
+            # run_set's own queue is deliberately discarded: it covers only
+            # this session. See judgement_queue_for.
+            fresh, _this_session = harness.run_set(
                 plan_cases, problem=roster.get("problem"),
                 run_one=run_one, skip=skip, on_result=on_result)
             results += fresh
         except BatteryHalt:
             results = list(checkpoint.results())
-            queue = []
+            halted = True
         except backends.LiveFatalError as err:
             checkpoint.append({"kind": "halt", "why": "fatal",
                                "detail": str(err)})
@@ -726,9 +763,14 @@ def main(argv=None):
             return 3
 
         key_rows = harness.load_key(roster.get("problem"))
+        # A halted battery is resumed, not judged; its queue is rebuilt in
+        # full on the run that completes it.
+        queue = [] if halted else judgement_queue_for(results, key_rows)
         summary = aggregate(results, key_rows)
         out = write_results(entry, fp, rid, header, results, queue, summary,
                             price, overrides, args.dry_run, key)
+        global LAST_RESULTS_PATH
+        LAST_RESULTS_PATH = out
         checkpoint.append({"kind": "footer", "completed": len(results),
                            "cost_usd": summary["cost_usd"]})
         print_summary(summary, out)

@@ -310,7 +310,7 @@ def confirm_bilingual(entry):
 # =====================================================================
 # THE PER-MEMBER COPY
 # =====================================================================
-def mirror_result(entry, dry_run):
+def mirror_result(entry, dry_run, canonical=None):
     """Copy the canonical result into results/live/<member>/.
 
     run_battery writes results/live/battery__*.json and
@@ -318,14 +318,28 @@ def mirror_result(entry, dry_run):
     the one the D5(b) table is built from and it must stay put. This is
     a SECOND copy under the member's own folder, in the naming the team
     agreed. Deleting the canonical one to tidy up would empty the table.
+
+    WHICH FILE. `canonical` is the file run_battery says it just wrote.
+    Without it, this member's own newest battery - never the newest file
+    overall, which on a machine that ran two members' batteries is the
+    other member's, and after a git pull can be an old one.
+
+    A SECOND BATTERY ON THE SAME DAY KEEPS THE FIRST. The copy is named by
+    date, not run id, so a same-day re-run used to overwrite run 1's copy
+    and then its judged twin. When the name already holds a DIFFERENT run,
+    this copy carries its run id; the same run re-copied keeps its name.
     """
     src_dir = os.path.join(ROOT, "results", "live",
                            "dryrun" if dry_run else "")
-    files = sorted(glob.glob(os.path.join(src_dir, "battery__*.json")),
-                   key=os.path.getmtime)
-    if not files:
-        return None
-    latest = files[-1]
+    if canonical and os.path.exists(canonical):
+        latest = canonical
+    else:
+        files = sorted(glob.glob(os.path.join(
+            src_dir, "battery__%s__*.json" % entry["member"])),
+            key=os.path.getmtime)
+        if not files:
+            return None
+        latest = files[-1]
     with open(latest, encoding="utf-8") as fh:
         doc = json.load(fh)
     if doc.get("member") != entry["member"]:
@@ -339,8 +353,19 @@ def mirror_result(entry, dry_run):
                else os.path.join(ROOT, "results", "live", entry["member"]))
     os.makedirs(out_dir, exist_ok=True)
     dest = os.path.join(out_dir, name)
+    if os.path.exists(dest) and _run_id_of(dest) != doc.get("run_id"):
+        dest = os.path.join(out_dir, "%s__%s.json"
+                            % (name[:-len(".json")], doc.get("run_id")))
     shutil.copy2(latest, dest)
     return os.path.relpath(dest, ROOT), os.path.relpath(latest, ROOT)
+
+
+def _run_id_of(path):
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh).get("run_id")
+    except (OSError, ValueError):
+        return None
 
 
 
@@ -505,7 +530,8 @@ def main(argv=None):
     rc = battery.main(inner)
 
     if rc == 0:
-        copied = mirror_result(entry, args.dry_run)
+        copied = mirror_result(entry, args.dry_run,
+                               canonical=battery.LAST_RESULTS_PATH)
         if copied:
             dest, canonical = copied
             print()

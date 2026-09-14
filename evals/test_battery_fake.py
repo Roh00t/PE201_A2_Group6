@@ -417,6 +417,127 @@ def scenario_checkpoint(tmp):
     cp4.close()
 
 
+def _dry_battery(root, extra=()):
+    """The REAL runner, as a dry run, with every output under `root`.
+
+    The checkpoint, the decision ledger and the results file all land in
+    `root`, so nothing touches the repository. Returns (exit code, what it
+    printed, the results document it wrote).
+    """
+    import contextlib
+    import glob
+    import io
+    from tools import tools as tools_mod
+    names = ("BACKEND", "MODEL", "PROMPT_VERSION", "PRICE_IN", "PRICE_OUT",
+             "ALLOW_REASONING", "DUPLICATE_RECOVERY_RETRIES")
+    saved = ({n: getattr(config, n) for n in names}, rb.ROOT, rb.LIVE_DIR,
+             tools_mod.DECISION_LOG_PATH)
+    rb.ROOT, rb.LIVE_DIR = root, os.path.join(root, "results", "live")
+    printed = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(printed):
+            code = rb.main(["--member", "li_yunke", "--dry-run"] + list(extra))
+    finally:
+        for n, v in saved[0].items():
+            setattr(config, n, v)
+        rb.ROOT, rb.LIVE_DIR, tools_mod.DECISION_LOG_PATH = saved[1:]
+        live_mode()
+    found = sorted(glob.glob(os.path.join(root, "results", "live", "dryrun",
+                                          "battery__*.json")))
+    doc = None
+    if found:
+        with open(found[-1], encoding="utf-8") as fh:
+            doc = json.load(fh)
+    return code, printed.getvalue(), doc
+
+
+def scenario_resume_keeps_the_whole_battery():
+    """A resumed battery must report what an uninterrupted one reports.
+
+    2026-09-14: li_yunke's live battery was interrupted at trial 40 and
+    resumed. Its summary was right (41/60), but the progress line printed
+    "50/60 done · 10 passed (20%)", and the judge graded 18 of 40 cases:
+    harness.run_set only queues the trials it ran in the current process,
+    so the resumed half was all the judge ever saw.
+    """
+    import tempfile
+    with tempfile.TemporaryDirectory() as whole, \
+            tempfile.TemporaryDirectory() as split:
+        code_whole, _, ref = _dry_battery(whole)
+        code_first, _, _ = _dry_battery(split, ["--limit", "3"])
+        code_rest, printed, resumed = _dry_battery(split)
+
+    ok = (code_whole == code_first == code_rest == 0 and ref and resumed)
+    check("39 a battery interrupted after 3 cases resumes to all 60 trials",
+          bool(ok) and len(resumed["results"]) == len(ref["results"]) == 60,
+          "exit %s/%s/%s" % (code_whole, code_first, code_rest))
+    queue = (resumed or {}).get("judgement_queue") or []
+    check("39a the resumed battery queues EVERY case for the judge",
+          len(queue) == len((ref or {}).get("judgement_queue") or []) == 40,
+          "%d items queued" % len(queue))
+    check("39b ...and the queue is identical to the uninterrupted one",
+          bool(ok) and queue == ref["judgement_queue"])
+    line = next((l for l in printed.splitlines() if "10/60 done" in l), "")
+    check("39c the progress line counts passes from before the interruption",
+          "10 passed" in line, line.strip() or "no 10/60 line printed")
+
+
+def scenario_rerun_keeps_both_member_copies():
+    """A second battery on the same day must not overwrite the first one's
+    per-member copy. That copy is named by date, not run id, so a same-day
+    re-run - li_yunke's, with a faulty provider excluded - would have
+    replaced run 1's file in results/live/li_yunke/, and then its judged
+    twin."""
+    import tempfile
+    import run_live_battery as rlb
+    saved = rlb.ROOT
+    entry = {"member": "li_yunke"}
+    outcome = {}
+    with tempfile.TemporaryDirectory() as tmp:
+        rlb.ROOT = tmp
+        live = os.path.join(tmp, "results", "live")
+        os.makedirs(live)
+
+        def canonical(member, run_id):
+            path = os.path.join(live, "battery__%s__model__v2__2026-09-14__%s.json"
+                                % (member, run_id))
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump({"member": member, "run_id": run_id, "date": "2026-09-14",
+                           "model": "qwen/qwen3-235b-a22b-2507"}, fh)
+            return path
+
+        def run_id_at(relpath):
+            with open(os.path.join(tmp, relpath), encoding="utf-8") as fh:
+                return json.load(fh).get("run_id")
+
+        try:
+            first = rlb.mirror_result(entry, False, canonical=canonical("li_yunke", "run1"))
+            second = rlb.mirror_result(entry, False, canonical=canonical("li_yunke", "run2"))
+            again = rlb.mirror_result(entry, False, canonical=os.path.join(
+                live, "battery__li_yunke__model__v2__2026-09-14__run2.json"))
+            canonical("huang_yu", "zzz")        # a newer file, someone else's
+            fallback = rlb.mirror_result(entry, False)
+            outcome = {"first": first, "second": second, "again": again,
+                       "fallback": fallback,
+                       "first_id": run_id_at(first[0]), "second_id": run_id_at(second[0]),
+                       "fallback_id": run_id_at(fallback[0]) if fallback else None}
+        except Exception as err:                        # noqa: BLE001
+            outcome = {"error": "%s: %s" % (type(err).__name__, err)}
+        finally:
+            rlb.ROOT = saved
+
+    check("40 a same-day re-run gets its own member copy; run 1's is untouched",
+          outcome.get("first_id") == "run1" and outcome.get("second_id") == "run2"
+          and outcome["first"][0] != outcome["second"][0],
+          outcome.get("error") or str(outcome)[:90])
+    check("40a copying the same run again reuses that run's own name",
+          "error" not in outcome and outcome["again"][0] == outcome["second"][0],
+          outcome.get("error", ""))
+    check("40b with no path given, only THIS member's newest battery is copied",
+          outcome.get("fallback_id") == "run2",
+          outcome.get("error") or "copied run_id %r" % outcome.get("fallback_id"))
+
+
 def scenario_secret_never_written():
     key = "sk-or-REALLOOKINGKEY123"
     try:
@@ -722,6 +843,8 @@ def main():
     scenario_drift_detected()
     with tempfile.TemporaryDirectory() as tmp:
         scenario_checkpoint(tmp)
+    scenario_resume_keeps_the_whole_battery()
+    scenario_rerun_keeps_both_member_copies()
     scenario_case_id_is_sent()
     scenario_gated_action_scoped_to_approvals()
     scenario_adapted_metrics()
