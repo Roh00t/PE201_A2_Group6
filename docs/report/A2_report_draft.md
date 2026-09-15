@@ -1,6 +1,6 @@
 # PE6201 A2 · Applied AI System — Problem A, health-insurance claim first response
 
-**Group 6** · Team ID `<FILL>` · Section `<FILL>` · https://github.com/Roh00t/PE201_A2_Group6
+**Group 6** · Team ID `6` · Section `B` · https://github.com/Roh00t/PE201_A2_Group6
 
 > **Draft for the team, 15 September 2026.** Every number below was checked against the
 > committed files named in the tables. The team edits, cuts and signs off before submission.
