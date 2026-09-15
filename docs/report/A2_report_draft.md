@@ -21,7 +21,7 @@ expired pre-authorisation, an already-decided duplicate — so a prompt would be
 unfalsifiable. A fixed workflow (rungs 2–6) handles the happy path, but not the branching:
 whether a line needs a pre-authorisation is known only after coverage answers, so the data
 sets the chain's length. In our set a run takes two to five turns. `CLM-8925` and `CLM-8842`
-arrive identically and part at turn 2, because one policy has lapsed. Read-only agentic
+arrive identically and part at turn 2, because one claim is over its annual limit. Read-only agentic
 retrieval could reach every decision and record none. Our governance cliff is the first
 write, `issue_decision_letter`.
 
@@ -210,4 +210,4 @@ multiply, but writes stay single-threaded — ours is one write behind one gate.
 
 ---
 
-*Prose word count: 1,631 (sections 1–6; tables, captions, code, references and this line excluded). Counted 15 September 2026.*
+*Prose word count: 1,634 (sections 1–6; tables, captions, code, references and this line excluded). Counted 15 September 2026.*

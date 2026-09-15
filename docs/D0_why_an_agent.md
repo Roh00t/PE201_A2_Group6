@@ -86,7 +86,7 @@ decides it**, and the brief demands cases from our own evaluation set.
 
 **A 2.5× spread in step count across one evaluation set, driven entirely by what the
 records say.** `CLM-8925` and `CLM-8842` enter the loop identically — a claim id and
-nothing else — and diverge at turn 2 because one policy is lapsed and the other is not.
+nothing else — and diverge at turn 2 because one claim exceeds its remaining annual limit and the other does not.
 No fixed workflow can express that without enumerating every branch, and the branch count
 is the product of **six independent conditions** — policy validity, annual limit,
 duplicate history, per-line exclusion, per-line pre-auth, per-line required document —
@@ -360,7 +360,7 @@ and a median of four turns**, and naming the measurement that would overturn it.
 
 **A negative evaluation case is still an evaluation case.** Its correct outcome is `ask`
 or `escalate` — anything except the act — and it asks whether the agent *reached the right
-outcome*. `CLM-8925` (lapsed policy → `escalate`) is a negative eval case: escalating is
+outcome*. `CLM-8925` (annual limit exceeded → `escalate`) is a negative eval case: escalating is
 the **right answer**, not a refusal.
 
 The brief names the failure mode directly: *"a team that files all its hostile-input tests
