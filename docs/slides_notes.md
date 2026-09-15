@@ -859,7 +859,7 @@ $$\text{Expected Financial Loss } (\mathcal{L}) = Q \cdot P(\text{Failure}) \cdo
 
 ## 5. Practical Integration into Course Deliverables
 
-### For Assignment 2 (A2) Applied AI System (Due Fri 4 Sep team decl. / Sun 13 Sep final)
+### For Assignment 2 (A2) Applied AI System (Due Fri 4 Sep team decl. / Sun 20 Sep final, moved from Sun 13 Sep; peer evaluation Thu 24 Sep)
 
 1. **Explicitly Frame Your Archetype:** Declare whether your system acts as a Horizontal Integration or a specialized Vertical Engine.
 2. **Defend Why an Agent is Necessary:** Demonstrate how automating the workflow removes a human labor bottleneck rather than simply adding system complexity.

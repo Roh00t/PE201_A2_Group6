@@ -1,7 +1,7 @@
 # PE6201 Assignment 2: Problem A — Complete Production Implementation and Submission Plan
 **Version 2.0 · Compiled 2 September 2026 (Afternoon)**  
 **For: Health-Insurance Claim First Response ReAct Agent**  
-**Team Deadline: Sunday 13 September 2026, 23:59 SGT**
+**Team Deadline: Sunday 20 September 2026** (moved from Sunday 13 September) · **Peer evaluation: Thursday 24 September 2026**
 
 ---
 
@@ -1655,7 +1655,7 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
    - Walk through a negative case + show escalation.
    - Cannot be AI-generated.
 
-7. **Peer Ratings** (Sep 16, 23:59 SGT)
+7. **Peer Evaluation** (Sep 24; moved from Sep 16)
    - Individual submission on NTU portal.
    - Human responsibility; not delegable.
 
@@ -2106,11 +2106,11 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
 
 ---
 
-### Phase 6: Report & Final Submission (Sep 12–13)
+### Phase 6: Report & Final Submission (Sep 19–20)
 
-**Dates**: Saturday 12 Sep – Sunday 13 Sep (23:59 SGT Deadline)
+**Dates**: Saturday 19 Sep – Sunday 20 Sep (submission deadline, moved from 13 Sep)
 
-#### Milestone 6a: Technical Report Writing (Sep 12)
+#### Milestone 6a: Technical Report Writing (Sep 19)
 
 - [ ] **All Members**: Contribute to 2,000-word report (section assignments):
 
@@ -2159,7 +2159,7 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
   git push origin main
   ```
 
-#### Milestone 6b: Demo Video Recording (Sep 12)
+#### Milestone 6b: Demo Video Recording (Sep 19)
 
 - [ ] **All Members**: Record 5-minute video:
   1. **Introduction** (30 sec): Team members introduce selves & problem.
@@ -2179,11 +2179,11 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
 - [ ] Commit:
   ```bash
   git add demo/DEMO_LINK.md
-  git commit -m "docs(demo): 5-minute video link [Sep 12]"
+  git commit -m "docs(demo): 5-minute video link [Sep 19]"
   git push origin main
   ```
 
-#### Milestone 6c: Self-Appraisal & CONTRIBUTIONS (Sep 13 Morning)
+#### Milestone 6c: Self-Appraisal & CONTRIBUTIONS (Sep 20 Morning)
 
 - [ ] **All Members**: Complete `PE6201_A2_Team_Self_Appraisal.pdf` (from course template):
   - Team performance summary.
@@ -2213,11 +2213,11 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
 - [ ] Commit:
   ```bash
   git add PE6201_A2_Team_Self_Appraisal.pdf CONTRIBUTIONS.md
-  git commit -m "docs(compliance): self-appraisal & contributions audit [Sep 13]"
+  git commit -m "docs(compliance): self-appraisal & contributions audit [Sep 20]"
   git push origin main
   ```
 
-#### Milestone 6d: Final Verification & Packaging (Sep 13, Afternoon)
+#### Milestone 6d: Final Verification & Packaging (Sep 20, Afternoon)
 
 - [ ] **Member 6 (Release Engineer)**: Verify submission checklist:
   - [ ] Repository defaults to `BACKEND = "scripted"`.
@@ -2250,7 +2250,7 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
 
 - [ ] **All Members**: Verify repository on GitHub one last time.
 
-#### Milestone 6e: Final Submission (Sep 13, 23:59 SGT)
+#### Milestone 6e: Final Submission (Sep 20)
 
 - [ ] **Member 6**: Submit to NTULearn:
   - [ ] Repository link (GitHub).
@@ -2263,16 +2263,16 @@ These tasks **must** be authored/executed by human team members (not Copilot/LLM
 
 ---
 
-### Phase 7: Post-Submission (Sep 16)
+### Phase 7: Post-Submission (Sep 24)
 
-**Dates**: Wednesday 16 Sep, 23:59 SGT (Peer Rating Deadline, moved from Sep 17)
+**Dates**: Thursday 24 Sep (peer evaluation deadline; moved from Wed 16 Sep, which had itself moved from Sep 17)
 
-#### Milestone 7a: Peer Ratings (Sep 16)
+#### Milestone 7a: Peer Evaluation (Sep 24)
 
 - [ ] **All Members**: Complete individual peer ratings on NTU portal:
   - Rate each team member's contribution (1–5).
   - Comment on strengths & areas for improvement.
-  - Deadline: Sep 16, 23:59 SGT.
+  - Deadline: Sep 24.
 
 ---
 
@@ -2362,9 +2362,9 @@ $$P_{\text{break-even}} = 1 - \frac{C_{\text{tokens}} + C_{\text{fixed}}}{F_{\te
 
 ---
 
-## Appendix B: Checklist for Submission (Sep 13 Verification)
+## Appendix B: Checklist for Submission (Sep 20 Verification)
 
-Use this checklist on Sep 13 morning before final submission:
+Use this checklist on Sep 20 morning before final submission:
 
 ```
 REPOSITORY STRUCTURE
@@ -2421,7 +2421,7 @@ FINAL CHECKS
   [ ] python evaluation/harness.py --backend scripted runs to completion
   [ ] All JSON files are valid JSON (no trailing commas, etc.)
   [ ] No secrets or API keys in committed files
-  [ ] Timestamp of final push ≤ Sep 13, 23:59 SGT
+  [ ] Timestamp of final push before the Sep 20 submission deadline
 ```
 
 ---
@@ -2437,7 +2437,7 @@ This **Complete Implementation and Submission Plan** consolidates all PE6201 Ass
 3. **Scripted backend** (default, $0) is used for development, guardrails, and failures; **live models** (N-1 per team) are used for evaluation battery in D5.
 4. **Evaluation is rigorous**: 40 test cases (32 ordinary + 8 negative), dual-layer grading, cost-to-serve analysis.
 5. **Human ownership** is mandatory for: D0 prose, evaluation case authoring (5–8 per member), live model execution (1 per member), technical report, demo video, and peer ratings.
-6. **Submission deadline**: Sep 13, 23:59 SGT (repository + report + video link + self-appraisal).
+6. **Submission deadline**: Sep 20, moved from Sep 13 (repository + report + video link + self-appraisal). Peer evaluation: Sep 24.
 
 **Success depends on**: Build small, prove thoroughly, and invest in evidence over features.
 
@@ -2445,6 +2445,6 @@ This **Complete Implementation and Submission Plan** consolidates all PE6201 Ass
 
 **Document Version**: 1.0  
 **Compiled**: 1 September 2026 (Evening)  
-**For Submission**: 13 September 2026, 23:59 SGT  
+**For Submission**: 20 September 2026 (moved from 13 September)  
 **Team Coordination**: Use this plan as the single source of truth for all work division, timelines, and deliverable specifications.
 

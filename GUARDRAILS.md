@@ -433,7 +433,7 @@ Derived directly from the lecturer's warnings, the FAQ and the brief's failure m
 
 ## 9 · Final submission checklist
 
-Work top to bottom on **Sat 12 Sep**, not on the 13th.
+Work top to bottom on **Sat 19 Sep**, not on the 20th, the submission date.
 
 ### Runtime and reproducibility
 
@@ -479,7 +479,7 @@ Work top to bottom on **Sat 12 Sep**, not on the 13th.
 
 ### After submission
 
-- [ ] **Peer rating by Wed 16 Sep, 23:59 SGT** — a participation requirement. `[brief §8]`
+- [ ] **Peer evaluation by Thu 24 Sep** (moved from Wed 16 Sep) — a participation requirement. `[brief §8]`
 - [ ] Repo left public and untouched until marks are released.
 
 ---
