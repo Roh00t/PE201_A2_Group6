@@ -11,7 +11,7 @@
 **Assessment:** A2 — Applied AI System · Group · 20% of course grade · Rubric 1
 **Problem:** A — Health-insurance claim first response
 **Team:** 6 members · Team ID: `<FILL>` · Section: `<FILL>`
-**Repository:** `<FILL — required on the Team Declaration by Fri 4 Sep>`
+**Repository:** https://github.com/Roh00t/PE201_A2_Group6
 
 Source tags used throughout: `[brief]` = PE6201_A2_Applied_AI_System.pdf ·
 `[faq]` = PE6201_A2_FAQ.pdf · `[upd]` = PE6201_A2_Document_Updates.pdf ·
@@ -19,16 +19,55 @@ Source tags used throughout: `[brief]` = PE6201_A2_Applied_AI_System.pdf ·
 
 ---
 
-## 0 · CURRENT STATE — 9 September 2026
+## 0 · CURRENT STATE — 15 September 2026
 
 **Read this first. It is the only section that changes daily.**
 
-### Merge status — all branches are on `main`
+**Dates, updated 15 Sep.** A2 submission: **Sun 20 Sep 2026**. Peer evaluation: **Thu 24 Sep
+2026**. These replace the original Sun 13 Sep and Wed 16 Sep, which the course documents in
+`docs/course/` still show. The End-of-Course Project stays Sun 27 Sep.
 
-| Branch | Merged | Brought |
+### Where A2 stands
+
+| Stage | State |
+|---|---|
+| D0–D4 · agent, tools, guardrails, evaluation set | **Done.** 40 cases, 10 negative, 60 trials. Guardrail checklist: 18 cases, 16/16 must-fire |
+| **D5(b) · live battery** | **Done, 13–15 Sep.** Six rows in `results/live/battery_table.md`, each with its judgement check |
+| Offline re-grade | **Done.** `results/regrade/regrade_matrix.md` (underscore fix, letter rule) |
+| **Post-freeze upgrade** | **Merged 15 Sep** (`7c99753`): v3 descriptors, fact ledger, final check. The v1 and v2 prompt hashes did not move |
+| **D6 · cost model** | **Filled 15 Sep.** `results/d6_inputs.json` → `results/d6_summary.json`; results in `docs/D6_cost_model.md`. The layer-3 rows are labelled assumptions |
+| Report | Draft in `docs/report/`, to be cut and signed off by the team |
+| Demo, self-appraisal | Nothing in the repo yet (the self-appraisal may live outside it) |
+
+### The battery, as run
+
+| Member | Model | Prompt | Code check | Negative 3-of-3 | Judgement check | List US$ |
+|---|---|---|---:|---:|---:|---:|
+| Rohit Panda | `anthropic/claude-haiku-4.5` | v2 | 54/60 (90.0%) | 8/10 | 34/40 | 1.2682 |
+| Huang Yu | `openai/gpt-4.1-mini` | v2 | 48/60 (80.0%) | 6/10 | 26/40 | 0.4634 |
+| Shen Bowen | `deepseek/deepseek-v3.2` | v2 | 48/60 (80.0%) | 6/10 | 31/40 | 0.2853 |
+| Xia Yanran | `google/gemini-2.5-flash` | v2 | 44/60 (73.3%) | 7/10 | 22/40 | 0.3476 |
+| Li Yunke | `qwen/qwen3-235b-a22b-2507` | v2 | 41/60 (68.3%) | 4/10 | 21/40 † | 0.0858 |
+| Zhao Yujia | `qwen/qwen3-235b-a22b-2507` | **v1** | 31/60 (51.7%) | 1/10 | 6/40 | 0.0409 |
+
+- **Li Yunke's row is her first complete run.** Two identical re-runs scored 37/60 and
+  49/60, depending on how many trials OpenRouter routed to DeepInfra, which returned
+  unreadable text. They are archived as replications: `results/archive/live/README.md`.
+- **† 22/40 as the judge wrote it.** CLM-8941 was an unparseable reply the judge passed.
+  `evals/graders/judge.py` now fails such records in code before any judge call.
+- **Xia Yanran and Shen Bowen ran from Windows checkouts.** Their content was identical;
+  `evals/line_endings.py` compares the two line-ending forms.
+- **No `v2-freeze` tag was cut.** Instead, `experiments/post_freeze/stage.py --status`
+  checked every battery's fingerprint against the frozen tree, 6/6, before the merge.
+
+### Merge status — everything is on `main`
+
+| Change | Commit | Brought |
 |---|---|---|
 | `hy/descriptors/guardrail-layer` | `c824aa9`, 8 Sep | D2(b) descriptors + `DESCRIPTORS_V1`, D3(a) code layer, D3(b) 15-case checklist |
 | `codex/zhaoyujia-d6-initial` | `78cfb03`, 9 Sep | `src/cost_model.py`, `docs/D6_cost_model.md`, `d6_inputs_template.json` |
+| Post-freeze upgrade | `7c99753`, 15 Sep | `src/final_check.py`, v3 descriptors, GR-16–18 |
+| Re-grade and dry-run ledger fixes | `fea7c04`, 15 Sep | Windows-checkout harness lookup; dry runs keep their own ledger |
 
 ### The shape of the evaluation set — DERIVED, never typed
 
@@ -48,7 +87,7 @@ from the fixtures, and `run_battery` refuses to start if a typed number disagree
 python3 run_eval.py                                   # 60 of 60 trials
 python3 evals/run_guardrails.py --twice               # 18 cases: 16/16, 1/1, 1 known limit
 python3 evals/test_battery_fake.py                    # 113 passed
-python3 evals/graders/test_judge_fake.py              # 54 passed
+python3 evals/graders/test_judge_fake.py              # 65 passed
 python3 evals/test_cost_model.py                      # 4 passed
 python3 experiments/test_regrade_offline.py           # 40 passed
 python3 experiments/d2c_parallel_vs_sequential.py     # 41% turns, 53% input tokens
@@ -56,51 +95,25 @@ python3 experiments/demo_loop_failure.py              # D7 failure 1 · loop con
 python3 experiments/demo_tool_interface_failure.py    # D7 failure 2 · tool interface
 ```
 
-### OpenRouter model mapping — `evals/battery_roster.json`
+### The roster — `evals/battery_roster.json`
 
-**Filled and live-verified 9 Sep. N−1: six members, FIVE distinct models.**
-`validate_roster()` refuses a `<placeholder>` model, refuses a `price_checked_on`
-older than 14 days, and enforces both conditions in code: **no two v2 members
-share a family**, and **the v2 set spans ≥2 tiers**.
+**N−1: six members, five distinct models**, 3 mid + 2 cheap across five families.
+`validate_roster()` enforces it. Zhao Yujia's row is the D2(b) **v1** pass, holding Li
+Yunke's model fixed: `sha(v1)=36992f7881ec` ≠ `sha(v2)=60c5e4344f24`, the prompts every
+battery ran. The model per member is in the battery table above. Re-verify prices before
+any new live run with `python3 evals/check_roster_prices.py`.
 
-| Member | Roster key | Model | Tier | Family | Prompt | Est. |
-|---|---|---|---|---|---|---:|
-| Rohit Panda | `rohit_panda` | `anthropic/claude-haiku-4.5` | mid | anthropic | v2 | $1.5792 |
-| Huang Yu | `huang_yu` | `openai/gpt-4.1-mini` | mid | openai | v2 | $0.5927 |
-| Xia Yanran | `xia_yanran` | `google/gemini-2.5-flash` | mid | google | v2 | $0.5713 |
-| Li Yunke | `li_yunke` | `qwen/qwen3-235b-a22b-2507` | cheap | qwen | v2 | $0.1296 |
-| Shen Bowen | `shen_bowen` | `deepseek/deepseek-v3.2` | cheap | deepseek | v2 | $0.3326 |
-| Zhao Yujia | `zhao_yujia` | `qwen/qwen3-235b-a22b-2507` | cheap | **qwen — same model as Li Yunke** | **v1** | $0.1296 |
+### Open, as of 15 September
 
-**Team total ≈ US$3.34.** 3 mid + 2 cheap across 5 families. Rewritten 2026-09-13: Rohit moved to Haiku 4.5, which forced Shen Bowen off Anthropic and Zhao Yujia off Llama. Yujia's row is the
-D2(b) v1 pass and **must** hold the model fixed against a v2 member's. It is
-unblocked: `sha(v1)=36992f7881ec` ≠ `sha(v2)=4accfcfacda4`.
-
-Re-verify on the day with `python3 evals/check_roster_prices.py` — free, no key.
-
-### The evaluation workflow — the order is not optional
-
-1. **Fill the roster** with real model ids and prices verified **on the day**, with the
-   date recorded. `[brief D5(b)]`
-2. `python3 run_battery.py --freeze` — **once**, at the frozen commit. Stamps the
-   fingerprint hashes.
-3. Cut and push the `v2-freeze` tag. **Nobody merges to `main` until results land.**
-4. Every member: `python3 run_live_battery.py --name "<Your Name>"` — bilingual,
-   prices the run, refuses over US$3, then hands over to the hardened runner.
-5. Everyone commits their own `results/live/battery__*.json`. **No editing of numbers.**
-6. `python3 evals/aggregate_battery.py` — builds the D5(b) table and the v1→v2 delta.
-
-### Blocking, as of today
-
-| Blocker | Owner | Why it blocks |
+| Item | Owner | Why it matters |
 |---|---|---|
-| ~~Roster is placeholders~~ | — | **DONE** — rewritten 13 Sep for Haiku 4.5, live-verified, N−1, ≈US$3.34 |
-| **`v2-freeze` not cut** | Rohit | Six runners with no frozen commit is guaranteed drift |
-| **Authorship table unsigned** | all six | `CONTRIBUTIONS.md` §3 carries the attestation; the case IDs and initials are blank, and a marker checks that section against `git log` |
-| **No commits from Xia Yanran, Shen Bowen** | those two | The history has to corroborate `CONTRIBUTIONS.md` |
-| ~~`evals/graders/` is three empty files~~ | — | **DONE 9 Sep** — check-kind classifier, judge, committed grading prompt, 51-check rehearsal. Both check kinds run |
-| ~~`docs/D0_why_an_agent.md` missing~~ | — | **DONE 9 Sep** — ladder, both Capsule 1 tests, `s = P^(1/T)` pending only `P` |
-| **D6 measured inputs** | Bowen, Yujia | `results/d6_inputs.json` needs the battery's tokens and pass rate. `cost_model.py` refuses nulls by design |
+| **Authorship table unsigned** | all six | `CONTRIBUTIONS.md` §3: the case IDs and initials are blank, and a marker checks that section against `git log` |
+| **Say who ran the two batteries committed under Rohit's name** | Li Yunke, Zhao Yujia | `CONTRIBUTIONS.md` §2. The history cannot show it |
+| **Confirm the D6 layer-3 assumptions and the per-member cap** | Shen Bowen, Zhao Yujia | Each is labelled in `results/d6_inputs.json` `_sources`; none changes a conclusion |
+| **Report** — cut the draft to ≤2,000 words of prose and sign off | Zhao Yujia, all | `docs/report/` |
+| **Demo** — 5 minutes, one negative case live, every member speaks | all | `[brief §4]` |
+| **Team self-appraisal** — one sheet for the team | all | Missing means an incomplete submission |
+| Team ID and section in this file's header | Zhao Yujia | Still `<FILL>` |
 
 ---
 
@@ -179,9 +192,9 @@ three, stop.
 | **Wed 9 Sep** | **`v2-freeze` tag cut** | Nobody merges to `main` until battery lands |
 | Wed 9 – Thu 10 Sep | Live battery: 6 members × **60 trials** | Blocks D6 |
 | Fri 11 Sep | D6 cost model, sensitivity, break-even complete | Blocks report §4 |
-| Sat 12 Sep | Report at 2,000 words; demo recorded; self-appraisal signed | — |
-| **Sun 13 Sep, 23:59** | **A2 due** — zip, repo, report, self-appraisal, video link | — |
-| Wed 16 Sep, 23:59 | Peer rating (participation requirement) | — |
+| Sat 19 Sep | Report at 2,000 words; demo recorded; self-appraisal signed | — |
+| **Sun 20 Sep** | **A2 due** — zip, repo, report, self-appraisal, video link (moved from Sun 13 Sep) | — |
+| Thu 24 Sep | Peer evaluation (participation requirement; moved from Wed 16 Sep) | — |
 | Sun 27 Sep, 23:59 | End-of-Course Project — **do not let A2 eat this** `[brief §10]` | — |
 
 ---
@@ -329,7 +342,7 @@ first `feat(loop)` commit.
    measurement in A2 that isolates our own writing as the variable. `[brief D5(b)]`
 4. Each member commits their raw results file under `results/live/`. No editing of numbers.
 
-### Phase 5 — Argue (10–13 Sep) · M4, M6
+### Phase 5 — Argue (10–20 Sep) · M4, M6
 
 D6, the report, the demo, the self-appraisal. See §6 and §7.
 

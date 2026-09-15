@@ -1,6 +1,6 @@
 # COMMANDS — the whole A2 pipeline, end to end
 
-**PE6201 A2 · Problem A · Group 6** · last verified **9 September 2026**
+**PE6201 A2 · Problem A · Group 6** · last verified **15 September 2026**
 
 Python 3.9+. **Standard library only** — nothing to install.
 Everything except §5 is **free, offline and deterministic**. Only §5 spends money.
@@ -48,7 +48,7 @@ after any descriptor change — it is the D2(b) artefact.
 
 ```bash
 python3 evals/test_battery_fake.py         # 113 checks · battery failure modes
-python3 evals/graders/test_judge_fake.py   #  54 checks · judge failure modes
+python3 evals/graders/test_judge_fake.py   #  65 checks · judge failure modes
 python3 evals/test_cost_model.py           #   4 checks · D6 arithmetic
 python3 evals/run_guardrails.py --twice    # D3(b) · 18 guardrail cases
 python3 evals/graders/code_check.py        # D4 · which check grades which case
@@ -106,13 +106,15 @@ python3 evals/graders/judge.py results/scripted/problemA__scripted__v2__<date>.j
 Writes `<input>__judged.json` — **never overwrites the input**, so judging can be
 re-run, compared or thrown away.
 
-**Three refusals you cannot switch off:**
+**Refusals you cannot switch off:**
 
 | Refusal | Why |
 |---|---|
 | The judge may not be the model being graded, or any model on the roster | *"Use a different model from the one being graded."* A model marking its own homework is not a measurement |
 | A malformed reply is a **FAIL**, never a pass | Counting an unparseable answer as a pass inflates the rate — the one direction a harness must never round |
 | `PENDING` items are excluded from **both** numerator and denominator | An unjudged item may not quietly move a percentage |
+| A record with **no parseable reply**, or one the harness **halted**, fails in code and is never sent to the judge | It carries no required item to find. Sent anyway, the judge passed li_yunke's CLM-8941 twice, citing "model did not return parseable JSON" as the evidence |
+| A verdict on an item that was **not asked about** is a FAIL | The count can be right while the labels are wrong; a verdict on the wrong item is not a verdict |
 
 Judge spend is written to `results/judge/judge_usage__*.json` with **measured**
 tokens. **This is a D6 input** — it never passes through `run_battery`, so it

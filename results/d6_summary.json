@@ -1,0 +1,89 @@
+{
+  "monthly_volume": 8000.0,
+  "failure_cost_usd": 7.6,
+  "layer3_fixed_monthly_usd": 481.57,
+  "layer3_breakdown_usd": {
+    "monitoring": 152.0,
+    "storage_infrastructure": 20.0,
+    "evaluation": 5.57,
+    "maintenance": 304.0
+  },
+  "models": {
+    "anthropic/claude-haiku-4.5": {
+      "success_rate": 0.9,
+      "cost_task_count": 60.0,
+      "average_tokens_in": 17613.766666666666,
+      "average_tokens_out": 704.4833333333333,
+      "layer1_variable_usd_per_task": 0.021136183333333336,
+      "layer2_expected_failure_usd_per_task": 0.7599999999999998,
+      "expected_usd_per_task_before_fixed": 0.7811361833333331
+    },
+    "openai/gpt-4.1-mini": {
+      "success_rate": 0.8,
+      "cost_task_count": 60.0,
+      "average_tokens_in": 16771.633333333335,
+      "average_tokens_out": 633.9166666666666,
+      "layer1_variable_usd_per_task": 0.007722920000000001,
+      "layer2_expected_failure_usd_per_task": 1.5199999999999996,
+      "expected_usd_per_task_before_fixed": 1.5277229199999995
+    },
+    "deepseek/deepseek-v3.2": {
+      "success_rate": 0.8,
+      "cost_task_count": 60.0,
+      "average_tokens_in": 16659.6,
+      "average_tokens_out": 682.85,
+      "layer1_variable_usd_per_task": 0.0047545724000000004,
+      "layer2_expected_failure_usd_per_task": 1.5199999999999996,
+      "expected_usd_per_task_before_fixed": 1.5247545723999996
+    },
+    "google/gemini-2.5-flash": {
+      "success_rate": 0.7333333333333333,
+      "cost_task_count": 60.0,
+      "average_tokens_in": 14822.6,
+      "average_tokens_out": 538.4166666666666,
+      "layer1_variable_usd_per_task": 0.005792821666666666,
+      "layer2_expected_failure_usd_per_task": 2.026666666666667,
+      "expected_usd_per_task_before_fixed": 2.0324594883333336
+    },
+    "qwen/qwen3-235b-a22b-2507": {
+      "success_rate": 0.6833333333333333,
+      "cost_task_count": 60.0,
+      "average_tokens_in": 14439.566666666668,
+      "average_tokens_out": 473.93333333333334,
+      "layer1_variable_usd_per_task": 0.0014293387499999999,
+      "layer2_expected_failure_usd_per_task": 2.4066666666666663,
+      "expected_usd_per_task_before_fixed": 2.4080960054166662
+    }
+  },
+  "deployed_model": "anthropic/claude-haiku-4.5",
+  "deployed_expected_monthly_usd": 6730.659466666665,
+  "success_rate_sensitivity": {
+    "-10pp": {
+      "success_rate": 0.8,
+      "monthly_usd": 12810.659466666662
+    },
+    "+0pp": {
+      "success_rate": 0.9,
+      "monthly_usd": 6730.659466666665
+    },
+    "+10pp": {
+      "success_rate": 1.0,
+      "monthly_usd": 650.6594666666667
+    }
+  },
+  "caps": {
+    "step_cap": 8.0,
+    "budget_ceiling_tokens_per_run": 60000.0,
+    "monthly_limit_per_user": 20.0
+  },
+  "cheap_model_break_even": {
+    "cheap_model": "deepseek/deepseek-v3.2",
+    "expensive_model": "anthropic/claude-haiku-4.5",
+    "formula": "1 - (E - C) / F",
+    "C_cheap_variable_cost_usd": 0.0047545724000000004,
+    "E_expensive_all_in_before_fixed_usd": 0.7811361833333331,
+    "F_failure_cost_usd": 7.6,
+    "required_cheap_success_rate_raw": 0.897844524877193,
+    "required_cheap_success_rate_feasible_range": 0.897844524877193
+  }
+}

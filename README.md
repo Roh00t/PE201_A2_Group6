@@ -320,10 +320,13 @@ all six members, and six people are not editing the same three lines.
 at 90% trial / 70% three-of-three is unreliable on refusals; one at 90%/90% is consistently
 wrong about a single case.
 
-**Before anyone spends:** the roster is filled on the day with prices verified that day, the
-`v2-freeze` tag is cut, `--freeze` stamps the hashes, and all six paste identical
-`--verify-drift` blocks. Member 1 then runs alone and everyone reads the file before the rest
-follow.
+**How it actually ran, 13–15 September:**
+- **Prices:** the roster was filled with prices verified on each run day.
+- **Freeze:** no `v2-freeze` tag was cut. Every battery stamped its own fingerprint, and
+  `experiments/post_freeze/stage.py --status` matched all six against the frozen tree
+  before the post-freeze merge. Two batteries came from Windows checkouts; their content
+  was the same, only the line endings differed (`evals/line_endings.py`).
+- **Order:** Rohit's run went first, and the other five followed.
 
 ---
 
@@ -340,9 +343,9 @@ follow.
 | **Evaluation cases — 5–8 each** | D4 | **all six** |
 | **Live model battery — one model each** | D5(b) | **all six** |
 
-See `CONTRIBUTIONS.md`. The history corroborates four of the six members; §3
-there records how the evaluation cases were authored and what the commit log
-can and cannot show about it.
+See `CONTRIBUTIONS.md`. Every one of the six members now has authored commits on
+`main`. §3 there records how the evaluation cases were authored, and what the commit
+log can and cannot show about it.
 
 ---
 
@@ -364,7 +367,8 @@ What remains is the live battery, and it runs tomorrow.**
 | **D3(b) · Checklist** | 18 scripted cases — 16/16 must-fire, 1/1 must-not-fire, 1 documented `known_limit`, identical across `--twice` |
 | **D4 · Evaluation set** | **40 cases · 10 negative · 30 ordinary · 60 trials**, derived not typed. Custom labels in `data/expected_outcomes_A.json`. **Both** check kinds implemented — the deterministic code check and the semantic judgement check |
 | **D5(a) · Scripted run** | **60 of 60** from a clean clone, no key. `BACKEND = "scripted"` is the committed default |
-| **D6 · Cost model** | Three layers, ±10pp sensitivity, break-even and the three caps in `src/cost_model.py`; four levers documented with measured before/after. **It refuses null inputs** — the measured figures arrive with the battery |
+| **D5(b) · Live battery** | Six models, 60 trials each: Haiku 4.5 **54/60** · gpt-4.1-mini 48 · deepseek-v3.2 48 · gemini-2.5-flash 44 · qwen3-235b 41 (v2) and 31 (v1). `results/live/battery_table.md`, with a judgement check on every row |
+| **D6 · Cost model** | Filled from the battery: deployed on Haiku 4.5, **US$0.78 a claim, US$6,731 a month** at 8,000 claims, against US$60,800 for people alone. Failures are 90% of the bill. No cheaper model reaches its ~89.8% break-even. `results/d6_summary.json`, `docs/D6_cost_model.md` |
 | **D7 · Two failures** | Both reproduce, each a deletion from the working agent. Loop control: 1.66× cost, same answer. Tool interface: 60/60 → **57/60**, silent wrong approval |
 
 ### The evaluation set
@@ -382,29 +386,34 @@ prose `must_record` items go to the **judge**, which is explicitly forbidden fro
 re-deciding the case. Conflating the two would replace a deterministic comparison
 with a non-deterministic one, which is strictly worse.
 
-### The live battery roster — built and validated, not yet run
+### The live battery — ran 13–15 September
 
-**N−1: six members, five distinct models.** 2 cheap + 3 mid across five families,
-every id and price verified live against OpenRouter today. **Team total US$1.24**,
-worst individual row US$0.43 — 14% of the US$3 per-member ceiling. The judge
-(`mistralai/mistral-small-2603`) is deliberately **off** the roster, and
+**N−1: six members, five distinct models**, 2 cheap + 3 mid across five families. The
+judge (`mistralai/mistral-small-2603`) is deliberately **off** the roster, and
 `test_judge_fake.py` re-checks that on every run.
 
-### Pending — tomorrow
+| Member | Model | Prompt | Code check | Negative 3-of-3 | Judgement check | List US$ |
+|---|---|---|---:|---:|---:|---:|
+| Rohit Panda | `anthropic/claude-haiku-4.5` | v2 | 54/60 (90.0%) | 8/10 | 34/40 | 1.2682 |
+| Huang Yu | `openai/gpt-4.1-mini` | v2 | 48/60 (80.0%) | 6/10 | 26/40 | 0.4634 |
+| Shen Bowen | `deepseek/deepseek-v3.2` | v2 | 48/60 (80.0%) | 6/10 | 31/40 | 0.2853 |
+| Xia Yanran | `google/gemini-2.5-flash` | v2 | 44/60 (73.3%) | 7/10 | 22/40 | 0.3476 |
+| Li Yunke | `qwen/qwen3-235b-a22b-2507` | v2 | 41/60 (68.3%) | 4/10 | 21/40 | 0.0858 |
+| Zhao Yujia | `qwen/qwen3-235b-a22b-2507` | **v1** | 31/60 (51.7%) | 1/10 | 6/40 | 0.0409 |
 
-| | Owner | Blocks |
-|---|---|---|
-| **Cut `v2-freeze`** — `run_battery.py --freeze`, then tag and push | Rohit | Everything below. Six runners without a frozen commit is guaranteed drift |
-| **The live battery** — six members × 60 trials, each on their own key | All six | D5(b), D6's measured inputs, report §3 |
-| **The judgement pass** — the Mistral judge over the live logs | Li Yunke | D4's second check on live output |
-| **D6 measured inputs** — `results/d6_inputs.json` from the battery's tokens and pass rate | Shen Bowen, Zhao Yujia | Report §4 |
+**Spend:** twelve live batteries, archived runs included, came to US$2.89 at list price
+and US$2.24 billed, plus US$0.14 of judging. Li Yunke's row is her first complete run;
+two identical re-runs scored 37 and 49 because of provider routing, and they are archived
+(`results/archive/live/README.md`). The regrade matrix and D6 are built from this table.
 
-### Still open, and not fixable by documentation
+### Status — 15 September
 
-- **The per-member authorship table in `CONTRIBUTIONS.md` is unsigned.** The
-  attestation is written; the case IDs and initials are blank. A marker checks
-  that section against `git log`, so it needs the members' own entries.
-- **Xia Yanran and Shen Bowen have no authored commits on `main`.**
+| Done | Open |
+|---|---|
+| Live battery, judgement check, offline re-grade | **The per-member authorship table in `CONTRIBUTIONS.md` is unsigned.** A marker checks it against `git log`, so it needs the members' own entries |
+| Post-freeze upgrade merged (`7c99753`) | Li Yunke and Zhao Yujia to say who ran the batteries committed under Rohit's name |
+| D6 filled: `results/d6_inputs.json`, `results/d6_summary.json` | Shen Bowen and Zhao Yujia to confirm D6's labelled layer-3 assumptions |
+| Every member has authored commits on `main` | The report (draft in `docs/report/`), the demo and the team self-appraisal |
 
 ## Known limits
 
@@ -418,3 +427,10 @@ worst individual row US$0.43 — 14% of the US$3 per-member ceiling. The judge
   guardrail case.
 - `docs/lecturer_clarifications.md` records where two course documents disagree and what we
   assumed instead.
+- **A live pass rate carries provider noise.** OpenRouter spreads one model id across
+  several providers. On qwen3-235b, three identical v2 runs scored 37, 41 and 49/60,
+  depending on how many trials reached a provider returning unreadable text. Each row is
+  one run, and the report reads differences between models against that spread.
+- **The judgement check is a second model and can be wrong.** It passed an unreadable
+  reply twice before `judge.py` began failing such records in code. Its verdicts are
+  graded wording, not the decision.
