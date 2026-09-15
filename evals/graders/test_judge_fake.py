@@ -112,6 +112,16 @@ def test_parser():
         reply([("item one", "absent"), ("item two", "present")], True), want)
     check("`pass: true` is NOT trusted over an absent item", ok is False)
 
+    # A verdict on an item nobody asked about is not a verdict on the one
+    # that was - even when the count is right and every verdict is present.
+    ok, _, why = judge.parse_verdict(
+        reply([("item one", "present"), ("something else", "present")]), want)
+    check("a label that was not asked about -> FAIL, and names it",
+          ok is False and "something else" in why, why)
+    ok, _, _ = judge.parse_verdict(
+        reply([("  ITEM   two ", "present"), ("Item One", "present")]), want)
+    check("case, spacing and order do not make a label a different item", ok is True)
+
 
 # =====================================================================
 # 2 · THE CHECK-KIND CLASSIFIER
@@ -269,6 +279,97 @@ def test_end_to_end(tmp_dir):
 
 
 # =====================================================================
+# 3b · A RECORD THE AGENT NEVER COMPLETED IS FAILED IN CODE
+# =====================================================================
+def test_code_verdicts(tmp_dir):
+    print("\n  3b · UNPARSEABLE AND HALTED RECORDS NEVER REACH THE JUDGE")
+    src = os.path.join(ROOT, "results", "scripted")
+    files = sorted(f for f in os.listdir(src)
+                   if f.startswith("problemA__scripted") and not f.endswith("__judged.json"))
+    if not files:
+        check("a scripted results file exists to judge", False, "run `python3 run_eval.py` first")
+        return
+    with open(os.path.join(src, files[-1]), encoding="utf-8") as fh:
+        doc = json.load(fh)
+    doc["model"] = "some/graded-model"
+    queue = doc["judgement_queue"][:4]
+    first = {}
+    for r in doc["results"]:
+        first.setdefault(r["case_id"], r)
+    # li_yunke's CLM-8941, twice: an unreadable reply the judge passed anyway.
+    first[queue[0]["case_id"]]["record"]["reason"] = "model did not return parseable JSON"
+    first[queue[1]["case_id"]]["record"]["stopped_by"] = "step_cap"
+    doc["judgement_queue"] = queue
+    path = os.path.join(tmp_dir, "code_verdicts.json")
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(doc, fh, indent=2)
+
+    calls = {"n": 0}
+
+    def fake(messages):
+        calls["n"] += 1
+        items = items_from_prompt(messages[0]["content"])
+        return (json.dumps({"items": [{"item": it, "verdict": "present", "evidence": "e"}
+                                      for it in items], "reason": "graded"}),
+                {"prompt_tokens": 1000, "completion_tokens": 50, "cost": 0.0003}, {})
+
+    real = backends.LIVE_CALL
+    backends.LIVE_CALL, judge.LIVE_CALL = fake, fake
+    config.set_api_key("sk-or-FAKE-never-leaves-memory")
+    saved_dir = judge.JUDGE_USAGE_DIR
+    judge.JUDGE_USAGE_DIR = tmp_dir
+    try:
+        rc = judge.main([path, "--by", "model", "--model", "fake/judge-model"])
+    finally:
+        backends.LIVE_CALL, judge.LIVE_CALL = real, real
+        judge.JUDGE_USAGE_DIR = saved_dir
+        config.set_api_key(None)
+
+    with open(path.replace(".json", "__judged.json"), encoding="utf-8") as fh:
+        out = json.load(fh)
+    q, s = out["judgement_queue"], out["judgement"]
+    check("the judging pass exits 0", rc == 0, "rc=%s" % rc)
+    check("only the two completed records cost a judge call", calls["n"] == 2, "n=%d" % calls["n"])
+    check("an unparseable record fails, graded by code",
+          q[0]["verdict"] == "fail" and q[0]["graded_by"] == "code: no parseable reply",
+          q[0].get("graded_by"))
+    check("a halted record fails, and names the guard",
+          q[1]["verdict"] == "fail" and q[1]["graded_by"] == "code: halted by step_cap",
+          q[1].get("graded_by"))
+    check("every required item of a code-failed case is recorded absent",
+          all(i["verdict"] == "absent" for c in q[:2] for i in c["items"])
+          and all(len(c["items"]) == len(c["must_record"]) for c in q[:2]))
+    check("the completed records are still judged by the model",
+          q[2]["graded_by"] == q[3]["graded_by"] == "model: fake/judge-model")
+    check("code-failed cases count as judged, not pending",
+          s["items_judged"] == 4 and s["items_pending"] == 0 and s["failed"] >= 2, str(s))
+    usage = [f for f in os.listdir(tmp_dir) if f.startswith("judge_usage__")]
+    cost = json.load(open(os.path.join(tmp_dir, usage[0])))["cost_usd"] if usage else None
+    check("the usage record bills only the two real calls",
+          cost is not None and abs(cost - 0.0006) < 1e-9, str(cost))
+
+    def must_not_ask(prompt=""):
+        raise AssertionError("a person was asked to rule on a record with nothing to rule on")
+
+    import builtins
+    saved_input, builtins.input = builtins.input, must_not_ask
+    person_queue = [dict(queue[0], verdict=None), dict(queue[1], verdict=None)]
+    try:
+        import contextlib
+        import io
+        with contextlib.redirect_stdout(io.StringIO()):
+            judge.judge_by_person(person_queue, "tester", doc)
+        asked = False
+    except AssertionError:
+        asked = True
+    finally:
+        builtins.input = saved_input
+    check("the person path fails them in code too, without asking",
+          not asked and all(c["verdict"] == "fail" and c["graded_by"].startswith("code:")
+                            for c in person_queue))
+
+
+# =====================================================================
 # 4 · THE REFUSALS
 # =====================================================================
 def test_refusals():
@@ -313,6 +414,8 @@ def main():
     test_classifier()
     with tempfile.TemporaryDirectory() as tmp:
         test_end_to_end(tmp)
+    with tempfile.TemporaryDirectory() as tmp:
+        test_code_verdicts(tmp)
     test_refusals()
     print()
     print("=" * 70)

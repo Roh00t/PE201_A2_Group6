@@ -95,6 +95,18 @@ def save(path, doc):
         json.dump(doc, fh, indent=2)
 
 
+def shape(battery):
+    """What the fixture implies, derived rather than typed: the first pass's
+    cases, the cases still pending, and which cases judge.py fails in code
+    (an unparseable or halted record) without a judge call."""
+    doc = load(battery)
+    rebuilt = rb.judgement_queue_for(doc["results"], harness.load_key(doc["problem"]))
+    first = [q["case_id"] for q in doc["judgement_queue"]]
+    pending = [q["case_id"] for q in rebuilt if q["case_id"] not in set(first)]
+    coded = {q["case_id"] for q in rebuilt if judge.code_verdict(doc, q)}
+    return first, pending, coded
+
+
 # =====================================================================
 # THE FIXTURE: her committed files, and her first pass recreated
 # =====================================================================
@@ -190,8 +202,12 @@ def test_dry_run(tmp, src):
     print("\n  1 · THE DRY RUN MAKES EVERY CHECK AND CHANGES NOTHING")
     battery, copy_path, judged, first_calls = make_tree(tmp, *src)
     first = load(judged)["judgement"]
-    check("the recreated first pass judged 18 of 40 cases",
-          first_calls == 18 and first["items_judged"] == 18, str(first))
+    first_ids, pending, coded = shape(battery)
+    pending_calls = [c for c in pending if c not in coded]
+    check("the recreated first pass judged 18 of 40 cases, calling the judge only on completed records",
+          first["items_judged"] == 18
+          and first_calls == len([c for c in first_ids if c not in coded]),
+          "%s calls=%d" % (first, first_calls))
     before = snapshot(tmp)
     rc, calls, out = run(tmp, ["--member", MEMBER, "--dry-run"])
     check("exits 0", rc == 0, str(rc))
@@ -201,8 +217,10 @@ def test_dry_run(tmp, src):
     check("the banner counts 40 cases, 18 kept, 22 to judge",
           "40, one item each" in out and "already judged  18" in out
           and "to judge now    22" in out, out[-600:])
-    check("the estimate comes from the first pass's measured cost",
-          "US$%.4f" % (22 * COST_PER_CALL) in out, out[-600:])
+    check("the banner says how many pending cases fail in code",
+          "%d fail in code" % (len(pending) - len(pending_calls)) in out, out[-600:])
+    check("the estimate prices only the judge calls still to make",
+          "US$%.4f" % (len(pending_calls) * COST_PER_CALL) in out, out[-600:])
 
 
 # =====================================================================
@@ -211,6 +229,9 @@ def test_dry_run(tmp, src):
 def test_completion(tmp, src):
     print("\n  2 · THE COMPLETION JUDGES ONLY THE 22 PENDING CASES")
     battery, copy_path, judged, _ = make_tree(tmp, *src)
+    first_ids, pending, coded = shape(battery)
+    pending_calls = [c for c in pending if c not in coded]
+    first_calls = [c for c in first_ids if c not in coded]
     first_doc = load(judged)
     kept = {q["case_id"]: q for q in first_doc["judgement_queue"]}
     pass1_usage = glob.glob(os.path.join(tmp, "judge", "*.json"))
@@ -218,7 +239,8 @@ def test_completion(tmp, src):
 
     rc, calls, out = run(tmp, ["--member", MEMBER])
     check("exits 0", rc == 0, "%s\n%s" % (rc, out[-800:]))
-    check("22 judge calls, one per pending case", calls["live"] == 22, str(calls["live"]))
+    check("one judge call per pending case with a completed record",
+          calls["live"] == len(pending_calls), "%d vs %d" % (calls["live"], len(pending_calls)))
     check("none of the 18 already-judged cases was sent to the judge",
           not set(calls["cases"]) & set(kept), sorted(set(calls["cases"]) & set(kept)))
     check("the key was asked once, after the confirmation",
@@ -244,9 +266,12 @@ def test_completion(tmp, src):
     check("the 18 earlier verdicts are kept exactly",
           all(q == kept[q["case_id"]] for q in doc["judgement_queue"]
               if q["case_id"] in kept))
-    check("every new item names the judge model",
-          all(q["graded_by"] == "model: %s" % judge.DEFAULT_JUDGE_MODEL
-              for q in doc["judgement_queue"]))
+    check("every item names what graded it: the judge model, or code for a record never completed",
+          all(q["graded_by"] == ("model: %s" % judge.DEFAULT_JUDGE_MODEL
+                                 if q["case_id"] not in coded else q["graded_by"])
+              and (q["case_id"] not in coded or q["graded_by"].startswith("code: "))
+              for q in doc["judgement_queue"]),
+          [(q["case_id"], q["graded_by"]) for q in doc["judgement_queue"]][:6])
     check("results are the battery's results", doc["results"] == load(battery)["results"])
 
     passes = s.get("passes") or []
@@ -264,11 +289,13 @@ def test_completion(tmp, src):
           len(new) == 1 and new[0].endswith("__%s__pass2.json" % RUN_ID), str(usage_files))
     check("each pass records its measured cost",
           [p.get("cost_usd") for p in passes]
-          == [round(18 * COST_PER_CALL, 6), round(22 * COST_PER_CALL, 6)], str(passes))
+          == [round(len(first_calls) * COST_PER_CALL, 6),
+              round(len(pending_calls) * COST_PER_CALL, 6)], str(passes))
     if new:
         u = load(new[0])
         check("the usage file records 22 cases and their MEASURED cost",
-              u["items_judged"] == 22 and abs(u["cost_usd"] - 22 * COST_PER_CALL) < 1e-9
+              u["items_judged"] == 22
+              and abs(u["cost_usd"] - len(pending_calls) * COST_PER_CALL) < 1e-9
               and u["cost_source"].startswith("measured"), str(u))
         check("it names the member, the judged file and the cases kept",
               u["graded_member"] == MEMBER and u["items_kept_from_earlier_passes"] == 18
@@ -278,20 +305,17 @@ def test_completion(tmp, src):
     written = "".join(json.dumps(load(p)) for p in [judged] + new)
     check("nothing key-shaped reaches the files", "sk-or-" not in written)
 
-    first = {}
-    for r in load(battery)["results"]:
-        first.setdefault(r["case_id"], r["record"])
-    unparseable_passes = [q["case_id"] for q in doc["judgement_queue"]
-                          if q["verdict"] == "pass"
-                          and "did not return parseable JSON" in str(first[q["case_id"]].get("reason"))]
-    check("every pass on an unparseable record is listed for a person",
-          s.get("needs_person_review") == unparseable_passes and unparseable_passes,
-          "%s vs %s" % (s.get("needs_person_review"), unparseable_passes))
-    check("listing a case for review leaves its verdict as the judge gave it",
-          all(q["verdict"] == "pass" for q in doc["judgement_queue"]
-              if q["case_id"] in (s.get("needs_person_review") or [])))
-    check("the summary tells the person which cases to review",
-          "PERSON REVIEW" in out and all(c in out for c in unparseable_passes), out[-500:])
+    by_case = {q["case_id"]: q for q in doc["judgement_queue"]}
+    coded_pending = [c for c in pending if c in coded]
+    check("every unparseable or halted pending case failed in code, with no judge call",
+          coded_pending
+          and all(by_case[c]["verdict"] == "fail" and by_case[c]["graded_by"].startswith("code: ")
+                  for c in coded_pending)
+          and not set(coded_pending) & set(calls["cases"]),
+          [(c, by_case[c]["verdict"], by_case[c]["graded_by"]) for c in coded_pending])
+    check("so nothing is left for a person to overrule",
+          s.get("needs_person_review") == [] and "PERSON REVIEW" not in out,
+          s.get("needs_person_review"))
 
     print("\n  3 · RUNNING IT AGAIN DOES NOTHING")
     before = snapshot(tmp)
@@ -308,12 +332,21 @@ def test_completion(tmp, src):
 def test_partial(tmp, src):
     print("\n  4 · A PASS THAT STOPS PART-WAY KEEPS WHAT IT PAID FOR")
     battery, copy_path, judged, _ = make_tree(tmp, *src)
+    first_ids, pending, coded = shape(battery)
+    pending_calls = [c for c in pending if c not in coded]
+    done, live = [], 0                  # judged before the 6th call fails
+    for c in pending:
+        if c not in coded:
+            live += 1
+            if live > 5:
+                break
+        done.append(c)
     rc, calls, out = run(tmp, ["--member", MEMBER], fake=failing_after(5))
     doc = load(judged)
     s = doc["judgement"]
     check("exits 1, because cases are still pending", rc == 1, "%s\n%s" % (rc, out[-500:]))
-    check("the 5 verdicts it got are written: 23 judged, 17 pending",
-          s["items_judged"] == 23 and s["items_pending"] == 17, str(s))
+    check("every verdict it got before the failure is written",
+          s["items_judged"] == 18 + len(done) and s["items_pending"] == 22 - len(done), str(s))
     usage = [p for p in glob.glob(os.path.join(tmp, "judge", "*.json"))
              if p.endswith("__pass2.json")]
     check("the spend before the failure is recorded",
@@ -324,11 +357,12 @@ def test_partial(tmp, src):
     rc, calls, out = run(tmp, ["--member", MEMBER])
     doc = load(judged)
     s = doc["judgement"]
-    check("the next run judges only the 17 left", calls["live"] == 17, str(calls["live"]))
-    check("40 judged, 0 pending, three passes: 18, 5, 17",
+    check("the next run calls the judge only for the cases left",
+          calls["live"] == len(pending_calls) - 5, str(calls["live"]))
+    check("40 judged, 0 pending, three passes",
           s["items_judged"] == 40 and s["items_pending"] == 0
-          and [p["items_judged"] for p in s["passes"]] == [18, 5, 17], str(s))
-    check("the 23 earlier verdicts are kept exactly",
+          and [p["items_judged"] for p in s["passes"]] == [18, len(done), 22 - len(done)], str(s))
+    check("the earlier verdicts are kept exactly",
           all(q == kept[q["case_id"]] for q in doc["judgement_queue"]
               if q["case_id"] in kept))
     check("pass 3 has its own usage file",
@@ -348,7 +382,9 @@ def other_run_usage(path, pass1):
 def test_same_day_rerun(tmp_root, src):
     print("\n  5 · A SAME-DAY RE-RUN'S USAGE FILE IS NEVER MISTAKEN FOR PASS 1")
     tmp = tempfile.mkdtemp(dir=tmp_root)
-    make_tree(tmp, *src)
+    battery, _c, _j, _n = make_tree(tmp, *src)
+    _first, pending, coded = shape(battery)
+    pending_calls = [c for c in pending if c not in coded]
     pass1 = glob.glob(os.path.join(tmp, "judge", "*.json"))[0]
     aside = pass1[:-len(".json")] + "__%s.json" % RUN_ID
     os.rename(pass1, aside)
@@ -362,7 +398,7 @@ def test_same_day_rerun(tmp_root, src):
           rc == 0 and (passes[0]["usage_file"] or "").endswith("__%s.json" % RUN_ID),
           "%s %s" % (rc, passes[0]))
     check("the estimate uses pass 1's cost, not the re-run's",
-          "US$%.4f" % (22 * COST_PER_CALL) in out, out[-700:])
+          "US$%.4f" % (len(pending_calls) * COST_PER_CALL) in out, out[-700:])
     check("the re-run's usage file and the renamed one are byte-identical",
           all(before[os.path.relpath(p, tmp)] == after[os.path.relpath(p, tmp)]
               for p in (pass1, aside)))

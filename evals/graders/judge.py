@@ -257,6 +257,12 @@ def render_prompt(template, item, doc, expected_decision):
 _FENCE = re.compile(r"```(?:json)?\s*(.+?)\s*```", re.S)
 
 
+def _label(text):
+    """An item label as the judge was asked to copy it: case, surrounding
+    space and runs of whitespace do not make it a different item."""
+    return re.sub(r"\s+", " ", str(text or "")).strip().casefold()
+
+
 def parse_verdict(content, expected_items):
     """Turn the judge's reply into a verdict. NEVER raise.
 
@@ -292,8 +298,10 @@ def parse_verdict(content, expected_items):
     if not isinstance(items, list):
         return False, [], "judge response has no `items` list"
 
-    # The parser checks verdict vocabulary and item count, but it does not
-    # compare the returned item labels with `expected_items`.
+    # Vocabulary, count AND labels are checked: a verdict on an item nobody
+    # asked about is not a verdict on the one that was. Across the nine
+    # judged files of 2026-09-15 the judge copied all 1,035 labels exactly,
+    # so this refuses nothing a working judge sends.
     clean, absent = [], []
     for entry in items:
         if not isinstance(entry, dict):
@@ -310,6 +318,12 @@ def parse_verdict(content, expected_items):
     if len(clean) != len(expected_items):
         return False, clean, ("judge ruled on %d item(s), %d were required"
                               % (len(clean), len(expected_items)))
+
+    asked = sorted(_label(i) for i in expected_items)
+    if sorted(_label(e["item"]) for e in clean) != asked:
+        stray = [str(e["item"])[:60] for e in clean if _label(e["item"]) not in asked]
+        return False, clean, ("judge ruled on item(s) it was not asked about: %s"
+                              % ("; ".join(stray) or "a duplicated label"))
 
     # `pass` is DERIVED, not trusted. The judge is asked for it, and the
     # ask is what makes it think item by item - but a model that marks
@@ -374,9 +388,15 @@ def evaluate_outcome(expected, actual, judge_model=None, doc=None):
 # =====================================================================
 # THE TWO PATHS
 # =====================================================================
-def judge_by_person(queue, who):
+def judge_by_person(queue, who, doc=None):
     tokens_in = tokens_out = 0
     for n, item in enumerate(queue, 1):
+        verdict = code_verdict(doc, item) if doc else None
+        if verdict:
+            apply_code_verdict(item, verdict)
+            print("\n  %d of %d · %s · FAIL - %s (nothing to rule on)"
+                  % (n, len(queue), item["case_id"], verdict[1]))
+            continue
         required = item.get("must_record") or []
         print("\n" + "=" * 68)
         print("  %d of %d · %s · decided %s"
@@ -402,6 +422,45 @@ def judge_by_person(queue, who):
     return tokens_in, tokens_out
 
 
+def code_verdict(doc, item):
+    """Fail a case in code when the record is not one the agent completed.
+
+    Returns (reason, graded_by), or None when the judge should rule.
+
+    A record whose reply could not be parsed carries no must_record item,
+    and a record the harness halted is not a decision - so neither can
+    pass, and neither is worth a model call. Sending them anyway produced
+    two false passes: on 2026-09-14 li_yunke's CLM-8941 was an unparseable
+    reply (1 output token) in two runs, and both times the judge marked
+    every item "present", citing "model did not return parseable JSON" as
+    the evidence while its own reason said they were absent. A halted
+    record passed once too (an archived llama run, CLM-8910,
+    duplicate_action). A transport halt is failed the same way: the case
+    has no record to read, and PENDING would ask for it forever.
+    """
+    from evals.metrics import UNPARSEABLE
+    record = next(((r.get("record") or {}) for r in doc.get("results") or []
+                   if r.get("case_id") == item.get("case_id")), None)
+    if record is None:
+        return None
+    if UNPARSEABLE in str(record.get("reason") or ""):
+        return ("no parseable reply - the record carries no item to find",
+                "code: no parseable reply")
+    if record.get("stopped_by"):
+        return ("halted by %s - a halt is not a decision the agent completed"
+                % record["stopped_by"], "code: halted by %s" % record["stopped_by"])
+    return None
+
+
+def apply_code_verdict(item, verdict):
+    reason, graded_by = verdict
+    item["verdict"] = "fail"
+    item["items"] = [{"item": m, "verdict": "absent", "evidence": reason}
+                     for m in item.get("must_record") or []]
+    item["graded_by"] = graded_by
+    item["judge_reason"] = reason
+
+
 def judge_by_model(queue, doc, judge_model, key_map, spend_cap):
     tokens_in = tokens_out = 0
     spent = 0.0
@@ -409,6 +468,12 @@ def judge_by_model(queue, doc, judge_model, key_map, spend_cap):
     # update it; returned alongside the token counts.
     measured_cost = [0.0, True]
     for n, item in enumerate(queue, 1):
+        verdict = code_verdict(doc, item)
+        if verdict:
+            apply_code_verdict(item, verdict)
+            print("  %3d/%d  %-12s FAIL   %s (no judge call)"
+                  % (n, len(queue), item["case_id"], verdict[1]))
+            continue
         expected = key_map.get(item["case_id"], {})
         out = evaluate_outcome(expected, item, judge_model, doc)
 
@@ -589,7 +654,7 @@ def main(argv=None):
     else:
         who = args.name or input("  your name: ").strip() or "unnamed"
         print("=" * 68)
-        judge_by_person(queue, who)
+        judge_by_person(queue, who, doc)
 
     # ---- write the judged copy; never touch the input ----------------
     out_path = (args.results if args.results.endswith("__judged.json")

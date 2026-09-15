@@ -194,8 +194,12 @@ def earlier_verdicts(judged_path, doc, rebuilt, judge_model):
     rebuilt_by_case = {q["case_id"]: q for q in rebuilt}
     for cid, item in sorted(given.items()):
         want = rebuilt_by_case.get(cid)
-        if item.get("graded_by") != want_by:
-            refuse("%s was graded by %s, not %s." % (cid, item.get("graded_by"), want_by))
+        # A verdict failed in code ("code: no parseable reply", "code: halted
+        # by ...") comes from the same judge.py, deterministically, so it is
+        # the same instrument as a model verdict and is kept like one.
+        graded = str(item.get("graded_by") or "")
+        if graded != want_by and not graded.startswith("code: "):
+            refuse("%s was graded by %s, not %s." % (cid, graded or None, want_by))
         if want is None or any(item.get(f) != want.get(f) for f in SAME_ITEM_FIELDS):
             refuse("%s's earlier verdict was given on a different item than the "
                    "rebuilt queue holds." % cid)
@@ -255,17 +259,22 @@ def first_pass_entry(summary, judge_model, doc, copy_path):
             "queue": "the judgement_queue the battery wrote"}
 
 
-def estimate(passes, pending):
-    """Cost for `pending` items at the rate earlier passes measured, or None."""
-    usd = items = 0
+def estimate(passes, calls, model_verdicts):
+    """Cost of `calls` judge calls at the rate earlier passes measured, or None.
+
+    The rate is per MODEL verdict. A verdict failed in code cost nothing, so
+    counting it would dilute the rate and under-estimate the pass to come.
+    """
+    usd, read = 0.0, 0
     for p in passes:
         if not p.get("usage_file"):
             continue
         with open(os.path.join(ROOT, p["usage_file"]), encoding="utf-8") as fh:
-            u = json.load(fh)
-        usd += float(u.get("cost_usd") or 0)
-        items += int(u.get("items_judged") or 0)
-    return (usd / items * pending, usd, items) if items else None
+            usd += float(json.load(fh).get("cost_usd") or 0)
+        read += 1
+    if not read or not model_verdicts:
+        return None
+    return usd / model_verdicts * calls, usd, model_verdicts
 
 
 # =====================================================================
@@ -348,7 +357,10 @@ def main(argv=None):
     passes = copy.deepcopy(prev.get("passes") or
                            ([first_pass_entry(prev, judge_model, doc, copy_path)]
                             if given else []))
-    guess = estimate(passes, len(pending))
+    coded = [q["case_id"] for q in pending if judge.code_verdict(doc, q)]
+    model_verdicts = sum(1 for q in given.values()
+                         if str(q.get("graded_by") or "").startswith("model: "))
+    guess = estimate(passes, len(pending) - len(coded), model_verdicts)
 
     print()
     print("=" * 68)
@@ -361,14 +373,15 @@ def main(argv=None):
     print("  judged file     %s" % rel(judged_path))
     print("  cases           %d, one item each from trial 1" % len(queue))
     print("  already judged  %d - kept as they are, not judged again" % len(given))
-    print("  to judge now    %d" % len(pending))
+    print("  to judge now    %d%s" % (len(pending), " - %d fail in code, with no judge call"
+                                        % len(coded) if coded else ""))
     print("  judge           %s · prompt sha %s"
           % (judge_model, judge.prompt_sha256()[:12]))
     for p in passes:
         print("  pass %d usage    %s" % (p["pass"], p.get("usage_file") or
                                         "NOT FOUND - no usage record graded this copy"))
     if guess:
-        print("  estimate        about US$%.4f  (measured US$%.5f for %d case(s) so far)"
+        print("  estimate        about US$%.4f  (measured US$%.5f for %d judge call(s) so far)"
               % guess)
     print("  spend cap       US$%.2f" % args.spend_cap)
     print("=" * 68)
