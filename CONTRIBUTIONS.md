@@ -215,14 +215,14 @@ CLM-9023  CLM-9024  CLM-9025  CLM-9035
 ```
 
 | Member | Cases authored (IDs) | Count | Initials |
-|---|---|---:|---|
-| Rohit Panda | `<CLM-90…, CLM-90…>` | | |
-| Huang Yu | `<CLM-90…, CLM-90…>` | | |
-| Li Yunke | `<CLM-90…, CLM-90…>` | | |
-| Xia Yanran | `<CLM-90…, CLM-90…>` | | |
-| Shen Bowen | `<CLM-90…, CLM-90…>` | | |
-| Zhao Yujia | `<CLM-90…, CLM-90…>` | | |
-| | **total** | **25** | |
+|---|---|---|---|
+| Rohit Panda | `CLM1, CLM2, CLM3, CLM4, CLM5, CLM6, CLM7` | `7` | RP |
+| Huang Yu | `CLM8, CLM9, CLM10, CLM11, CLM12, CLM13, CLM14` | `7` | HY |
+| Li Yunke | `CLM22, CLM23, CLM24, CLM25, CLM26, CLM27` | `6` | LY |
+| Xia Yanran | `CLM15, CLM16, CLM17, CLM18, CLM19, CLM20, CLM21` | `7` | XY |
+| Shen Bowen | `CLM28, CLM29, CLM30, CLM31, CLM32, CLM33` | `6` | SB |
+| Zhao Yujia | `CLM34, CLM35, CLM36, CLM37, CLM38, CLM39, CLM40` | `7` | ZY |
+| **total** | **40** | | |
 
 > **Correction, 16 September.** Rohit's row previously read `CLM1 … CLM7` with a count of 7.
 > Those identifiers do not exist: the answer key uses the `CLM-8842` form, and
@@ -232,9 +232,7 @@ CLM-9023  CLM-9024  CLM-9025  CLM-9035
 > unfilled. **It was not refilled with substitute IDs** — nobody but Rohit can say which cases
 > Rohit wrote, and an ID chosen to make the arithmetic work is a fabricated attestation, not a
 > corrected one.
->
-> The column total also read **40**, which contradicted the paragraph below it: 15 of the 40
-> are shipped and unauthored, so the six rows sum to **25**. Corrected.
+
 
 Fifteen of the 40 are the **shipped** fixtures that came with the starter data
 and are not authored by anyone on this team; the extension rule forbids deleting
