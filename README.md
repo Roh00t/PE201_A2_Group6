@@ -1,5 +1,7 @@
 # PE6201 A2 · Applied AI System — Group 6
 
+[![Video Title](https://img.youtube.com/vi/1ehD3pLdGoY/0.jpg)](https://www.youtube.com/watch?v=1ehD3pLdGoY)
+
 **Problem A — health-insurance claim first response.** A single-agent ReAct loop that
 reads a claim, checks the policy, works every line item, chases a pre-authorisation
 where a procedure needs one, checks the hospital panel, and reaches exactly one of three
