@@ -49,7 +49,8 @@ after any descriptor change — it is the D2(b) artefact.
 ```bash
 python3 evals/test_battery_fake.py         # 113 checks · battery failure modes
 python3 evals/graders/test_judge_fake.py   #  65 checks · judge failure modes
-python3 evals/test_cost_model.py           #   4 checks · D6 arithmetic
+python3 evals/test_cost_model.py
+python3 evals/test_significance.py           #   4 checks · D6 arithmetic
 python3 evals/run_guardrails.py --twice    # D3(b) · 18 guardrail cases
 python3 evals/graders/code_check.py        # D4 · which check grades which case
 python3 experiments/test_regrade_offline.py     # 40 checks · the offline re-grade

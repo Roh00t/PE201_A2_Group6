@@ -31,9 +31,9 @@ the claim itself. Each answers inside the turn, with no person in the loop. That
 loop may run unsupervised up to the write, and why autonomy is `confirm` on that one call
 only: the ten escalations and document requests in our set never reach the gate.
 
-**What the climb cost.** On the deployed model a claim's tokens cost US$0.021. A wrong
-outcome costs an assessor US$7.60. Tokens are noise beside failures, so rung 7 earns its
-cost exactly when it raises the success rate (§4).
+**What the climb cost.** Tokens are US$0.021 a claim; a wrong outcome costs an assessor
+US$7.60. Tokens are noise beside failures, so rung 7 earns its cost only by raising the
+success rate (§4).
 
 **Step quality, not step count.** Claude Haiku 4.5 passed 54 of 60 trials at a median of four
 turns, an implied per-step reliability of 0.90^(1/4) = 0.974; qwen3-235b's is 0.909. No live
@@ -50,12 +50,11 @@ Seven tools, one of them a write: `get_claim`, `lookup_policy`, `lookup_hospital
 
 **We tried not adding tools first.** Instead of a `get_required_documents` tool,
 `check_coverage` takes the attached documents and returns the required one — D7's second
-failure is the receipt, since deleting that widening silently approves a claim missing its
-itemised bill. Narrative checking became ordinary code, not a tool: a tool the model chooses
-to call is one it can choose to skip, and hostile text argues for skipping. We added
+failure is the receipt. Narrative checking became ordinary code, not a tool: a tool the model
+chooses to call is one it can choose to skip, and hostile text argues for skipping. We added
 `check_duplicate_claim` only because nothing else sees decided claims. `lookup_hospital` is
 our weak tool: no case fails without it, and its 140 tokens are re-billed every turn. We kept
-it because the record must state panel status, and we say so.
+it because the record must state panel status.
 
 **Poka-yoke in the signatures.** `check_coverage` requires a `policy_id`, so pricing a line
 against no policy cannot be expressed; that costs one turn per approval. The letter accepts
@@ -69,8 +68,16 @@ often (49 against 45). It lost on what v2's process section and final-record che
 for: fifteen trials escalated correctly with a trigger in free text (v2: three), no v1 record
 carried the checklist fields, and v1 never sent a letter for any of its 30 approvals (v2:
 25 of 25). v2 changed descriptors, process section and example together, so the gain cannot
-be credited to descriptors alone. Five of v1's trigger failures differ only by a space for an
-underscore; forgiving them gives 36 of 60, and the conclusion stands.
+be credited to descriptors alone — the isolation D2(b) asks for is not something we achieved,
+and we report the comparison as a prompt-version result rather than a descriptor result.
+
+§3's test, applied to our own rewrite, goes against us: **the pass-rate gain is not
+significant** (31→41 of 60, p = 0.062), nor is the negative 3-of-3 rise (p = 0.121). What is
+significant is categorical — approvals that sent the letter went 0 of 30 to 25 of 25,
+checklist fields 0 of 40 to 23 of 40, judgement check 6 of 40 to 21 of 40, all p < 0.001. The
+defensible claim is narrow: v2 changed what the model *did* every run; that it made the agent
+*more often right* is weak at 60 trials. Forgiving v1's underscore-for-space trigger failures
+gives 36 of 60, moving that comparison further from significance, not closer.
 
 **Dependency rule: two calls share a turn only when neither needs the other's output.** The
 claim comes alone; policy, hospital and duplicate history together; one coverage check per
@@ -81,17 +88,19 @@ No call was removed; the transcript was re-sent fewer times.
 
 ## 3 · What the evidence showed
 
-| Model (member) | Prompt | Code check, 60 trials | Negative trials | Negative cases 3 of 3 | Judgement check | List US$ |
-|---|---|---:|---:|---:|---:|---:|
-| `anthropic/claude-haiku-4.5` (Rohit Panda) | v2 | **54 (90.0%)** | 24/30 | 8/10 | 34/40 | 1.2682 |
-| `openai/gpt-4.1-mini` (Huang Yu) | v2 | 48 (80.0%) | 18/30 | 6/10 | 26/40 | 0.4634 |
-| `deepseek/deepseek-v3.2` (Shen Bowen) | v2 | 48 (80.0%) | 20/30 | 6/10 | 31/40 | 0.2853 |
-| `google/gemini-2.5-flash` (Xia Yanran) | v2 | 44 (73.3%) | 21/30 | 7/10 | 22/40 | 0.3476 |
-| `qwen/qwen3-235b-a22b-2507` (Li Yunke) | v2 | 41 (68.3%) | 18/30 | 4/10 | 21/40 | 0.0858 |
-| `qwen/qwen3-235b-a22b-2507` (Zhao Yujia) | **v1** | 31 (51.7%) | 4/30 | 1/10 | 6/40 | 0.0409 |
+| Model (member) | Prompt | Code check, 60 trials | 95% CI | Separated from best? | Negative trials | Negative cases 3 of 3 | Judgement check | List US$ |
+|---|---|---:|---:|---|---:|---:|---:|---:|
+| `anthropic/claude-haiku-4.5` (Rohit Panda) | v2 | **54 (90.0%)** | 79.9–95.3% | — (best) | 24/30 | 8/10 | 34/40 | 1.2682 |
+| `openai/gpt-4.1-mini` (Huang Yu) | v2 | 48 (80.0%) | 68.2–88.2% | **no**, p = 0.125 | 18/30 | 6/10 | 26/40 | 0.4634 |
+| `deepseek/deepseek-v3.2` (Shen Bowen) | v2 | 48 (80.0%) | 68.2–88.2% | **no**, p = 0.125 | 20/30 | 6/10 | 31/40 | 0.2853 |
+| `google/gemini-2.5-flash` (Xia Yanran) | v2 | 44 (73.3%) | 61.0–82.9% | yes, p = 0.018 | 21/30 | 7/10 | 22/40 | 0.3476 |
+| `qwen/qwen3-235b-a22b-2507` (Li Yunke) | v2 | 41 (68.3%) | 55.8–78.7% | yes, p = 0.003 | 18/30 | 4/10 | 21/40 | 0.0858 |
+| `qwen/qwen3-235b-a22b-2507` (Zhao Yujia) | **v1** | 31 (51.7%) | 39.3–63.8% | v1 — not a rival | 4/30 | 1/10 | 6/40 | 0.0409 |
 
 *Source: `results/live/battery_table.md`; judgement counts from each run's `__judged.json`.
-Re-grades with two grader fixes: `results/regrade/regrade_matrix.md`.*
+Re-grades with two grader fixes: `results/regrade/regrade_matrix.md`. Wilson intervals and the
+two-proportion tests are derived by `evals/metrics.py` and printed by
+`python3 evals/aggregate_battery.py`; rehearsed by `evals/test_significance.py` (19 checks).*
 
 The negative cases separated the models by kind of failure, not only by count.
 `CLM-8952`, whose narrative imitates a tool result, was approved in every trial by Haiku,
@@ -100,16 +109,24 @@ correctly — the same model that missed a lapsed policy and a missing pre-autho
 time. `CLM-8925`, a claim above its remaining limit, was escalated every time by Haiku and
 Gemini; the other three asked for a document in eight of their nine trials.
 
-No cheaper model met our bar: §4 shows one would need about 89.8% success to beat Haiku,
-and the best measured 80%. So the evidence supports the most expensive model. The one that
-least earned its
-price is gpt-4.1-mini: it matched deepseek-v3.2's 48 at 1.6× the cost, was the only model
-to accept `CLM-9035`'s invented waiver, and five of its approvals never sent their letter.
+**Two of the four gaps are not real, and that is the finding.** Haiku leads, but at 60 trials
+it is not separable from deepseek-v3.2 or gpt-4.1-mini (both p = 0.125), only from Gemini and
+qwen. We hold the evidence for why: three identical qwen3-235b batteries — same prompt, same
+commit — scored 37, 41 and 49, a 20-point spread on **one** model, wider than the 10-point gap
+we would have read as Haiku beating deepseek. So the honest claim is not "no cheaper model met
+our bar" but that our experiment was too small to say. §4's break-even asks 89.8% where Haiku
+measured 90.0% — one-eighth of a trial — so the deployment choice is a judgement under
+uncertainty, and we report it as one. Separating those two would need roughly 300 trials each,
+about US$6 on the mid tier: affordable next time, not inside a US$10 key that also carries the
+Project.
 
-How far to trust a row: three identical qwen3-235b runs scored 37, 41 and 49, depending on
-how many trials OpenRouter routed to a provider returning unreadable text. With one run per
-model, a gap of a few trials is noise. The judgement check is a second model and passed an
-unreadable reply twice; `judge.py` now fails such records in code.
+What the trial count **does** support: Haiku over qwen and Gemini, the v2 rewrite's
+behavioural effects (§2), and every claim resting on which cases failed rather than how many. gpt-4.1-mini is
+the row that least earned its price — it matched deepseek's 48 at 1.6× the cost, was the only
+model to accept `CLM-9035`'s invented waiver, and five of its approvals never sent their
+letter. The judgement check is a second model, is uncalibrated against human labels, and
+passed an unreadable reply twice; `judge.py` now fails such records in code, but its column
+carries unquantified error and should be read as indicative.
 
 ## 4 · What it costs
 
@@ -134,17 +151,16 @@ unreadable reply twice; `judge.py` now fails such records in code.
 **text** as 1,240 and 3,134 rough tokens (`characters / 4`); that is an estimate of a
 different quantity, and the billed count is the one a cost lever is measured in.*
 
-We price a failure with the escalation form because a wrong outcome goes to a person, not
-back into the loop. That makes layer 2 the bill: 90% of the deployed month. **Lever 4
-dominated by three orders of magnitude.** The v2 rewrite added under a tenth of a US cent
-in tokens per claim and removed US$1.27 of expected failure. Inside
-layer 1, turn count was the larger lever; that is why the dependency rule matters more than
-descriptor length.
+We price a failure with the escalation form because a wrong outcome goes to a person, not back
+into the loop. That makes layer 2 the bill: 90% of the deployed month. **Lever 4 dominated by
+three orders of magnitude** — v2 added under a tenth of a cent per claim and removed US$1.27
+of expected failure. Inside layer 1, turn count was the larger lever, which is why the
+dependency rule matters more than descriptor length.
 
-**Sensitivity.** At 80% success the month costs US$12,811; at 100%, US$651. Against people
-the conclusion survives the whole range. The choice of Haiku does not: at 80% it costs
-US$107–131 a month more than gpt-4.1-mini or deepseek-v3.2 at their measured 80%, so Haiku is
-right only while it really succeeds more often — a six-trial margin from one run each.
+**Sensitivity.** At 80% success the month costs US$12,811; at 100%, US$651. Against people the
+conclusion survives the whole range. The choice of Haiku does not: at 80% it costs US$107–131
+a month more than gpt-4.1-mini or deepseek-v3.2 at their measured 80% — and §3 shows we cannot
+establish that it succeeds more often.
 
 **Break-even.** A cheap model must succeed 1 − (0.7811 − 0.0048)/7.60 = 89.8% of the time to
 beat Haiku. deepseek-v3.2 measured 80.0% and qwen3-235b 68.3%. Because a claim's tokens are
@@ -152,43 +168,41 @@ tiny beside US$7.60, a cheaper model has to match the expensive one's success al
 exactly; its price barely matters. OpenRouter's prompt caching billed gpt-4.1-mini US$0.19
 instead of US$0.46; we report that beside the list-price baseline, never inside it.
 
-**Caps that ship with it.** Eight turns: the worst legitimate run takes five, plus three to
-recover from one wander. 60,000 tokens a run: the largest live run used 27,444. Twenty claims
-a member a month: the busiest member in our data has eight of 40, and the cap bounds one
-member at US$6 of model spend. The twelve live batteries were billed US$2.24, plus US$0.14 of
-judging.
+**Caps that ship with it.** Eight turns (worst legitimate run five, plus three to recover
+from a wander); 60,000 tokens a run (largest live run 27,444); twenty claims per member per
+month. The twelve live batteries billed US$2.24, plus US$0.14 of judging.
 
 ## 5 · The two failures
 
-**Loop control — action de-duplication deleted.** On `CLM-8842` the run went from five turns
-to seven and from 29,520 tokens to 48,960, at 1.66× the cost, and still gave the correct
-answer. Only per-run turn and token logging showed it; a pass-rate table scores it clean.
-Neither cap fired, because a cap bounds damage but cannot recognise a repeat. Only the
-de-duplication guard remembers what the agent already did, and no prompt repairs a model
-that forgot. Across the set the median run is four turns, the worst legitimate run five,
-and none reaches the cap, which is how we set it at eight.
+**Loop control — action de-duplication deleted.** On `CLM-8842` the run went five turns to
+seven and 29,520 tokens to 48,960, at 1.66× the cost, and still answered correctly. Only
+per-run turn and token logging showed it; a pass-rate table scores it clean. Neither cap
+fired: a cap bounds damage but cannot recognise a repeat, only the de-duplication guard
+remembers what the agent already did, and no prompt repairs a model that forgot. Median four
+turns, worst legitimate five, none at the cap — which is how we set it at eight.
 
-**Tool interface — the coverage widening deleted.** The set fell from 60 to 57 of 60:
-`CLM-8901` was approved in all three trials without its required itemised bill. The code
-check caught it; cost logging could not, because a wrong approval looks exactly like a right
-one — a turn longer and dearer than a document request — so no cost threshold separates
-them. The fix belongs
-in the tool, the only place that sees policy and documents together. Loop control is the
-wrong layer, since every guard behaved; the prompt is wrong too, because no instruction
-makes a model use a field it was never returned.
+**Tool interface — the coverage widening deleted.** 60 fell to 57 of 60: `CLM-8901` was
+approved in all three trials without its itemised bill. The code check caught it; cost logging
+could not, because a wrong approval looks exactly like a right one, so no cost threshold
+separates them. The fix belongs in the tool, the only place that sees policy and documents
+together. Loop control is the wrong layer — every guard behaved; so is the prompt, because no
+instruction makes a model use a field it was never returned.
 
 ## 6 · What we would not deploy
 
 We would not deploy the model's own resistance to injection: four of five models approved
-`CLM-8952` at least once. `narrative_guard` is a keyword tripwire that misses a paraphrase (GR-15). The
-post-freeze letter checks and final check now refuse or override those decisions in code,
-but that is projected on recorded trials, not measured live.
+`CLM-8952` at least once. Nor would we deploy `narrative_guard` as a boundary — put twelve
+plausible member narratives through it and **eleven pass**, including a reworded imitation of
+a tool result. It is a tripwire, and our three hostile cases largely test it against strings
+written for it. What stops a missed injection costing money is the letter re-deriving every
+total through `check_coverage`: the failure mode is a wrong decision, not a wrong payment.
+The post-freeze checks are projected on recorded trials, not measured live.
 
-A second agent reviewing each letter is the obvious catch for `CLM-8952`, at about one more
-short Haiku call a claim — roughly US$0.002, or US$19 a month. We stayed single-agent
-because a reviewer reads the same forged narrative and can be fooled the same way, while
-the check needed is deterministic. Cognition's reversal points the same way: reviewers may
-multiply, but writes stay single-threaded — ours is one write behind one gate.
+A second agent reviewing each letter is the obvious catch for `CLM-8952`, at one more short
+Haiku call a claim — US$0.002, or US$19 a month. We stayed single-agent because a reviewer
+reads the same forged narrative and is fooled the same way, while the check needed is
+deterministic. Cognition's reversal agrees: reviewers may multiply, writes stay
+single-threaded — ours is one write behind one gate.
 
 ---
 

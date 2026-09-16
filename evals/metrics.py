@@ -10,6 +10,7 @@ key, no tokens. Read by evals/aggregate_battery.py and by the demo.
 """
 import collections
 import json
+import math
 import os
 import statistics
 import sys
@@ -254,6 +255,115 @@ def ghost_loops(results):
         if (r.get("record") or {}).get("stopped_by") in GHOST_LOOP_TRIGGERS)
     count = sum(by.values())
     return {"count": count, "rate": frac(count, n), "by_trigger": dict(by)}
+
+
+# =====================================================================
+# HOW MUCH OF A DIFFERENCE IS REAL  (D4, D5b, D6)
+# =====================================================================
+# WHY THIS EXISTS, AND WHY IT EXISTS LATE.
+#
+# The brief says a pass rate without its trial count is not a
+# measurement. We reported trial counts from the start - and then read
+# the resulting table as a RANKING, which needs something the trial
+# count alone cannot give: an idea of how far two rates must sit apart
+# before the gap means anything.
+#
+# It matters here more than most places, because we hold the evidence
+# that it matters. Three identical qwen3-235b batteries - same prompt,
+# same commit, same fixtures - scored 37, 41 and 49 of 60. That is a
+# 20-percentage-point spread with the model held FIXED, and it is wider
+# than most of the gaps between DIFFERENT models in our own table. A
+# ranking read off numbers that move that much on re-run is not a
+# finding; it is one sample of a noisy process.
+#
+# So these functions answer one question and refuse to answer more:
+# given k passes out of n trials, what range of true pass rates is
+# consistent with what we saw, and can two of our rows be told apart at
+# all? They do not say which model is better. They say whether our
+# experiment was large enough to have an opinion.
+#
+# Standard library only, like everything else here: math.erfc gives the
+# normal tail, so no scipy and nothing to install.
+
+def wilson_interval(passes, trials, z=1.96):
+    """95% confidence interval for a pass rate, Wilson score method.
+
+    WHY WILSON AND NOT THE TEXTBOOK p +/- z*sqrt(p(1-p)/n). The normal
+    approximation breaks exactly where our batteries live: small n (60)
+    and rates near the ends. At 60/60 it returns a zero-width interval
+    centred on 1.0, which would claim certainty from a single battery.
+    Wilson stays inside [0, 1], never collapses to a point, and is the
+    interval most statistics packages default to for this reason.
+
+    Returns (low, high) as fractions, or (None, None) when trials is 0.
+    """
+    if not trials:
+        return (None, None)
+    p = passes / trials
+    denom = 1.0 + z * z / trials
+    centre = (p + z * z / (2.0 * trials)) / denom
+    halfwidth = (z * math.sqrt(p * (1.0 - p) / trials
+                               + z * z / (4.0 * trials * trials))) / denom
+    return (max(0.0, centre - halfwidth), min(1.0, centre + halfwidth))
+
+
+def two_proportion_p(passes_a, trials_a, passes_b, trials_b):
+    """Two-sided p-value for 'these two pass rates are the same'.
+
+    Pooled two-proportion z-test. A SMALL p means the gap is unlikely to
+    be sampling noise. A LARGE p does NOT mean the models are equally
+    good - it means our experiment was too small to tell, which is a
+    statement about us, not about them. Report it that way.
+
+    Returns (z, p). (0.0, 1.0) when either arm is empty or both rates
+    are identical, because there is then nothing to separate.
+    """
+    if not trials_a or not trials_b:
+        return (0.0, 1.0)
+    p_a = passes_a / trials_a
+    p_b = passes_b / trials_b
+    pooled = (passes_a + passes_b) / (trials_a + trials_b)
+    se = math.sqrt(pooled * (1.0 - pooled)
+                   * (1.0 / trials_a + 1.0 / trials_b))
+    if se == 0:
+        return (0.0, 1.0)
+    z = (p_a - p_b) / se
+    return (z, math.erfc(abs(z) / math.sqrt(2.0)))
+
+
+def separability(rows_, alpha=0.05):
+    """Can the best row in the table be told apart from the others?
+
+    Takes the aggregator's rows, finds the highest pass rate at the
+    shipped prompt version, and tests it against every other row at that
+    version. Returns the best row's label plus one verdict per rival.
+
+    THE POINT IS THE NEGATIVE RESULT. If the top model cannot be
+    separated from a cheaper one, then 'we ship the top model' is not
+    something our evidence supports, and D6's deployment choice inherits
+    that uncertainty. Saying so is the measurement; hiding it behind a
+    sorted table is not.
+    """
+    live = [r for r in rows_ if r.get("prompt") == "v2" and r.get("trials")]
+    if len(live) < 2:
+        return None
+    best = max(live, key=lambda r: r["pass_rate"])
+    k_best = round(best["pass_rate"] * best["trials"])
+    out = []
+    for r in live:
+        if r is best:
+            continue
+        k = round(r["pass_rate"] * r["trials"])
+        z, pv = two_proportion_p(k_best, best["trials"], k, r["trials"])
+        out.append({"model": r["model"], "member": r["member"],
+                    "passes": k, "trials": r["trials"],
+                    "pass_rate": r["pass_rate"],
+                    "z": z, "p": pv, "separated": pv < alpha})
+    return {"best": {"model": best["model"], "member": best["member"],
+                     "passes": k_best, "trials": best["trials"],
+                     "pass_rate": best["pass_rate"]},
+            "alpha": alpha,
+            "rivals": sorted(out, key=lambda x: -x["pass_rate"])}
 
 
 def percentile(values, p):

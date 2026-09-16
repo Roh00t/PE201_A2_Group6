@@ -510,6 +510,7 @@ both Capsule 1 tests; the three-question test and the governance cliff; Appendix
 routing table, volume (8,000/month) and failure cost (US$38/h × 12 min = US$7.60).
 `[faq]` `PE6201_A2_FAQ.pdf` — evaluation vs guardrail cases; the exponent is steps in one
 run. `[upd]` `PE6201_A2_Document_Updates.pdf` — the scripted-guardrail caveat.
-`[lect]` `docs/slides_notes.md` — Class 4 slide 9, the seven-rung taxonomy; `B·T + D·T(T−1)/2`.
+`[lect]` Class 4 lecture slides (NTULearn, not redistributed here) — slide 9, the seven-rung
+taxonomy; `B·T + D·T(T−1)/2`.
 Pre-read 1 (Anthropic, *Building effective agents*) · Pre-read 5 (Cognition's reversal on
 multi-agent, and single-threaded writes).

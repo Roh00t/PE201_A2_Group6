@@ -89,6 +89,7 @@ python3 evals/run_guardrails.py --twice               # 18 cases: 16/16, 1/1, 1 
 python3 evals/test_battery_fake.py                    # 113 passed
 python3 evals/graders/test_judge_fake.py              # 65 passed
 python3 evals/test_cost_model.py                      # 4 passed
+python3 evals/test_significance.py                    # 19 passed · error bars
 python3 experiments/test_regrade_offline.py           # 40 passed
 python3 experiments/d2c_parallel_vs_sequential.py     # 41% turns, 53% input tokens
 python3 experiments/demo_loop_failure.py              # D7 failure 1 · loop control

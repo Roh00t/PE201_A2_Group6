@@ -87,9 +87,11 @@ PROBLEM = "A"
 #
 #   turn distribution, 60 trials over 40 cases, parallel grouping:
 #       2 turns  12 runs      median            4
-#       3 turns  12 runs      mean              3.50
-#       4 turns  30 runs      worst LEGITIMATE  5
-#       5 turns   6 runs      hit the cap       0
+#       3 turns  12 runs      mean              3.52
+#       4 turns  29 runs      worst LEGITIMATE  5
+#       5 turns   7 runs      hit the cap       0
+#   (re-measured 16 Sep 2026; the 30/6 split above it read before was stale.
+#    Worst legitimate is unchanged at 5, so the cap of 8 is unaffected.)
 #
 #   per-run tokens: median 21,600 · worst 29,520 · worst cost US$0.00317
 #

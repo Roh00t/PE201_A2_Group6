@@ -103,6 +103,8 @@ def rows(runs):
     for _path, r in runs:
         s = r["summary"]
         n = s["negative"]
+        _ci = metrics.wilson_interval(
+            round(s["pass_rate"] * s["trials_graded"]), s["trials_graded"])
         # THE SPLIT, PER MODEL. A pass rate alone cannot distinguish "the
         # model decided wrongly" from "our code stopped it before it
         # decided", and those are different findings with different fixes.
@@ -121,6 +123,14 @@ def rows(runs):
             "prompt": r["prompt_version"],
             "trials": s["trials_graded"],
             "pass_rate": s["pass_rate"],
+            # THE ERROR BAR, DERIVED FROM THE SAME TWO NUMBERS.
+            # A pass rate is an estimate from 60 trials, not a
+            # property of the model. Carrying the interval beside it
+            # is what stops the sorted table below reading as a
+            # ranking it cannot support - see metrics.separability.
+            "ci": _ci,
+            "ci_low": _ci[0],
+            "ci_high": _ci[1],
             "ordinary": s["ordinary"]["rate"],
             "neg_trials": n["rate"],
             "neg_3of3": n["consistency"],
@@ -138,9 +148,9 @@ def rows(runs):
     return sorted(out, key=lambda x: (x["prompt"], x["tier"] or "", x["cost"]))
 
 
-HEAD = ("member", "model", "tier", "prompt", "trials", "pass", "ordinary",
-        "neg trial", "neg 3of3", "done/halt/unp", "macro F1", "med turns",
-        "tok in", "tok out", "US$", "US$/pass")
+HEAD = ("member", "model", "tier", "prompt", "trials", "pass", "95% CI",
+        "ordinary", "neg trial", "neg 3of3", "done/halt/unp", "macro F1",
+        "med turns", "tok in", "tok out", "US$", "US$/pass")
 
 
 def to_markdown(rs):
@@ -152,6 +162,8 @@ def to_markdown(rs):
             "`%s`" % r["model"], r["tier"] or "", r["prompt"],
             str(r["trials"]),
             "%.1f%%" % (100 * r["pass_rate"]),
+            ("%.1f–%.1f%%" % (100 * r["ci"][0], 100 * r["ci"][1])
+             if r["ci"][0] is not None else "n/a"),
             "%.1f%%" % (100 * r["ordinary"]),
             "%.1f%%" % (100 * r["neg_trials"]),
             "%s (%.0f%%)" % (r["neg_cases"], 100 * r["neg_3of3"]),
@@ -167,7 +179,7 @@ def to_markdown(rs):
 
 def to_csv(rs):
     keys = ["member", "model", "family", "tier", "prompt", "trials",
-            "pass_rate", "ordinary", "neg_trials", "neg_3of3", "neg_cases",
+            "pass_rate", "ci_low", "ci_high", "ordinary", "neg_trials", "neg_3of3", "neg_cases",
             "completed", "halted", "unparseable", "macro_f1",
             "median_turns", "transport", "tokens_in", "tokens_out", "cost",
             "cost_per_trial", "cost_per_passed", "clean", "dry_run"]
@@ -206,6 +218,52 @@ def v1_vs_v2(rs):
                a["cost_per_trial"], b["cost_per_trial"]))
 
 
+def separability_report(rs):
+    """The sentence the sorted table above cannot say for itself.
+
+    A table ordered by pass rate LOOKS like a ranking, and a reader will
+    treat it as one. This block says which of those orderings our trial
+    count can actually support and which are inside the noise - and it
+    prints the negative result first, because that is the finding.
+    """
+    sep = metrics.separability(rs)
+    if not sep:
+        return None
+    b = sep["best"]
+    lines = ["\n  CAN WE TELL THESE APART? (two-proportion z-test, alpha = %.2f)"
+             % sep["alpha"],
+             "    best measured: %s (%s) at %d/%d = %.1f%%"
+             % (b["model"], b["member"], b["passes"], b["trials"],
+                100 * b["pass_rate"])]
+    inside = []
+    for r in sep["rivals"]:
+        verdict = "separated" if r["separated"] else "INSIDE THE NOISE"
+        lines.append("      vs %-34s %d/%d  p=%.3f  %s"
+                     % (r["model"], r["passes"], r["trials"], r["p"], verdict))
+        if not r["separated"]:
+            inside.append(r["model"])
+    if inside:
+        lines += [
+            "",
+            "    %d of %d rivals are NOT separated at this trial count."
+            % (len(inside), len(sep["rivals"])),
+            "    Our evidence does not support ranking %s above %s."
+            % (b["model"], " or ".join(inside)),
+            "    It supports one claim only: at n=%d we cannot tell them apart."
+            % b["trials"],
+            "",
+            "    This is not a hedge. Three identical qwen3-235b batteries -",
+            "    same prompt, same commit - scored 37, 41 and 49 of 60. That",
+            "    20-point spread on ONE model is wider than most gaps in the",
+            "    table above, which is exactly why the gaps need a test and",
+            "    not an ordering. D6 inherits this: the deployed-model choice",
+            "    is a judgement under uncertainty, not a measured result."]
+    else:
+        lines.append("\n    Every rival is separated at alpha = %.2f."
+                     % sep["alpha"])
+    return "\n".join(lines) + "\n"
+
+
 def main(argv=None):
     argv = argv or sys.argv[1:]
     include_dry = "--include-dry-run" in argv
@@ -242,6 +300,9 @@ def main(argv=None):
           "quoted\n  with its trial count because a pass rate without one is "
           "not a measurement." % (shape["cases"], shape["negative"],
                                   shape["trials"]))
+    sep = separability_report(rs)
+    if sep:
+        print(sep)
     delta = v1_vs_v2(rs)
     if delta:
         print(delta)
@@ -251,6 +312,8 @@ def main(argv=None):
     os.makedirs(LIVE_DIR, exist_ok=True)
     with open(md, "w", encoding="utf-8") as fh:
         fh.write(to_markdown(rs) + "\n")
+        if sep:
+            fh.write("\n```" + sep + "```\n")
         if delta:
             fh.write("\n```" + delta + "```\n")
     with open(csv, "w", encoding="utf-8") as fh:

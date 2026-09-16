@@ -1,11 +1,31 @@
-| member | model | tier | prompt | trials | pass | ordinary | neg trial | neg 3of3 | done/halt/unp | macro F1 | med turns | tok in | tok out | US$ | US$/pass |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| zhao_yujia | `qwen/qwen3-235b-a22b-2507` | cheap | v1 | 60 | 51.7% | 90.0% | 13.3% | 1/10 (10%) | 55/2/3 | 0.87 | 3.0 | 367,581 | 25,019 | 0.0409 | 0.0013 |
-| li_yunke | `qwen/qwen3-235b-a22b-2507` | cheap | v2 | 60 | 68.3% | 76.7% | 60.0% | 4/10 (40%) | 48/0/12 | 0.84 | 4.0 | 866,374 | 28,436 | 0.0858 | 0.0021 |
-| shen_bowen | `deepseek/deepseek-v3.2` | cheap | v2 | 60 | 80.0% | 93.3% | 66.7% | 6/10 (60%) | 58/0/2 | 0.88 | 4.0 | 999,576 | 40,971 | 0.2853 | 0.0059 |
-| xia_yanran | `google/gemini-2.5-flash` | mid | v2 | 60 | 73.3% | 76.7% | 70.0% | 7/10 (70%) | 51/0/9 | 0.91 | 2.5 | 889,356 | 32,305 | 0.3476 | 0.0079 |
-| huang_yu | `openai/gpt-4.1-mini` | mid | v2 | 60 | 80.0% | 100.0% | 60.0% | 6/10 (60%) | 59/0/1 | 0.85 | 4.0 | 1,006,298 | 38,035 | 0.4634 | 0.0097 |
-| rohit_panda | `anthropic/claude-haiku-4.5` | mid | v2 | 60 | 90.0% | 100.0% | 80.0% | 8/10 (80%) | 60/0/0 | 0.96 | 4.0 | 1,056,826 | 42,269 | 1.2682 | 0.0235 |
+| member | model | tier | prompt | trials | pass | 95% CI | ordinary | neg trial | neg 3of3 | done/halt/unp | macro F1 | med turns | tok in | tok out | US$ | US$/pass |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| zhao_yujia | `qwen/qwen3-235b-a22b-2507` | cheap | v1 | 60 | 51.7% | 39.3–63.8% | 90.0% | 13.3% | 1/10 (10%) | 55/2/3 | 0.87 | 3.0 | 367,581 | 25,019 | 0.0409 | 0.0013 |
+| li_yunke | `qwen/qwen3-235b-a22b-2507` | cheap | v2 | 60 | 68.3% | 55.8–78.7% | 76.7% | 60.0% | 4/10 (40%) | 48/0/12 | 0.84 | 4.0 | 866,374 | 28,436 | 0.0858 | 0.0021 |
+| shen_bowen | `deepseek/deepseek-v3.2` | cheap | v2 | 60 | 80.0% | 68.2–88.2% | 93.3% | 66.7% | 6/10 (60%) | 58/0/2 | 0.88 | 4.0 | 999,576 | 40,971 | 0.2853 | 0.0059 |
+| xia_yanran | `google/gemini-2.5-flash` | mid | v2 | 60 | 73.3% | 61.0–82.9% | 76.7% | 70.0% | 7/10 (70%) | 51/0/9 | 0.91 | 2.5 | 889,356 | 32,305 | 0.3476 | 0.0079 |
+| huang_yu | `openai/gpt-4.1-mini` | mid | v2 | 60 | 80.0% | 68.2–88.2% | 100.0% | 60.0% | 6/10 (60%) | 59/0/1 | 0.85 | 4.0 | 1,006,298 | 38,035 | 0.4634 | 0.0097 |
+| rohit_panda | `anthropic/claude-haiku-4.5` | mid | v2 | 60 | 90.0% | 79.9–95.3% | 100.0% | 80.0% | 8/10 (80%) | 60/0/0 | 0.96 | 4.0 | 1,056,826 | 42,269 | 1.2682 | 0.0235 |
+
+```
+  CAN WE TELL THESE APART? (two-proportion z-test, alpha = 0.05)
+    best measured: anthropic/claude-haiku-4.5 (rohit_panda) at 54/60 = 90.0%
+      vs deepseek/deepseek-v3.2             48/60  p=0.125  INSIDE THE NOISE
+      vs openai/gpt-4.1-mini                48/60  p=0.125  INSIDE THE NOISE
+      vs google/gemini-2.5-flash            44/60  p=0.018  separated
+      vs qwen/qwen3-235b-a22b-2507          41/60  p=0.003  separated
+
+    2 of 4 rivals are NOT separated at this trial count.
+    Our evidence does not support ranking anthropic/claude-haiku-4.5 above deepseek/deepseek-v3.2 or openai/gpt-4.1-mini.
+    It supports one claim only: at n=60 we cannot tell them apart.
+
+    This is not a hedge. Three identical qwen3-235b batteries -
+    same prompt, same commit - scored 37, 41 and 49 of 60. That
+    20-point spread on ONE model is wider than most gaps in the
+    table above, which is exactly why the gaps need a test and
+    not an ordering. D6 inherits this: the deployed-model choice
+    is a judgement under uncertainty, not a measured result.
+```
 
 ```
   v1 -> v2 on qwen/qwen3-235b-a22b-2507, model held fixed (zhao_yujia -> li_yunke)
