@@ -55,6 +55,21 @@ python3 evals/test_cost_model.py                      # D6 arithmetic
 
 ---
 
+## Scope — what is ours and what is inherited
+
+We chose **Problem A**. Tools under `REGISTRY['B']` represent inherited scaffold code, are retained unmodified, and are explicitly out of scope for the Problem A agent execution. They are never registered for Problem A, never
+reachable from `run_eval.py`, and never counted in the seven-tool set that D2(a) scores;
+`config.PROBLEM = "A"` is what selects between the two registries. They are left in place
+rather than deleted because `src/tools/tools.py` is one of the files fingerprinted in every
+committed battery result (`fingerprint.sources_sha256`), and editing it after the fact would
+break the link between our live numbers and the source that produced them.
+
+**The seven tools A2 is marked on** are `get_claim`, `lookup_policy`, `lookup_hospital`,
+`check_coverage`, `get_preauthorisation`, `check_duplicate_claim` and
+`issue_decision_letter`. Each carries a full six-field descriptor; see `docs/D2a_tool_scoring.md`.
+
+---
+
 ## Where things are
 
 ```

@@ -122,12 +122,17 @@ unreadable reply twice; `judge.py` now fails such records in code.
 
 | Lever | Before | After | Measured effect |
 |---|---|---|---|
-| 1 · Tool block | v1 prompt, 1,106 tokens | v2 prompt, 3,134 tokens | +US$0.00075 a claim (qwen3-235b) |
+| 1 · Tool block | v1 prompt, 1,106 tokens† | v2 prompt, 3,134 tokens† | +US$0.00075 a claim (qwen3-235b) |
 | 2 · Turn count | 357 turns, 2,322,600 input tokens | 211 turns, 1,091,400 | −53% input tokens |
 | 3 · Observation size | no size bound in v1's contracts | bounded in v2's | not separable: both versions call the same functions |
 | 4 · Success rate | v1, 51.7% | v2, 68.3% | −US$1.27 a claim in failures |
 
 *Source: `results/d6_inputs.json` → `results/d6_summary.json`; `docs/D6_cost_model.md`.*
+*† Lever 1's two figures are the **first-turn prompt tokens OpenRouter actually billed** on
+`qwen/qwen3-235b-a22b-2507`, read from each trial's `usage` block — the modal value in 51 of
+60 v1 trials and 52 of 60 v2 trials. `docs/D2b_descriptors.md` separately reports the prompt
+**text** as 1,240 and 3,134 rough tokens (`characters / 4`); that is an estimate of a
+different quantity, and the billed count is the one a cost lever is measured in.*
 
 We price a failure with the escalation form because a wrong outcome goes to a person, not
 back into the loop. That makes layer 2 the bill: 90% of the deployed month. **Lever 4

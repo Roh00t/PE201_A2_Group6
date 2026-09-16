@@ -10,7 +10,7 @@
 **Course:** PE6201 Emerging AI Technologies · MSc Enterprise AI · T1 AY2026–27
 **Assessment:** A2 — Applied AI System · Group · 20% of course grade · Rubric 1
 **Problem:** A — Health-insurance claim first response
-**Team:** 6 members · Team ID: `<FILL>` · Section: `<FILL>`
+**Team:** 6 members · Team ID: `B-6` · Section: `B`
 **Repository:** https://github.com/Roh00t/PE201_A2_Group6
 
 Source tags used throughout: `[brief]` = PE6201_A2_Applied_AI_System.pdf ·
@@ -113,7 +113,7 @@ any new live run with `python3 evals/check_roster_prices.py`.
 | **Report** — cut the draft to ≤2,000 words of prose and sign off | Zhao Yujia, all | `docs/report/` |
 | **Demo** — 5 minutes, one negative case live, every member speaks | all | `[brief §4]` |
 | **Team self-appraisal** — one sheet for the team | all | Missing means an incomplete submission |
-| Team ID and section in this file's header | Zhao Yujia | Still `<FILL>` |
+| ~~Team ID and section in this file's header~~ | Zhao Yujia | **Done 16 Sep** — `B-6`, Section B, set here and in `CONTRIBUTIONS.md` and the report |
 
 ---
 
@@ -354,7 +354,7 @@ D6, the report, the demo, the self-appraisal. See §6 and §7.
 /GUARDRAILS.md                  constraints — overrides this file
 /CONTRIBUTIONS.md               who did what; commit history must corroborate
 /TEAM_DECLARATION.pdf           checked in by Fri 4 Sep
-/requirements.txt               pinned
+/requirements.txt               intentionally empty — standard library only
 /docs/
   D0_why_an_agent.md            ladder, workflow test, two conditions, three questions
   D0c_what_good_looks_like.md   five statements — FIRST COMMIT, before any agent code
@@ -367,25 +367,35 @@ D6, the report, the demo, the self-appraisal. See §6 and §7.
   report/                       drafts + final 2,000-word report
 /src/
   config.py                     BACKEND / MODEL / BASE_URL — one block, scripted default
-  loop.py                       the ReAct loop, multi-action parsing, instrumentation
-  guardrails.py                 step cap, budget ceiling, dedup, autonomy gate
-  tools/                        one module per tool + descriptor docstring
-  backends/scripted.py          deterministic, no network, no key
-  backends/openrouter.py        the ONLY file that knows a vendor exists
+  loop_agent.py                 the ReAct loop, multi-action parsing, instrumentation
+  prompt.py                     assembles the descriptors into what the model is sent
+  narrative_guard.py            hostile-text detection, in code (D3a)
+  final_check.py                fact ledger + final-record validation
+  cost_model.py                 D6 three layers, sensitivity, break-even
+  tools/tools.py                the 7 Problem A tools + six-field descriptors
+  backends/planner.py           deterministic move derivation, no network, no key
+  backends/backends.py          scripted + live; the ONLY file that knows a vendor exists
+  backends/guardrails.py        step cap, budget ceiling, dedup, autonomy gate
 /data/
-  shipped/                      READ-ONLY. Never edit or delete a shipped row.
-  extended/                     our added rows, new ids only
-  expected_outcomes_A.json      answer key
-  generate_cases.py             reproducible generator for our additions
-/eval/
-  cases/                        40 cases, one file per author
-  harness.py
+  data_A/                       generated fixtures. READ-ONLY: never edit or delete a
+                                shipped row (CLM-8842…CLM-8971)
+  expected_outcomes_A.json      answer key — 40 labels, written BY HAND
+  make_fixtures_A.py            reproducible generator; the EXTRA_* block holds our 25
+  check_my_data.py              ids resolve · shipped rows unchanged · every case labelled
+/evals/
+  harness.py                    code check + judgement queue
   graders/code_check.py
-  graders/judge.py              judge prompt committed alongside
+  graders/judge.py              judge prompt committed alongside as judge_prompt.md
+  guardrail_cases.json          D3(b) — 18 cases
+  run_battery.py                D5(b) the live battery — the ONE script that spends
+/experiments/
+  d2c_parallel_vs_sequential.py D2(c) measurement + the turn distribution
+  demo_loop_failure.py          D7 failure 1 · loop control
+  demo_tool_interface_failure.py D7 failure 2 · tool interface
 /results/
   scripted/                     D3(b), D5(a), D7 outputs — free, deterministic
-  live/                         one file per member per model
-  v1_vs_v2/
+  live/                         one file per member per model, + battery_table.md
+  regrade/                      offline re-grade matrix
 /logs/decisions.jsonl           the gated action's append-only record
 
 

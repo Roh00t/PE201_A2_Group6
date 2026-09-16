@@ -1,7 +1,7 @@
 # CONTRIBUTIONS
 
 **PE6201 A2 · Applied AI System · Problem A — health-insurance claim first response**
-Team ID: `<FILL>` · Section: `<FILL>` · Last updated: **9 September 2026**
+Team ID: `B-6` · Section: `B` · Last updated: **16 September 2026**
 
 > The brief requires this file and requires the **commit history to corroborate
 > it**. `[brief §8]` Below, "commits" is what `git log` actually shows on `main`
@@ -56,7 +56,7 @@ D5(a) scripted backend, the D5(b) battery infrastructure.
   commit — `c66193f`, 6 Sep), `D2a_tool_scoring.md`, `D2c_dependency_rule.md`,
   `D7_failures.md`, `README.md`, `CLAUDE.md`, `GUARDRAILS.md`.
 
-**Commits:** 17 on `main` (2–9 Sep). Corroborated.
+**Commits:** **69 of 81 on `main`** (2–15 Sep) — 66 as `Rohit`, 3 as `Rohit Panda`, across `pandarohit05@gmail.com` and the GitHub noreply address. Corroborated, and disproportionate: see §3 for why the case work consolidated through one committer.
 
 ### Huang Yu (黄煜) — `黄煜 <huangyu@…>`
 
@@ -72,7 +72,7 @@ layer; D3(b) guardrail checklist.
 - `evals/guardrail_cases.json` (15 cases) and `evals/run_guardrails.py`.
 - `docs/D2b_descriptors.md`, `docs/D3b_guardrail_checklist.md`.
 
-**Commits:** `653cc6b` (8 Sep), merged as `c824aa9`. Corroborated.
+**Commits:** **2 on `main`** as `黄煜 <huangyu@…>` — `653cc6b` (8 Sep, merged as `c824aa9`) and `6ff7d8c` (his D5(b) battery). Corroborated.
 
 ### Zhao Yujia — `Zhao Yujia <s230001152@mail.uic.edu.cn>` (also `yoga-aaa`)
 
@@ -91,7 +91,14 @@ the live battery.
   31/60), committed in `d37634d` on 15 Sep **under Rohit's name**. Record here who ran
   it, so this file and the history agree.
 
-**Commits:** `48721ef` (7 Sep), `3576f36` (3 Sep), merged as `78cfb03`. Corroborated.
+> **UNSIGNED — Zhao Yujia to confirm and initial.** *"I ran the 60-trial D2(b) v1 pass on
+> `qwen/qwen3-235b-a22b-2507`, prompt v1, on my own OpenRouter key on 14 September 2026.
+> It is committed under Rohit's name as `d37634d`; run id `22d45c794f78`."*  Initials: `____`
+>
+> This line is a placeholder written by the team, not by Zhao Yujia. It is worth nothing
+> until she reads it, confirms it is true, and initials it herself.
+
+**Commits:** **2 on `main`** — `3576f36` (3 Sep, as `yoga-aaa`) and `d37634d` (15 Sep, as `Zhao Yujia`); the D6 branch work merged as `78cfb03`. Corroborated.
 **Note:** two git identities, one email. Worth unifying before submission so the
 history reads cleanly for a marker.
 
@@ -105,16 +112,21 @@ history reads cleanly for a marker.
   grading prompt and its offline rehearsal suite (`290f34a`, 9 Sep, consolidated
   push). D4 now runs **both** check kinds; before this only the code check ran.
 
-**Commits:** 1 authored (`adf1e85`, 8 Sep); the graders landed through the
-consolidated push described in §3. **Authored-commit count is the weak point of
-this row** — the strand's substance is present, the attribution is thin.
+> **UNSIGNED — Li Yunke to confirm and initial.** *"I ran the 60-trial D5(b) battery on
+> `qwen/qwen3-235b-a22b-2507`, prompt v2, on my own OpenRouter key on 14 September 2026.
+> It is committed under Rohit's name as `765d289`; run id `e7dd3797c778`."*  Initials: `____`
+>
+> This line is a placeholder written by the team, not by Li Yunke. It is worth nothing
+> until she reads it, confirms it is true, and initials it herself.
+
+**Commits:** **2 on `main`** as `liyunke12-sudo <liyunke12@gmail.com>`; the graders landed through the consolidated push described in §3. **Authored-commit count remains the weak point of this row** — the strand's substance is present, the attribution is thin. Her battery row is committed under Rohit's name (see the line above).
 
 ### Shen Bowen
 
 **Owns:** the OpenRouter cost ledger, sensitivity and break-even alongside Zhao
 Yujia; report §§4–5.
 
-**Commits: none authored on `main` as of 9 Sep.** D6's arithmetic exists
+**Commits: 2 on `main`**, both from `dbldft@outlook.com` (one authored as `CodexSandboxOffline` — see the note below). As of 9 Sep this row read *none authored*; that is no longer true and the original wording is kept below so the change is visible rather than silent. D6's arithmetic exists
 (`src/cost_model.py`); what does not is the filled `results/d6_inputs.json`, which
 is blocked until the D5(b) battery produces measured tokens and a measured pass
 rate. Bowen's inputs are **queued behind the battery, not late** — but the strand
@@ -127,6 +139,11 @@ needs a commit under his name before submission. He also holds the roster's only
 - `3457e52`, which stops the runner charging a fresh canary when a checkpoint is
   already complete.
 
+**Identity note.** `1f76e03` is authored as `CodexSandboxOffline` against Bowen's own
+email. The email corroborates it; the display name does not. Worth correcting the
+local `user.name` before any further commit so a marker reading `git log --format='%an'`
+sees his name.
+
 ### Xia Yanran
 
 **Owns:** negative-case design, red-team cases, D7 failure reproductions.
@@ -135,7 +152,7 @@ needs a commit under his name before submission. He also holds the roster's only
   behind the three hostile-narrative cases (`CLM-8941`, `CLM-8952`, `CLM-9035`)
   — authored in the sessions described in §3.
 
-**Commits: none authored on `main` as of 9 Sep.** Her case work reached the repo
+**Commits: 4 on `main`** as `yaraxia-glitch <yaraxia04@gmail.com>` — the most of any member other than Rohit. As of 9 Sep this row read *none authored*; that is no longer true. Her case work reached the repo
 through the consolidated push. The two D7 reproductions in `experiments/` were
 built by Rohit and are hers to extend and re-run. **This row needs an authored
 commit before submission** — §3 explains why the history reads as it does, but an
@@ -186,15 +203,38 @@ explained away.
 > everyone's behalf — that would reproduce the exact problem it exists to
 > resolve.
 
+**The 25 IDs to choose from.** The 15 shipped fixtures (`CLM-8842` … `CLM-8971`) were not
+authored by anyone on this team, so they do not appear below. Every ID in this table must come
+from the 25 extension cases, which are exactly the `CLM-90xx` block:
+
+```
+CLM-9001  CLM-9002  CLM-9003  CLM-9004  CLM-9005  CLM-9006  CLM-9007
+CLM-9008  CLM-9009  CLM-9010  CLM-9011  CLM-9013  CLM-9014  CLM-9015
+CLM-9016  CLM-9017  CLM-9018  CLM-9019  CLM-9020  CLM-9021  CLM-9022
+CLM-9023  CLM-9024  CLM-9025  CLM-9035
+```
+
 | Member | Cases authored (IDs) | Count | Initials |
 |---|---|---:|---|
-| Rohit Panda | `CLM1, CLM2, CLM3, CLM4, CLM5, CLM6, CLM7` | `7` | RP |
-| Huang Yu | `<CLM-…, CLM-…>` | | |
-| Li Yunke | `<CLM-…, CLM-…>` | | |
-| Xia Yanran | `<CLM-…, CLM-…>` | | |
-| Shen Bowen | `<CLM-…, CLM-…>` | | |
-| Zhao Yujia | `<CLM-…, CLM-…>` | | |
-| | **total** | **40** | |
+| Rohit Panda | `<CLM-90…, CLM-90…>` | | |
+| Huang Yu | `<CLM-90…, CLM-90…>` | | |
+| Li Yunke | `<CLM-90…, CLM-90…>` | | |
+| Xia Yanran | `<CLM-90…, CLM-90…>` | | |
+| Shen Bowen | `<CLM-90…, CLM-90…>` | | |
+| Zhao Yujia | `<CLM-90…, CLM-90…>` | | |
+| | **total** | **25** | |
+
+> **Correction, 16 September.** Rohit's row previously read `CLM1 … CLM7` with a count of 7.
+> Those identifiers do not exist: the answer key uses the `CLM-8842` form, and
+> `python3 -c "import json; print('CLM1' in [r['case_id'] for r in json.load(open('data/expected_outcomes_A.json'))])"`
+> returns `False`. They were placeholders that read as real data, which is worse than a blank
+> row in a section the non-contribution clause relies on, so the row has been returned to
+> unfilled. **It was not refilled with substitute IDs** — nobody but Rohit can say which cases
+> Rohit wrote, and an ID chosen to make the arithmetic work is a fabricated attestation, not a
+> corrected one.
+>
+> The column total also read **40**, which contradicted the paragraph below it: 15 of the 40
+> are shipped and unauthored, so the six rows sum to **25**. Corrected.
 
 Fifteen of the 40 are the **shipped** fixtures that came with the starter data
 and are not authored by anyone on this team; the extension rule forbids deleting

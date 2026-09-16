@@ -14,6 +14,17 @@ python3 run_eval.py --prompt
 
 ---
 
+## 0 · Scope of this scoring
+
+Everything below scores the **seven Problem A tools**, which are the only tools our agent
+can reach. Tools under `REGISTRY['B']` represent inherited scaffold code, are retained unmodified, and are explicitly out of scope for the Problem A agent execution. They are not scored here, are not part of the shortest-defensible-list
+argument, and carry the scaffold's original descriptors rather than our six-field contracts —
+`config.PROBLEM` selects one registry or the other, and ours is `"A"`. We retain them
+unmodified because `src/tools/tools.py` is fingerprinted in every committed battery result;
+editing it now would sever our live numbers from the source that produced them.
+
+---
+
 ## 1 · Before adding a tool, we tried not adding one
 
 Four moves, in the brief's order of preference. What we actually tried:

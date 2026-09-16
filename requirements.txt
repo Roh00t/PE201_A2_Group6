@@ -1,0 +1,3 @@
+# Intentionally empty: standard library only.
+# Verified 16 Sep 2026 — no third-party imports anywhere in src/, evals/ or experiments/.
+# A clean clone runs `python3 run_eval.py` with nothing installed and no API key.
