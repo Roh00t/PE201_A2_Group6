@@ -1,0 +1,19 @@
+# Canonical names for the six members, so `git shortlog -sn` reads like the roster in
+# CONTRIBUTIONS.md. This changes how git DISPLAYS authors; it rewrites no commit.
+#
+# Honoured by `git shortlog` and by the %aN / %aE log placeholders. Ignored by the raw
+# %an / %ae placeholders, and by GitHub's contributor graph, which credits by the email
+# on the commit.
+#
+# Huang Yu's two commits carry `huangyu@huangyudeMacBook-Air.local`, git's username@hostname
+# fallback when user.email is unset. Once her git email is set to the one on her GitHub
+# account, change her line below to `Huang Yu <that address> <huangyu@huangyudeMacBook-Air.local>`
+# so both sets of commits count as one person.
+
+Rohit Panda <pandarohit05@gmail.com>
+Rohit Panda <pandarohit05@gmail.com> <75230041+Roh00t@users.noreply.github.com>
+Huang Yu <huangyu@huangyudeMacBook-Air.local>
+Li Yunke <liyunke12@gmail.com>
+Shen Bowen <dbldft@outlook.com>
+Xia Yanran <yaraxia04@gmail.com>
+Zhao Yujia <s230001152@mail.uic.edu.cn>

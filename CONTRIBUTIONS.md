@@ -72,7 +72,16 @@ layer; D3(b) guardrail checklist.
 - `evals/guardrail_cases.json` (15 cases) and `evals/run_guardrails.py`.
 - `docs/D2b_descriptors.md`, `docs/D3b_guardrail_checklist.md`.
 
-**Commits:** **2 on `main`** as `黄煜 <huangyu@…>` — `653cc6b` (8 Sep, merged as `c824aa9`) and `6ff7d8c` (his D5(b) battery). Corroborated.
+**Commits:** **2 on `main`** — `653cc6b` (8 Sep, the D2(b)/D3 branch, merged as `c824aa9`) and `6ff7d8c` (13 Sep, her D5(b) battery). Corroborated.
+
+**Why her name is hard to find.** Both commits are authored as `黄煜 <huangyu@huangyudeMacBook-Air.local>`. That address is not one she chose: it is
+git's fallback of *username@hostname* when `user.email` was never set. Two consequences:
+`git log --author="Huang Yu"` finds nothing, because the name is written in Chinese
+characters; and **GitHub's contributor list omits her entirely**, because GitHub credits a
+commit by email and a `.local` address belongs to no account — nor can one be added, since
+GitHub verifies an email by sending mail to it. The root `.mailmap` makes `git shortlog`
+show her as Huang Yu with both commits. It cannot change GitHub's page; only a new commit
+under an email on her GitHub account can put her there.
 
 ### Zhao Yujia — `Zhao Yujia <s230001152@mail.uic.edu.cn>` (also `yoga-aaa`)
 
@@ -96,9 +105,9 @@ the live battery.
 > It is committed under Rohit's name as `d37634d`; run id `22d45c794f78`."*  Initials: `____`
 >
 > This line is a placeholder written by the team, not by Zhao Yujia. It is worth nothing
-> until she reads it, confirms it is true, and initials it herself.
+> until Zhao Yujia reads it, confirms it is true, and initials it.
 
-**Commits:** **2 on `main`** — `3576f36` (3 Sep, as `yoga-aaa`) and `d37634d` (15 Sep, as `Zhao Yujia`); the D6 branch work merged as `78cfb03`. Corroborated.
+**Commits:** **2 on `main`**, both from `s230001152@mail.uic.edu.cn` — `3576f36` (3 Sep, as `yoga-aaa`) and `48721ef` (7 Sep, as `Zhao Yujia`, the D6 cost-model framework, merged as `78cfb03`). Corroborated. `d37634d`, which carries the v1 pass, is authored by Rohit — see above.
 **Note:** two git identities, one email. Worth unifying before submission so the
 history reads cleanly for a marker.
 
